@@ -1,11 +1,11 @@
 {
-  "name": "framework7 for webapp",
+  "name": "framework7-webapp",
   "version": "1.3.6",
   "description": "Full Featured Mobile HTML Framework For Building iOS & Android Apps",
   "main": "dist/js/framework7.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iamxiaoma/Framework7.git"
+    "url": "https://github.com/iamxiaoma/Framework7-WebApp.git"
   },
   "keywords": [
     "mobile",
@@ -33,7 +33,7 @@
     "MIT"
   ],
   "bugs": {
-    "url": "https://github.com/nolimits4web/Framework7/issues"
+    "url": "https://github.com/iamxiaoma/Framework7-WebApp/issues"
   },
   "homepage": "http://framework7cn.sinaapp.com",
   "engines": {

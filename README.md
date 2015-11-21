@@ -3,10 +3,10 @@
 [![devDependency Status](https://david-dm.org/nolimits4web/framework7/dev-status.svg)](https://david-dm.org/nolimits4web/framework7#info=devDependencies)
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=nolimits4web&url=https://github.com/nolimits4web/framework7/&title=Framework7&language=JavaScript&tags=github&category=software)
 
-Framework7 for WebApp
+Framework7-WebApp
 ==========
 
-Full Featured Mobile HTML Framework For Building iOS & Android Apps
+Full Featured Mobile HTML Framework For Building iOS & Android Apps & WebApp
 
 ## Getting Started
   * [Getting Started Guide](http://www.idangero.us/framework7/get-started/)
