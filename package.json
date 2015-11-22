@@ -37,7 +37,7 @@
   "bugs": {
     "url": "https://github.com/iamxiaoma/Framework7-WebApp/issues"
   },
-  "homepage": "http://framework7cn.sinaapp.com",
+  "homepage": "http://www.idangero.us/framework7/",
   "engines": {
     "node": ">= 0.10.0"
   },
