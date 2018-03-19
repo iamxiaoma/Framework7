@@ -1,3 +1,4 @@
+import { window, document } from 'ssr-window';
 import $ from 'dom7';
 import Template7 from 'template7';
 import PathToRegexp from 'path-to-regexp'; // eslint-disable-line
@@ -7,10 +8,11 @@ import Component from '../../utils/component';
 import History from '../../utils/history';
 import SwipeBack from './swipe-back';
 
-import { forward, load, navigate } from './navigate';
+import { refreshPage, forward, load, navigate } from './navigate';
 import { tabLoad, tabRemove } from './tab';
 import { modalLoad, modalRemove } from './modal';
 import { backward, loadBack, back } from './back';
+import { clearPreviousHistory } from './clear-previous-history';
 
 class Router extends Framework7Class {
   constructor(app, view) {
@@ -92,6 +94,7 @@ class Router extends Framework7Class {
       forward,
       load,
       navigate,
+      refreshPage,
       // Tab
       tabLoad,
       tabRemove,
@@ -102,6 +105,8 @@ class Router extends Framework7Class {
       backward,
       loadBack,
       back,
+      // Clear history
+      clearPreviousHistory,
     });
 
     return router;
@@ -425,8 +430,8 @@ class Router extends Framework7Class {
     const router = this;
     const $el = $(el);
     if ($el.length === 0) return;
-    if ($el[0].f7Component && $el[0].f7Component.destroy) {
-      $el[0].f7Component.destroy();
+    if ($el[0].f7Component && $el[0].f7Component.$destroy) {
+      $el[0].f7Component.$destroy();
     }
     if (!router.params.removeElements) {
       return;
@@ -622,15 +627,48 @@ class Router extends Framework7Class {
     }
     if (index !== false) xhrCache.splice(index, 1);
   }
-  xhrRequest(requestUrl, ignoreCache) {
+  xhrRequest(requestUrl, options) {
     const router = this;
     const params = router.params;
+    const { ignoreCache } = options;
     let url = requestUrl;
+
+    let hasQuery = url.indexOf('?') >= 0;
+    if (params.passRouteQueryToRequest &&
+      options &&
+      options.route &&
+      options.route.query &&
+      Object.keys(options.route.query).length
+    ) {
+      url += `${hasQuery ? '&' : '?'}${Utils.serializeObject(options.route.query)}`;
+      hasQuery = true;
+    }
+
+    if (params.passRouteParamsToRequest &&
+      options &&
+      options.route &&
+      options.route.params &&
+      Object.keys(options.route.params).length
+    ) {
+      url += `${hasQuery ? '&' : '?'}${Utils.serializeObject(options.route.params)}`;
+      hasQuery = true;
+    }
+
+    if (url.indexOf('{{') >= 0 &&
+      options &&
+      options.route &&
+      options.route.params &&
+      Object.keys(options.route.params).length
+    ) {
+      Object.keys(options.route.params).forEach((paramName) => {
+        const regExp = new RegExp(`{{${paramName}}}`, 'g');
+        url = url.replace(regExp, options.route.params[paramName] || '');
+      });
+    }
     // should we ignore get params or not
     if (params.xhrCacheIgnoreGetParameters && url.indexOf('?') >= 0) {
       url = url.split('?')[0];
     }
-
     return Utils.promise((resolve, reject) => {
       if (params.xhrCache && !ignoreCache && url.indexOf('nocache') < 0 && params.xhrCacheIgnore.indexOf(url) < 0) {
         for (let i = 0; i < router.cache.xhr.length; i += 1) {
@@ -648,8 +686,8 @@ class Router extends Framework7Class {
       router.xhr = router.app.request({
         url,
         method: 'GET',
-        beforeSend() {
-          router.emit('routerAjaxStart', router.xhr);
+        beforeSend(xhr) {
+          router.emit('routerAjaxStart', xhr, options);
         },
         complete(xhr, status) {
           router.emit('routerAjaxComplete', xhr);
@@ -662,15 +700,15 @@ class Router extends Framework7Class {
                 content: xhr.responseText,
               });
             }
-            router.emit('routerAjaxSuccess', xhr);
+            router.emit('routerAjaxSuccess', xhr, options);
             resolve(xhr.responseText);
           } else {
-            router.emit('routerAjaxError', xhr);
+            router.emit('routerAjaxError', xhr, options);
             reject(xhr);
           }
         },
         error(xhr) {
-          router.emit('routerAjaxError', xhr);
+          router.emit('routerAjaxError', xhr, options);
           reject(xhr);
         },
       });
@@ -725,7 +763,7 @@ class Router extends Framework7Class {
         router.xhr = false;
       }
       router
-        .xhrRequest(templateUrl)
+        .xhrRequest(templateUrl, options)
         .then((templateContent) => {
           compile(templateContent);
         })
@@ -758,14 +796,24 @@ class Router extends Framework7Class {
     const router = this;
     const url = typeof component === 'string' ? component : componentUrl;
     function compile(c) {
-      const extendContext = Utils.extend(
+      let context = options.context || {};
+      if (typeof context === 'function') context = context.call(router);
+      else if (typeof context === 'string') {
+        try {
+          context = JSON.parse(context);
+        } catch (err) {
+          reject();
+          throw (err);
+        }
+      }
+      const extendContext = Utils.merge(
         {},
-        options.context || {},
+        context,
         {
           $,
           $$: $,
           $app: router.app,
-          $root: Utils.extend({}, router.app.data, router.app.methods),
+          $root: Utils.merge({}, router.app.data, router.app.methods),
           $route: options.route,
           $router: router,
           $dom7: $,
@@ -785,7 +833,7 @@ class Router extends Framework7Class {
         router.xhr = false;
       }
       router
-        .xhrRequest(url)
+        .xhrRequest(url, options)
         .then((loadedComponent) => {
           compile(Component.parse(loadedComponent));
         })
@@ -970,6 +1018,7 @@ class Router extends Framework7Class {
   clearHistory() {
     const router = this;
     router.history = [];
+    if (router.view) router.view.history = [];
     router.saveHistory();
   }
   init() {

@@ -4,6 +4,7 @@ import History from '../../utils/history';
 function modalLoad(modalType, route, loadOptions = {}) {
   const router = this;
   const app = router.app;
+
   const options = Utils.extend({
     animate: router.params.animate,
     pushState: true,
@@ -11,13 +12,8 @@ function modalLoad(modalType, route, loadOptions = {}) {
     on: {},
   }, loadOptions);
 
-  const modalParams = route.route[modalType];
+  const modalParams = Utils.extend({}, route.route[modalType]);
   const modalRoute = route.route;
-
-  const { ignoreCache } = options;
-
-  // Load Modal Props
-  const { url, template, templateUrl, component, componentUrl } = modalParams;
 
   function onModalLoaded() {
     // Create Modal
@@ -39,10 +35,10 @@ function modalLoad(modalType, route, loadOptions = {}) {
 
     modal.on('modalClosed', () => {
       modal.$el.trigger(`${modalType.toLowerCase()}:beforeremove`, route, modal);
-      modal.emit(`${modalType}BeforeRemove`, modal.el, route, modal);
+      modal.emit(`modalBeforeRemove ${modalType}BeforeRemove`, modal.el, route, modal);
       const modalComponent = modal.el.f7Component;
       if (modalComponent) {
-        modalComponent.destroy();
+        modalComponent.$destroy();
       }
       Utils.nextTick(() => {
         if (modalComponent) {
@@ -83,64 +79,90 @@ function modalLoad(modalType, route, loadOptions = {}) {
 
     // Emit events
     modal.$el.trigger(`${modalType.toLowerCase()}:init ${modalType.toLowerCase()}:mounted`, route, modal);
-    router.emit(`${modalType}Init ${modalType}Mounted`, modal.el, route, modal);
+    router.emit(`modalInit ${modalType}Init ${modalType}Mounted`, modal.el, route, modal);
     // Open
     modal.open();
   }
 
-  // Component/Template Callbacks
-  function resolve(contentEl) {
-    if (contentEl) {
-      if (typeof contentEl === 'string') {
-        modalParams.content = contentEl;
-      } else if (contentEl.f7Component) {
-        contentEl.f7Component.mount((componentEl) => {
-          modalParams.el = componentEl;
-          app.root.append(componentEl);
-        });
-      } else {
-        modalParams.el = contentEl;
+  // Load Modal Content
+  function loadModal(loadModalParams, loadModalOptions) {
+    // Load Modal Props
+    const { url, content, template, templateUrl, component, componentUrl } = loadModalParams;
+
+    // Component/Template Callbacks
+    function resolve(contentEl) {
+      if (contentEl) {
+        if (typeof contentEl === 'string') {
+          modalParams.content = contentEl;
+        } else if (contentEl.f7Component) {
+          contentEl.f7Component.$mount((componentEl) => {
+            modalParams.el = componentEl;
+            app.root.append(componentEl);
+          });
+        } else {
+          modalParams.el = contentEl;
+        }
+        onModalLoaded();
       }
+    }
+    function reject() {
+      router.allowPageChange = true;
+      return router;
+    }
+
+    if (content) {
+      resolve(content);
+    } else if (template || templateUrl) {
+      try {
+        router.modalTemplateLoader(template, templateUrl, loadModalOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (component || componentUrl) {
+      // Load from component (F7/Vue/React/...)
+      try {
+        router.modalComponentLoader(app.root[0], component, componentUrl, loadModalOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (url) {
+      // Load using XHR
+      if (router.xhr) {
+        router.xhr.abort();
+        router.xhr = false;
+      }
+      router.xhrRequest(url, loadModalOptions)
+        .then((modalContent) => {
+          modalParams.content = modalContent;
+          onModalLoaded();
+        })
+        .catch(() => {
+          router.allowPageChange = true;
+        });
+    } else {
       onModalLoaded();
     }
   }
-  function reject() {
-    router.allowPageChange = true;
-    return router;
-  }
 
-  if (template || templateUrl) {
-    try {
-      router.modalTemplateLoader(template, templateUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
+  ('url content component el componentUrl template templateUrl').split(' ').forEach((modalLoadProp) => {
+    if (modalParams[modalLoadProp]) {
+      loadModal({ [modalLoadProp]: modalParams[modalLoadProp] }, options);
     }
-  } else if (component || componentUrl) {
-    // Load from component (F7/Vue/React/...)
-    try {
-      router.modalComponentLoader(app.root[0], component, componentUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
-    }
-  } else if (url) {
-    // Load using XHR
-    if (router.xhr) {
-      router.xhr.abort();
-      router.xhr = false;
-    }
-    router.xhrRequest(url, ignoreCache)
-      .then((modalContent) => {
-        modalParams.content = modalContent;
-        onModalLoaded();
-      })
-      .catch(() => {
-        router.allowPageChange = true;
-      });
-  } else {
-    onModalLoaded();
+  });
+
+  // Async
+  function asyncResolve(resolveParams, resolveOptions) {
+    loadModal(resolveParams, Utils.extend(options, resolveOptions));
   }
+  function asyncReject() {
+    router.allowPageChange = true;
+  }
+  if (modalParams.async) {
+    modalParams.async.call(router, options.route, router.currentRoute, asyncResolve, asyncReject);
+  }
+  return router;
 }
 function modalRemove(modal) {
   Utils.extend(modal, { closeByRouter: true });

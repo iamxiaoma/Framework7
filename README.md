@@ -1,15 +1,16 @@
 <a href="https://www.patreon.com/vladimirkharlampidi"><img src="https://cdn.framework7.io/i/support-badge.png" height="20"></a>
 [![Join the chat at https://gitter.im/nolimits4web/Framework7](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nolimits4web/Framework7)
-[![Build Status](https://travis-ci.org/framework7io/Framework7.svg?branch=master)](https://travis-ci.org/framework7io/Framework7)
+[![Build Status](https://travis-ci.org/framework7io/framework7.svg?branch=master)](https://travis-ci.org/framework7io/framework7)
 [![devDependency Status](https://david-dm.org/framework7io/framework7/dev-status.svg)](https://david-dm.org/framework7io/framework7#info=devDependencies)
 
-Framework7
-==========
+# Framework7
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/framework7io/Framework7.svg)](https://greenkeeper.io/)
 
 Full Featured Mobile HTML Framework For Building iOS & Android Apps
 
 ## Getting Started
-  * [Getting Started Guide](http://www.idangero.us/framework7/get-started/)
+  * [Getting Started Guide](https://framework7.io/docs/introduction.html)
   * Clone/download this repo
   * Start building your App from changing Kitchen Sink, or using a clean template.
 
@@ -63,6 +64,8 @@ $ npm run prod
 ```
 
 ## Contributing
+
+Before you open an issue please review the [contributing](https://github.com/framework7io/framework7/blob/master/CONTRIBUTING.md) guideline.
 
 All changes should be commited to `src/` files. Framework7 uses LESS for CSS compliations, and ES modules JS files.
 

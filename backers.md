@@ -1,5 +1,15 @@
 # Backers
 
+<table>
+  <tr>
+    <td align="center" valign="middle">
+      <a href="http://mytommy.com" target="_blank">
+        <img width="200" src="https://framework7.io/i/sponsors/tommy.png">
+      </a>
+    </td>
+  </tr>
+</table>
+
 Support Framework7 development by [pledging on Patreon](https://www.patreon.com/vladimirkharlampidi)!
 
 ### $1000
@@ -22,6 +32,7 @@ Support Framework7 development by [pledging on Patreon](https://www.patreon.com/
 
 ### $100
 
+Mason Fok ([tommy](http://mytommy.com))<br>
 Juergen Schimmoeller
 
 [Join here!](https://www.patreon.com/bePatron?patAmt=100.0&exp=1&u=4109762&rid=830841)
@@ -30,6 +41,7 @@ Juergen Schimmoeller
 
 ### $50+
 
+Marcelo Lopetegui L.<br>
 Bearr Dayss<br>
 Kris Reddy<br>
 Bart DJ
@@ -40,7 +52,6 @@ Bart DJ
 
 ### $10+
 Dan Boschen<br>
-Catalin Rogojeanu<br>
 Ferry van de Graaf<br>
 Denis Bousselier<br>
 Firestream<br>
@@ -48,8 +59,6 @@ Matthew Becker<br>
 Greg Hatt<br>
 Timo Ernst<br>
 Dmitry Akinin<br>
-Adrian Maleska<br>
-Todd Crowe<br>
 Rick Chang<br>
 Dave Billington
 
@@ -58,6 +67,7 @@ Dave Billington
 ---
 
 ### $5+
+Adrian Maleska<br>
 Travel With Lucas<br>
 Garry Lowther<br>
 Uri Bram<br>
@@ -66,7 +76,6 @@ Tirso Martínez Reyes<br>
 Zafer Ayan<br>
 Amir br<br>
 Toby Allen - Ballymaloe Cookery School<br>
-Daniel Dingemanse<br>
 Henry Blackman<br>
 Ruslan Skorynin
 

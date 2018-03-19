@@ -27,7 +27,10 @@ class SmartSelect extends Framework7Class {
     ss.useModulesParams(defaults);
 
     // View
-    const view = $el.parents('.view').length && $el.parents('.view')[0].f7View;
+    let view = params.view;
+    if (!view) {
+      view = $el.parents('.view').length && $el.parents('.view')[0].f7View;
+    }
     if (!view) {
       throw Error('Smart Select requires initialized View');
     }
@@ -71,11 +74,11 @@ class SmartSelect extends Framework7Class {
     }
     ss.attachEvents = function attachEvents() {
       $el.on('click', onClick);
-      $el.on('change', 'input[type="checkbox"], input[type="radio"]', onChange);
+      $el.on('change', 'select', onChange);
     };
     ss.detachEvents = function detachEvents() {
       $el.off('click', onClick);
-      $el.off('change', 'input[type="checkbox"], input[type="radio"]', onChange);
+      $el.off('change', 'select', onChange);
     };
 
     function handleInputChange() {

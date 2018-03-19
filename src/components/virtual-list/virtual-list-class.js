@@ -1,3 +1,4 @@
+import { document } from 'ssr-window';
 import $ from 'dom7';
 import Template7 from 'template7';
 import Utils from '../../utils/utils';
@@ -20,6 +21,8 @@ class VirtualList extends Framework7Class {
       searchByItem: undefined,
       searchAll: undefined,
       itemTemplate: undefined,
+      ul: null,
+      createUl: true,
       renderItem(item) {
         return `
           <li>
@@ -59,6 +62,7 @@ class VirtualList extends Framework7Class {
       vl.renderItem = vl.params.renderItem;
     }
     vl.$pageContentEl = vl.$el.parents('.page-content');
+    vl.pageContentEl = vl.$pageContentEl[0];
 
     // Bad scroll
     if (typeof vl.params.updatableScroll !== 'undefined') {
@@ -71,14 +75,21 @@ class VirtualList extends Framework7Class {
     }
 
     // Append <ul>
-    vl.$ul = vl.params.ul ? $(vl.params.ul) : vl.$el.children('ul');
-    if (vl.$ul.length === 0) {
+    const ul = vl.params.ul;
+    vl.$ul = ul ? $(vl.params.ul) : vl.$el.children('ul');
+    if (vl.$ul.length === 0 && vl.params.createUl) {
       vl.$el.append('<ul></ul>');
       vl.$ul = vl.$el.children('ul');
     }
     vl.ul = vl.$ul[0];
 
+    let $itemsWrapEl;
+    if (!vl.ul && !vl.params.createUl) $itemsWrapEl = vl.$el;
+    else $itemsWrapEl = vl.$ul;
+
     Utils.extend(vl, {
+      $itemsWrapEl,
+      itemsWrapEl: $itemsWrapEl[0],
       // DOM cached items
       domCache: {},
       displayDomCache: {},
@@ -157,7 +168,7 @@ class VirtualList extends Framework7Class {
     }
 
     if (vl.updatableScroll || vl.params.setListHeight) {
-      vl.$ul.css({ height: `${vl.listHeight}px` });
+      vl.$itemsWrapEl.css({ height: `${vl.listHeight}px` });
     }
   }
   render(force, forceScrollTop) {
@@ -249,12 +260,7 @@ class VirtualList extends Framework7Class {
         itemEl.style.top = `${topPosition}px`;
 
         // Before item insert
-        vl.emit({
-          events: 'itemBeforeInsert',
-          data: [itemEl, items[i]],
-          parents: [],
-        });
-        vl.emit('vlItemBeforeInsert', vl, itemEl, items[i]);
+        vl.emit('local::itemBeforeInsert vlItemBeforeInsert', vl, itemEl, items[i]);
 
         // Append item to fragment
         vl.fragment.appendChild(itemEl);
@@ -264,9 +270,9 @@ class VirtualList extends Framework7Class {
     // Update list height with not updatable scroll
     if (!vl.updatableScroll) {
       if (vl.dynamicHeight) {
-        vl.ul.style.height = `${heightBeforeLastItem}px`;
+        vl.itemsWrapEl.style.height = `${heightBeforeLastItem}px`;
       } else {
-        vl.ul.style.height = `${(i * vl.params.height) / vl.params.cols}px`;
+        vl.itemsWrapEl.style.height = `${(i * vl.params.height) / vl.params.cols}px`;
       }
     }
 
@@ -276,34 +282,19 @@ class VirtualList extends Framework7Class {
         vl.reachEnd = true;
       }
     } else {
-      vl.emit({
-        events: 'beforeClear',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlBeforeClear', vl, vl.fragment);
-      vl.ul.innerHTML = '';
+      vl.emit('local::beforeClear vlBeforeClear', vl, vl.fragment);
+      vl.itemsWrapEl.innerHTML = '';
 
-      vl.emit({
-        events: 'itemsBeforeInsert',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlItemsBeforeInsert', vl, vl.fragment);
+      vl.emit('local::itemsBeforeInsert vlItemsBeforeInsert', vl, vl.fragment);
 
       if (items && items.length === 0) {
         vl.reachEnd = true;
-        if (vl.params.emptyTemplate) vl.ul.innerHTML = vl.params.emptyTemplate;
+        if (vl.params.emptyTemplate) vl.itemsWrapEl.innerHTML = vl.params.emptyTemplate;
       } else {
-        vl.ul.appendChild(vl.fragment);
+        vl.itemsWrapEl.appendChild(vl.fragment);
       }
 
-      vl.emit({
-        events: 'itemsAfterInsert',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlItemsAfterInsert', vl, vl.fragment);
+      vl.emit('local::itemsAfterInsert vlItemsAfterInsert', vl, vl.fragment);
     }
 
     if (typeof forceScrollTop !== 'undefined' && force) {

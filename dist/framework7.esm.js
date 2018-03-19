@@ -1,13 +1,13 @@
 /**
- * Framework7 2.0.2
+ * Framework7 2.1.2
  * Full featured mobile HTML framework for building iOS & Android apps
  * http://framework7.io/
  *
- * Copyright 2014-2017 Vladimir Kharlampidi
+ * Copyright 2014-2018 Vladimir Kharlampidi
  *
  * Released under the MIT License
  *
- * Released on: December 5, 2017
+ * Released on: March 18, 2018
  */
 
 import Template7 from 'template7';
@@ -16,17 +16,23 @@ import $ from 'dom7';
 // F7 Class
 import Framework7 from './components/core/core-class';
 
+// Import Helpers
+import Request from './utils/request';
+import Utils from './utils/utils';
+import Support from './utils/support';
+import Device from './utils/device';
+
 // Core Modules
-import Device from './modules/device/device';
-import Support from './modules/support/support';
-import Utils from './modules/utils/utils';
-import Resize from './modules/resize/resize';
-import Request from './modules/request/request';
-import Touch from './modules/touch/touch';
-import Clicks from './modules/clicks/clicks';
-import Router from './modules/router/router';
-import History from './modules/history/history';
-import Storage from './modules/storage/storage';
+import DeviceModule from './modules/device/device';
+import SupportModule from './modules/support/support';
+import UtilsModule from './modules/utils/utils';
+import ResizeModule from './modules/resize/resize';
+import RequestModule from './modules/request/request';
+import TouchModule from './modules/touch/touch';
+import ClicksModule from './modules/clicks/clicks';
+import RouterModule from './modules/router/router';
+import HistoryModule from './modules/history/history';
+import StorageModule from './modules/storage/storage';
 
 // Core Components
 import Statusbar from './components/statusbar/statusbar';
@@ -39,25 +45,27 @@ import Modal from './components/modal/modal';
 
 
 if ("es" !== 'es') {
-  // Template7
-  if (!window.Template7) window.Template7 = Template7;
+  if (typeof window !== 'undefined') {
+    // Template7
+    if (!window.Template7) window.Template7 = Template7;
 
-  // Dom7
-  if (!window.Dom7) window.Dom7 = $;
+    // Dom7
+    if (!window.Dom7) window.Dom7 = $;
+  }
 }
 
 // Install Core Modules & Components
 Framework7.use([
-  Device,
-  Support,
-  Utils,
-  Resize,
-  Request,
-  Touch,
-  Clicks,
-  Router,
-  History,
-  Storage,
+  DeviceModule,
+  SupportModule,
+  UtilsModule,
+  ResizeModule,
+  RequestModule,
+  TouchModule,
+  ClicksModule,
+  RouterModule,
+  HistoryModule,
+  StorageModule,
   Statusbar,
   View,
   Navbar,
@@ -67,4 +75,5 @@ Framework7.use([
   Modal,
   ]);
 
+export { Template7, $ as Dom7, Request, Utils, Device, Support };
 export default Framework7;

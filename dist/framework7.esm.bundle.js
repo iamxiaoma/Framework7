@@ -1,17 +1,20 @@
 /**
- * Framework7 2.0.2
+ * Framework7 2.1.2
  * Full featured mobile HTML framework for building iOS & Android apps
  * http://framework7.io/
  *
- * Copyright 2014-2017 Vladimir Kharlampidi
+ * Copyright 2014-2018 Vladimir Kharlampidi
  *
  * Released under the MIT License
  *
- * Released on: December 5, 2017
+ * Released on: March 18, 2018
  */
 
-import Template7 from 'template7';
+import { window, document } from 'ssr-window';
 import $ from 'dom7';
+export { default as Dom7 } from 'dom7';
+import Template7 from 'template7';
+export { default as Template7 } from 'template7';
 import PathToRegexp from 'path-to-regexp';
 
 /**
@@ -120,6 +123,8 @@ function bezier (mX1, mY1, mX2, mY2) {
     return calcBezier(getTForX(x), mY1, mY2);
   };
 }
+
+/* eslint no-control-regex: "off" */
 
 // Remove Diacritics
 const defaultDiacriticsRemovalap = [
@@ -436,6 +441,26 @@ const Utils = {
   isObject(o) {
     return typeof o === 'object' && o !== null && o.constructor && o.constructor === Object;
   },
+  merge(...args) {
+    const to = args[0];
+    args.splice(0, 1);
+    const from = args;
+
+    for (let i = 0; i < from.length; i += 1) {
+      const nextSource = args[i];
+      if (nextSource !== undefined && nextSource !== null) {
+        const keysArray = Object.keys(Object(nextSource));
+        for (let nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex += 1) {
+          const nextKey = keysArray[nextIndex];
+          const desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+          if (desc !== undefined && desc.enumerable) {
+            to[nextKey] = nextSource[nextKey];
+          }
+        }
+      }
+    }
+    return to;
+  },
   extend(...args) {
     let deep = true;
     let to;
@@ -541,6 +566,8 @@ const Device = (function Device() {
 
   // Webview
   device.webView = (iphone || ipad || ipod) && (ua.match(/.*AppleWebKit(?!.*Safari)/i) || window.navigator.standalone);
+  device.webview = device.webView;
+
 
   // Desktop
   device.desktop = !(device.os || device.android || device.webView);
@@ -590,23 +617,24 @@ class Framework7Class {
       });
     }
   }
-  on(events, handler) {
+  on(events, handler, priority) {
     const self = this;
     if (typeof handler !== 'function') return self;
+    const method = priority ? 'unshift' : 'push';
     events.split(' ').forEach((event) => {
       if (!self.eventsListeners[event]) self.eventsListeners[event] = [];
-      self.eventsListeners[event].push(handler);
+      self.eventsListeners[event][method](handler);
     });
     return self;
   }
-  once(events, handler) {
+  once(events, handler, priority) {
     const self = this;
     if (typeof handler !== 'function') return self;
     function onceHandler(...args) {
       handler.apply(self, args);
       self.off(events, onceHandler);
     }
-    return self.on(events, onceHandler);
+    return self.on(events, onceHandler, priority);
   }
   off(events, handler) {
     const self = this;
@@ -647,7 +675,7 @@ class Framework7Class {
     const parentEvents = eventsArray.filter(eventName => eventName.indexOf('local::') < 0);
 
     localEvents.forEach((event) => {
-      if (self.eventsListeners[event]) {
+      if (self.eventsListeners && self.eventsListeners[event]) {
         const handlers = [];
         self.eventsListeners[event].forEach((eventHandler) => {
           handlers.push(eventHandler);
@@ -743,7 +771,7 @@ class Framework7Class {
   }
 }
 
-class Framework7$1 extends Framework7Class {
+class Framework7 extends Framework7Class {
   constructor(params) {
     super(params);
 
@@ -787,8 +815,6 @@ class Framework7$1 extends Framework7Class {
       language: app.params.language,
       // Root
       root: $rootEl,
-      // Local Storage
-      ls: window.localStorage,
       // RTL
       rtl: $rootEl.css('direction') === 'rtl',
       // Theme
@@ -803,7 +829,9 @@ class Framework7$1 extends Framework7Class {
     });
 
     // Save Root
-    app.root[0].f7 = app;
+    if (app.root && app.root[0]) {
+      app.root[0].f7 = app;
+    }
 
     // Install Modules
     app.useModules();
@@ -881,207 +909,10 @@ class Framework7$1 extends Framework7Class {
   }
 }
 
-var Device$2 = {
-  name: 'device',
-  proto: {
-    device: Device,
-  },
-  static: {
-    device: Device,
-  },
-  on: {
-    init() {
-      const classNames = [];
-      const html = document.querySelector('html');
-      // Pixel Ratio
-      classNames.push(`device-pixel-ratio-${Math.floor(Device.pixelRatio)}`);
-      if (Device.pixelRatio >= 2) {
-        classNames.push('device-retina');
-      }
-      // OS classes
-      if (Device.os) {
-        classNames.push(
-          `device-${Device.os}`,
-          `device-${Device.os}-${Device.osVersion.split('.')[0]}`,
-          `device-${Device.os}-${Device.osVersion.replace(/\./g, '-')}`
-        );
-        if (Device.os === 'ios') {
-          const major = parseInt(Device.osVersion.split('.')[0], 10);
-          for (let i = major - 1; i >= 6; i -= 1) {
-            classNames.push(`device-ios-gt-${i}`);
-          }
-          if (Device.iphoneX) {
-            classNames.push('device-iphone-x');
-          }
-        }
-      } else if (Device.desktop) {
-        classNames.push('device-desktop');
-      }
-      // Status bar classes
-      if (Device.statusbar) {
-        classNames.push('with-statusbar');
-      } else {
-        html.classList.remove('with-statusbar');
-      }
-
-      // Add html classes
-      classNames.forEach((className) => {
-        html.classList.add(className);
-      });
-    },
-  },
-};
-
-const Support$1 = (function Support() {
-  const positionSticky = (function supportPositionSticky() {
-    let support = false;
-    const div = document.createElement('div');
-    ('sticky -webkit-sticky -moz-sticky').split(' ').forEach((prop) => {
-      if (support) return;
-      div.style.position = prop;
-      if (div.style.position === prop) {
-        support = true;
-      }
-    });
-    return support;
-  }());
-
-  return {
-    positionSticky,
-    touch: (function checkTouch() {
-      return !!(('ontouchstart' in window) || (window.DocumentTouch && document instanceof window.DocumentTouch));
-    }()),
-
-    transforms3d: (function checkTransforms3d() {
-      const div = document.createElement('div').style;
-      return ('webkitPerspective' in div || 'MozPerspective' in div || 'OPerspective' in div || 'MsPerspective' in div || 'perspective' in div);
-    }()),
-
-    flexbox: (function checkFlexbox() {
-      const div = document.createElement('div').style;
-      const styles = ('alignItems webkitAlignItems webkitBoxAlign msFlexAlign mozBoxAlign webkitFlexDirection msFlexDirection mozBoxDirection mozBoxOrient webkitBoxDirection webkitBoxOrient').split(' ');
-      for (let i = 0; i < styles.length; i += 1) {
-        if (styles[i] in div) return true;
-      }
-      return false;
-    }()),
-
-    observer: (function checkObserver() {
-      return ('MutationObserver' in window || 'WebkitMutationObserver' in window);
-    }()),
-
-    passiveListener: (function checkPassiveListener() {
-      let supportsPassive = false;
-      try {
-        const opts = Object.defineProperty({}, 'passive', {
-          // eslint-disable-next-line
-          get() {
-            supportsPassive = true;
-          },
-        });
-        window.addEventListener('testPassiveListener', null, opts);
-      } catch (e) {
-        // No support
-      }
-      return supportsPassive;
-    }()),
-
-    gestures: (function checkGestures() {
-      return 'ongesturestart' in window;
-    }()),
-  };
-}());
-
-var Support = {
-  name: 'support',
-  proto: {
-    support: Support$1,
-  },
-  static: {
-    support: Support$1,
-  },
-  on: {
-    init() {
-      const html = document.querySelector('html');
-      const classNames = [];
-      if (Support$1.positionSticky) {
-        classNames.push('support-position-sticky');
-      }
-      // Add html classes
-      classNames.forEach((className) => {
-        html.classList.add(className);
-      });
-    },
-  },
-};
-
-var Utils$2 = {
-  name: 'utils',
-  proto: {
-    utils: Utils,
-  },
-  static: {
-    utils: Utils,
-  },
-};
-
-var Resize = {
-  name: 'resize',
-  instance: {
-    getSize() {
-      const app = this;
-      const offset = app.root.offset();
-      const [width, height, left, top] = [app.root[0].offsetWidth, app.root[0].offsetHeight, offset.left, offset.top];
-      app.width = width;
-      app.height = height;
-      app.left = left;
-      app.top = top;
-      return { width, height, left, top };
-    },
-  },
-  on: {
-    init() {
-      const app = this;
-
-      // Get Size
-      app.getSize();
-
-      // Emit resize
-      window.addEventListener('resize', () => {
-        app.emit('resize');
-      }, false);
-
-      // Emit orientationchange
-      window.addEventListener('orientationchange', () => {
-        app.emit('orientationchange');
-      });
-    },
-    orientationchange() {
-      const app = this;
-      if (app.device && app.device.minimalUi) {
-        if (window.orientation === 90 || window.orientation === -90) {
-          document.body.scrollTop = 0;
-        }
-      }
-      // Fix iPad weird body scroll
-      if (app.device.ipad) {
-        document.body.scrollLeft = 0;
-        setTimeout(() => {
-          document.body.scrollLeft = 0;
-        }, 0);
-      }
-    },
-    resize() {
-      const app = this;
-      app.getSize();
-    },
-  },
-};
-
 const globals = {};
 let jsonpRequests = 0;
 
-function Request$1(requestOptions) {
+function Request(requestOptions) {
   const globalsNoCallbacks = Utils.extend({}, globals);
   ('beforeCreate beforeOpen beforeSend error complete success statusCode').split(' ').forEach((callbackName) => {
     delete globalsNoCallbacks[callbackName];
@@ -1109,7 +940,7 @@ function Request$1(requestOptions) {
   function fireCallback(callbackName, ...data) {
     /*
       Callbacks:
-      beforeCreate (xhr, options),
+      beforeCreate (options),
       beforeOpen (xhr, options),
       beforeSend (xhr, options),
       error (xhr, status),
@@ -1245,13 +1076,14 @@ function Request$1(requestOptions) {
       }
     } else {
       postData = options.data;
+      xhr.setRequestHeader('Content-Type', options.contentType);
     }
   }
 
   // Additional headers
   if (options.headers) {
     Object.keys(options.headers).forEach((headerName) => {
-      xhr.setRequestHeader(headerName, options[headerName]);
+      xhr.setRequestHeader(headerName, options.headers[headerName]);
     });
   }
 
@@ -1338,41 +1170,263 @@ function RequestShortcut(method, ...args) {
       else error = undefined;
     }
   });
-  dataType = dataType || (method === 'json' ? 'json' : undefined);
-  return Request$1({
+  dataType = dataType || (method === 'json' || method === 'postJSON' ? 'json' : undefined);
+  const requestOptions = {
     url,
-    method: method === 'post' ? 'POST' : 'GET',
+    method: method === 'post' || method === 'postJSON' ? 'POST' : 'GET',
     data,
     success,
     error,
     dataType,
-  });
+  };
+  if (method === 'postJSON') {
+    Utils.extend(requestOptions, {
+      contentType: 'application/json',
+      processData: false,
+      crossDomain: true,
+      data: typeof data === 'string' ? data : JSON.stringify(data),
+    });
+  }
+  return Request(requestOptions);
 }
-Request$1.get = function get(...args) {
+Request.get = function get(...args) {
   return RequestShortcut('get', ...args);
 };
-Request$1.post = function post(...args) {
+Request.post = function post(...args) {
   return RequestShortcut('post', ...args);
 };
-Request$1.json = function json(...args) {
+Request.json = function json(...args) {
   return RequestShortcut('json', ...args);
 };
-Request$1.setup = function setup(options) {
+Request.getJSON = Request.json;
+Request.postJSON = function postJSON(...args) {
+  return RequestShortcut('postJSON', ...args);
+};
+Request.setup = function setup(options) {
   if (options.type && !options.method) {
     Utils.extend(options, { method: options.type });
   }
   Utils.extend(globals, options);
 };
 
-/* eslint no-param-reassign: "off" */
-var Request = {
-  name: 'request',
-  create() {
-    const app = this;
-    app.request = Request$1;
+const Support = (function Support() {
+  const positionSticky = (function supportPositionSticky() {
+    let support = false;
+    const div = document.createElement('div');
+    ('sticky -webkit-sticky -moz-sticky').split(' ').forEach((prop) => {
+      if (support) return;
+      div.style.position = prop;
+      if (div.style.position === prop) {
+        support = true;
+      }
+    });
+    return support;
+  }());
+
+  const testDiv = document.createElement('div');
+
+  return {
+    positionSticky,
+    touch: (function checkTouch() {
+      return !!(('ontouchstart' in window) || (window.DocumentTouch && document instanceof window.DocumentTouch));
+    }()),
+
+    pointerEvents: !!(window.navigator.pointerEnabled || window.PointerEvent),
+    prefixedPointerEvents: !!window.navigator.msPointerEnabled,
+
+    transition: (function checkTransition() {
+      const style = testDiv.style;
+      return ('transition' in style || 'webkitTransition' in style || 'MozTransition' in style);
+    }()),
+    transforms3d: (window.Modernizr && window.Modernizr.csstransforms3d === true) || (function checkTransforms3d() {
+      const style = testDiv.style;
+      return ('webkitPerspective' in style || 'MozPerspective' in style || 'OPerspective' in style || 'MsPerspective' in style || 'perspective' in style);
+    }()),
+
+    flexbox: (function checkFlexbox() {
+      const div = document.createElement('div').style;
+      const styles = ('alignItems webkitAlignItems webkitBoxAlign msFlexAlign mozBoxAlign webkitFlexDirection msFlexDirection mozBoxDirection mozBoxOrient webkitBoxDirection webkitBoxOrient').split(' ');
+      for (let i = 0; i < styles.length; i += 1) {
+        if (styles[i] in div) return true;
+      }
+      return false;
+    }()),
+
+    observer: (function checkObserver() {
+      return ('MutationObserver' in window || 'WebkitMutationObserver' in window);
+    }()),
+
+    passiveListener: (function checkPassiveListener() {
+      let supportsPassive = false;
+      try {
+        const opts = Object.defineProperty({}, 'passive', {
+          // eslint-disable-next-line
+          get() {
+            supportsPassive = true;
+          },
+        });
+        window.addEventListener('testPassiveListener', null, opts);
+      } catch (e) {
+        // No support
+      }
+      return supportsPassive;
+    }()),
+
+    gestures: (function checkGestures() {
+      return 'ongesturestart' in window;
+    }()),
+  };
+}());
+
+var DeviceModule = {
+  name: 'device',
+  proto: {
+    device: Device,
   },
   static: {
-    request: Request$1,
+    device: Device,
+  },
+  on: {
+    init() {
+      const classNames = [];
+      const html = document.querySelector('html');
+      if (!html) return;
+      // Pixel Ratio
+      classNames.push(`device-pixel-ratio-${Math.floor(Device.pixelRatio)}`);
+      if (Device.pixelRatio >= 2) {
+        classNames.push('device-retina');
+      }
+      // OS classes
+      if (Device.os) {
+        classNames.push(
+          `device-${Device.os}`,
+          `device-${Device.os}-${Device.osVersion.split('.')[0]}`,
+          `device-${Device.os}-${Device.osVersion.replace(/\./g, '-')}`
+        );
+        if (Device.os === 'ios') {
+          const major = parseInt(Device.osVersion.split('.')[0], 10);
+          for (let i = major - 1; i >= 6; i -= 1) {
+            classNames.push(`device-ios-gt-${i}`);
+          }
+          if (Device.iphoneX) {
+            classNames.push('device-iphone-x');
+          }
+        }
+      } else if (Device.desktop) {
+        classNames.push('device-desktop');
+      }
+      // Status bar classes
+      if (Device.statusbar) {
+        classNames.push('with-statusbar');
+      } else {
+        html.classList.remove('with-statusbar');
+      }
+
+      // Add html classes
+      classNames.forEach((className) => {
+        html.classList.add(className);
+      });
+    },
+  },
+};
+
+var SupportModule = {
+  name: 'support',
+  proto: {
+    support: Support,
+  },
+  static: {
+    support: Support,
+  },
+  on: {
+    init() {
+      const html = document.querySelector('html');
+      if (!html) return;
+      const classNames = [];
+      if (Support.positionSticky) {
+        classNames.push('support-position-sticky');
+      }
+      // Add html classes
+      classNames.forEach((className) => {
+        html.classList.add(className);
+      });
+    },
+  },
+};
+
+var UtilsModule = {
+  name: 'utils',
+  proto: {
+    utils: Utils,
+  },
+  static: {
+    utils: Utils,
+  },
+};
+
+var ResizeModule = {
+  name: 'resize',
+  instance: {
+    getSize() {
+      const app = this;
+      if (!app.root[0]) return { width: 0, height: 0, left: 0, top: 0 };
+      const offset = app.root.offset();
+      const [width, height, left, top] = [app.root[0].offsetWidth, app.root[0].offsetHeight, offset.left, offset.top];
+      app.width = width;
+      app.height = height;
+      app.left = left;
+      app.top = top;
+      return { width, height, left, top };
+    },
+  },
+  on: {
+    init() {
+      const app = this;
+
+      // Get Size
+      app.getSize();
+
+      // Emit resize
+      window.addEventListener('resize', () => {
+        app.emit('resize');
+      }, false);
+
+      // Emit orientationchange
+      window.addEventListener('orientationchange', () => {
+        app.emit('orientationchange');
+      });
+    },
+    orientationchange() {
+      const app = this;
+      if (app.device && app.device.minimalUi) {
+        if (window.orientation === 90 || window.orientation === -90) {
+          document.body.scrollTop = 0;
+        }
+      }
+      // Fix iPad weird body scroll
+      if (app.device.ipad) {
+        document.body.scrollLeft = 0;
+        setTimeout(() => {
+          document.body.scrollLeft = 0;
+        }, 0);
+      }
+    },
+    resize() {
+      const app = this;
+      app.getSize();
+    },
+  },
+};
+
+/* eslint no-param-reassign: "off" */
+
+var RequestModule = {
+  name: 'request',
+  proto: {
+    request: Request,
+  },
+  static: {
+    request: Request,
   },
 };
 
@@ -1909,12 +1963,12 @@ function initTouch() {
     emitAppTouchEvent('touchend:passive', e);
   }
 
-  const passiveListener = Support$1.passiveListener ? { passive: true } : false;
-  const activeListener = Support$1.passiveListener ? { passive: false } : false;
+  const passiveListener = Support.passiveListener ? { passive: true } : false;
+  const activeListener = Support.passiveListener ? { passive: false } : false;
 
   document.addEventListener('click', appClick, true);
 
-  if (Support$1.passiveListener) {
+  if (Support.passiveListener) {
     document.addEventListener(app.touchEvents.start, appTouchStartActive, activeListener);
     document.addEventListener(app.touchEvents.move, appTouchMoveActive, activeListener);
     document.addEventListener(app.touchEvents.end, appTouchEndActive, activeListener);
@@ -1937,7 +1991,7 @@ function initTouch() {
     }, false);
   }
 
-  if (Support$1.touch) {
+  if (Support.touch) {
     app.on('click', handleClick);
     app.on('touchstart', handleTouchStart);
     app.on('touchmove', handleTouchMove);
@@ -1959,7 +2013,7 @@ function initTouch() {
   });
 }
 
-var Touch = {
+var TouchModule = {
   name: 'touch',
   params: {
     touch: {
@@ -1976,16 +2030,16 @@ var Touch = {
       tapHoldPreventClicks: true,
       // Active State
       activeState: true,
-      activeStateElements: 'a, button, label, span, .actions-button',
+      activeStateElements: 'a, button, label, span, .actions-button, .stepper-button, .stepper-button-plus, .stepper-button-minus',
       materialRipple: true,
-      materialRippleElements: '.ripple, .link, .item-link, .links-list a, .button, button, .input-clear-button, .dialog-button, .tab-link, .item-radio, .item-checkbox, .actions-button, .searchbar-disable-button, .fab a, .checkbox, .radio, .data-table .sortable-cell, .notification-close-button',
+      materialRippleElements: '.ripple, .link, .item-link, .links-list a, .button, button, .input-clear-button, .dialog-button, .tab-link, .item-radio, .item-checkbox, .actions-button, .searchbar-disable-button, .fab a, .checkbox, .radio, .data-table .sortable-cell:not(.input-cell), .notification-close-button, .stepper-button, .stepper-button-minus, .stepper-button-plus',
     },
   },
   instance: {
     touchEvents: {
-      start: Support$1.touch ? 'touchstart' : 'mousedown',
-      move: Support$1.touch ? 'touchmove' : 'mousemove',
-      end: Support$1.touch ? 'touchend' : 'mouseup',
+      start: Support.touch ? 'touchstart' : 'mousedown',
+      move: Support.touch ? 'touchmove' : 'mousemove',
+      end: Support.touch ? 'touchend' : 'mouseup',
     },
   },
   on: {
@@ -1996,51 +2050,53 @@ var Touch = {
 const tempDom = document.createElement('div');
 
 class Framework7Component {
-  constructor(c, extendContext = {}) {
-    const context = Utils.extend({}, extendContext);
-    let component = Utils.extend(this, c, { context });
+  constructor(opts, extendContext = {}) {
+    let component = Utils.merge(this, extendContext, { $options: opts });
+    const options = component.$options;
 
     // Apply context
     ('beforeCreate created beforeMount mounted beforeDestroy destroyed').split(' ').forEach((cycleKey) => {
-      if (component[cycleKey]) component[cycleKey] = component[cycleKey].bind(context);
+      if (options[cycleKey]) options[cycleKey] = options[cycleKey].bind(component);
     });
 
-    if (component.data) {
-      component.data = component.data.bind(context);
+    if (options.data) {
+      options.data = options.data.bind(component);
       // Data
-      Utils.extend(context, component.data());
+      Utils.extend(component, options.data());
     }
-    if (component.render) component.render = component.render.bind(context);
-    if (component.methods) {
-      Object.keys(component.methods).forEach((methodName) => {
-        context[methodName] = component.methods[methodName].bind(context);
+    if (options.render) options.render = options.render.bind(component);
+    if (options.methods) {
+      Object.keys(options.methods).forEach((methodName) => {
+        component[methodName] = options.methods[methodName].bind(component);
       });
     }
 
     // Bind Events
-    if (component.on) {
-      Object.keys(component.on).forEach((eventName) => {
-        component.on[eventName] = component.on[eventName].bind(context);
+    if (options.on) {
+      Object.keys(options.on).forEach((eventName) => {
+        options.on[eventName] = options.on[eventName].bind(component);
       });
     }
-    if (component.once) {
-      Object.keys(component.once).forEach((eventName) => {
-        component.once[eventName] = component.once[eventName].bind(context);
+    if (options.once) {
+      Object.keys(options.once).forEach((eventName) => {
+        options.once[eventName] = options.once[eventName].bind(component);
       });
     }
 
-    if (component.beforeCreate) component.beforeCreate();
+    if (options.beforeCreate) options.beforeCreate();
 
     // Watchers
-    if (component.watch) {
-      Object.keys(component.watch).forEach((watchKey) => {
-        let dataKeyValue = component.context[watchKey];
-        Object.defineProperty(component.context, watchKey, {
+    if (options.watch) {
+      Object.keys(options.watch).forEach((watchKey) => {
+        let dataKeyValue = component[watchKey];
+        Object.defineProperty(component, watchKey, {
           enumerable: true,
           configurable: true,
           set(newValue) {
+            const previousValue = dataKeyValue;
             dataKeyValue = newValue;
-            component.watch[watchKey].call(context, dataKeyValue);
+            if (previousValue === newValue) return;
+            options.watch[watchKey].call(component, newValue, previousValue);
           },
           get() {
             return dataKeyValue;
@@ -2050,21 +2106,27 @@ class Framework7Component {
     }
 
     // Render template
-    let html = '';
-    if (component.render) {
-      html = component.render();
-    } else if (component.template) {
-      if (typeof component.template === 'string') {
-        try {
-          html = Template7.compile(component.template)(context);
-        } catch (err) {
-          throw err;
+
+    function render() {
+      let html = '';
+      if (options.render) {
+        html = options.render();
+      } else if (options.template) {
+        if (typeof options.template === 'string') {
+          try {
+            html = Template7.compile(options.template)(component);
+          } catch (err) {
+            throw err;
+          }
+        } else {
+          // Supposed to be function
+          html = options.template(component);
         }
-      } else {
-        // Supposed to be function
-        html = component.template(context);
       }
+      return html;
     }
+
+    let html = render();
 
     // Make Dom
     if (html && typeof html === 'string') {
@@ -2075,117 +2137,123 @@ class Framework7Component {
       tempDom.appendChild(html);
     }
 
-    // Extend context with $el
+    // Extend component with $el
     const el = tempDom.children[0];
     const $el = $(el);
-    context.$el = $el;
-    context.el = el;
+    component.$el = $el;
+    component.el = el;
     component.el = el;
 
     // Find Events
     const events = [];
     $(tempDom).find('*').each((index, element) => {
+      const attrs = [];
       for (let i = 0; i < element.attributes.length; i += 1) {
         const attr = element.attributes[i];
         if (attr.name.indexOf('@') === 0) {
-          const event = attr.name.replace('@', '');
-          let name = event;
-          let stop = false;
-          let prevent = false;
-          let once = false;
-          if (event.indexOf('.') >= 0) {
-            event.split('.').forEach((eventNamePart, eventNameIndex) => {
-              if (eventNameIndex === 0) name = eventNamePart;
-              else {
-                if (eventNamePart === 'stop') stop = true;
-                if (eventNamePart === 'prevent') prevent = true;
-                if (eventNamePart === 'once') once = true;
-              }
-            });
-          }
-
-          const value = attr.value;
-          element.removeAttribute(attr.name);
-          events.push({
-            el: element,
-            name,
-            once,
-            handler: (...args) => {
-              const e = args[0];
-              if (stop) e.stopPropagation();
-              if (prevent) e.preventDefault();
-              let methodName;
-              let method;
-              let customArgs = [];
-              if (value.indexOf('(') < 0) {
-                customArgs = args;
-                methodName = value;
-              } else {
-                methodName = value.split('(')[0];
-                value.split('(')[1].split(')')[0].split(',').forEach((argument) => {
-                  let arg = argument.trim();
-                  // eslint-disable-next-line
-                  if (!isNaN(arg)) arg = parseFloat(arg);
-                  else if (arg === 'true') arg = true;
-                  else if (arg === 'false') arg = false;
-                  else if (arg === 'null') arg = null;
-                  else if (arg === 'undefined') arg = undefined;
-                  else if (arg[0] === '"') arg = arg.replace(/"/g, '');
-                  else if (arg[0] === '\'') arg = arg.replace(/'/g, '');
-                  else if (arg.indexOf('.') > 0) {
-                    let deepArg;
-                    arg.split('.').forEach((path) => {
-                      if (!deepArg) deepArg = context;
-                      deepArg = deepArg[path];
-                    });
-                    arg = deepArg;
-                  } else {
-                    arg = context[arg];
-                  }
-                  customArgs.push(arg);
-                });
-              }
-              if (methodName.indexOf('.') >= 0) {
-                methodName.split('.').forEach((path, pathIndex) => {
-                  if (!method) method = context;
-                  if (method[path]) method = method[path];
-                  else {
-                    throw new Error(`Component doesn't have method "${methodName.split('.').slice(0, pathIndex + 1).join('.')}"`);
-                  }
-                });
-              } else {
-                if (!context[methodName]) {
-                  throw new Error(`Component doesn't have method "${methodName}"`);
-                }
-                method = context[methodName];
-              }
-              method(...customArgs);
-            },
+          attrs.push({
+            name: attr.name,
+            value: attr.value,
           });
         }
       }
+      attrs.forEach((attr) => {
+        element.removeAttribute(attr.name);
+        const event = attr.name.replace('@', '');
+        let name = event;
+        let stop = false;
+        let prevent = false;
+        let once = false;
+        if (event.indexOf('.') >= 0) {
+          event.split('.').forEach((eventNamePart, eventNameIndex) => {
+            if (eventNameIndex === 0) name = eventNamePart;
+            else {
+              if (eventNamePart === 'stop') stop = true;
+              if (eventNamePart === 'prevent') prevent = true;
+              if (eventNamePart === 'once') once = true;
+            }
+          });
+        }
+        const value = attr.value.toString();
+        events.push({
+          el: element,
+          name,
+          once,
+          handler(...args) {
+            const e = args[0];
+            if (stop) e.stopPropagation();
+            if (prevent) e.preventDefault();
+            let methodName;
+            let method;
+            let customArgs = [];
+            if (value.indexOf('(') < 0) {
+              customArgs = args;
+              methodName = value;
+            } else {
+              methodName = value.split('(')[0];
+              value.split('(')[1].split(')')[0].split(',').forEach((argument) => {
+                let arg = argument.trim();
+                // eslint-disable-next-line
+                if (!isNaN(arg)) arg = parseFloat(arg);
+                else if (arg === 'true') arg = true;
+                else if (arg === 'false') arg = false;
+                else if (arg === 'null') arg = null;
+                else if (arg === 'undefined') arg = undefined;
+                else if (arg[0] === '"') arg = arg.replace(/"/g, '');
+                else if (arg[0] === '\'') arg = arg.replace(/'/g, '');
+                else if (arg.indexOf('.') > 0) {
+                  let deepArg;
+                  arg.split('.').forEach((path) => {
+                    if (!deepArg) deepArg = component;
+                    deepArg = deepArg[path];
+                  });
+                  arg = deepArg;
+                } else {
+                  arg = component[arg];
+                }
+                customArgs.push(arg);
+              });
+            }
+            if (methodName.indexOf('.') >= 0) {
+              methodName.split('.').forEach((path, pathIndex) => {
+                if (!method) method = component;
+                if (method[path]) method = method[path];
+                else {
+                  throw new Error(`Component doesn't have method "${methodName.split('.').slice(0, pathIndex + 1).join('.')}"`);
+                }
+              });
+            } else {
+              if (!component[methodName]) {
+                throw new Error(`Component doesn't have method "${methodName}"`);
+              }
+              method = component[methodName];
+            }
+            method(...customArgs);
+          },
+        });
+      });
     });
 
     // Set styles scope ID
     let styleEl;
-    if (component.style) {
+    if (options.style) {
       styleEl = document.createElement('style');
-      styleEl.innerHTML = component.style;
+      styleEl.innerHTML = options.style;
     }
-    if (component.styleScopeId) {
-      el.setAttribute('data-scope', component.styleScopeId);
+    if (options.styleScopeId) {
+      el.setAttribute('data-scope', options.styleScopeId);
     }
 
     // Attach events
     function attachEvents() {
-      if (component.on) {
-        Object.keys(component.on).forEach((eventName) => {
-          $el.on(Utils.eventNameToColonCase(eventName), component.on[eventName]);
+      if (options.on) {
+        Object.keys(options.on).forEach((eventName) => {
+          $el.on(Utils.eventNameToColonCase(eventName), options.on[eventName]);
         });
       }
-      if (component.once) {
-        Object.keys(component.once).forEach((eventName) => {
-          $el.once(Utils.eventNameToColonCase(eventName), component.once[eventName]);
+      if (options.once) {
+        Object.keys(options.once).forEach((eventName) => {
+          $el.once(Utils.eventNameToColonCase(eventName), options.once[eventName]);
         });
       }
       events.forEach((event) => {
@@ -2194,14 +2262,14 @@ class Framework7Component {
     }
 
     function detachEvents() {
-      if (component.on) {
-        Object.keys(component.on).forEach((eventName) => {
-          $el.off(Utils.eventNameToColonCase(eventName), component.on[eventName]);
+      if (options.on) {
+        Object.keys(options.on).forEach((eventName) => {
+          $el.off(Utils.eventNameToColonCase(eventName), options.on[eventName]);
         });
       }
-      if (component.once) {
-        Object.keys(component.once).forEach((eventName) => {
-          $el.off(Utils.eventNameToColonCase(eventName), component.once[eventName]);
+      if (options.once) {
+        Object.keys(options.once).forEach((eventName) => {
+          $el.off(Utils.eventNameToColonCase(eventName), options.once[eventName]);
         });
       }
       events.forEach((event) => {
@@ -2212,27 +2280,28 @@ class Framework7Component {
     attachEvents();
 
     // Created callback
-    if (component.created) component.created();
+    if (options.created) options.created();
 
     // Mount
-    component.mount = function mount(mountMethod) {
-      if (component.beforeMount) component.beforeMount();
+    component.$mount = function mount(mountMethod) {
+      if (options.beforeMount) options.beforeMount();
       if (styleEl) $('head').append(styleEl);
       if (mountMethod) mountMethod(el);
-      if (component.mounted) component.mounted();
+      if (options.mounted) options.mounted();
     };
 
     // Destroy
-    component.destroy = function destroy() {
-      if (component.beforeDestroy) component.beforeDestroy();
+    component.$destroy = function destroy() {
+      if (options.beforeDestroy) options.beforeDestroy();
       if (styleEl) $(styleEl).remove();
       detachEvents();
-      if (component.destroyed) component.destroyed();
-      // Store component instance
+      if (options.destroyed) options.destroyed();
+      // Delete component instance
       if (el && el.f7Component) {
         el.f7Component = null;
         delete el.f7Component;
       }
+      Utils.deleteProps(component);
       component = null;
     };
 
@@ -2509,7 +2578,7 @@ function SwipeBack(r) {
       }
 
       currentPage = target.closest('.page');
-      if (currentPage.hasClass('no-swipeback')) cancel = true;
+      if (currentPage.hasClass('no-swipeback') || target.closest('.no-swipeback').length > 0) cancel = true;
       previousPage = $el.find('.page-previous:not(.stacked)');
 
       let notFromBorder = touchesStart.x - $el.offset().left > router.params.iosSwipeBackActiveArea;
@@ -2811,13 +2880,13 @@ function SwipeBack(r) {
   }
 
   function attachEvents() {
-    const passiveListener = (app.touchEvents.start === 'touchstart' && Support$1.passiveListener) ? { passive: true, capture: false } : false;
+    const passiveListener = (app.touchEvents.start === 'touchstart' && Support.passiveListener) ? { passive: true, capture: false } : false;
     $el.on(app.touchEvents.start, handleTouchStart, passiveListener);
     app.on('touchmove:active', handleTouchMove);
     app.on('touchend:passive', handleTouchEnd);
   }
   function detachEvents() {
-    const passiveListener = (app.touchEvents.start === 'touchstart' && Support$1.passiveListener) ? { passive: true, capture: false } : false;
+    const passiveListener = (app.touchEvents.start === 'touchstart' && Support.passiveListener) ? { passive: true, capture: false } : false;
     $el.off(app.touchEvents.start, handleTouchStart, passiveListener);
     app.off('touchmove:active', handleTouchMove);
     app.off('touchend:passive', handleTouchEnd);
@@ -2828,7 +2897,7 @@ function SwipeBack(r) {
   router.on('routerDestroy', detachEvents);
 }
 
-var redirect = function (direction, route, options) {
+function redirect (direction, route, options) {
   const router = this;
   const redirect = route.route.redirect;
   function redirectResolve(redirectUrl, redirectOptions = {}) {
@@ -2848,7 +2917,15 @@ var redirect = function (direction, route, options) {
     return router;
   }
   return router[direction](redirect, options);
-};
+}
+
+function refreshPage() {
+  const router = this;
+  return router.navigate(router.currentRoute.url, {
+    ignoreCache: true,
+    reloadCurrent: true,
+  });
+}
 
 function forward(el, forwardOptions = {}) {
   const router = this;
@@ -2862,6 +2939,7 @@ function forward(el, forwardOptions = {}) {
     reloadCurrent: router.params.reloadPages,
     reloadPrevious: false,
     reloadAll: false,
+    clearPreviousHistory: false,
     on: {},
   }, forwardOptions);
 
@@ -3002,22 +3080,26 @@ function forward(el, forwardOptions = {}) {
     );
   }
 
-  // Current Page & Navbar
-  router.currentPageEl = $newPage[0];
-  if (dynamicNavbar && $newNavbarInner.length) {
-    router.currentNavbarEl = $newNavbarInner[0];
-  } else {
-    delete router.currentNavbarEl;
-  }
+  if (!options.reloadPrevious) {
+    // Current Page & Navbar
+    router.currentPageEl = $newPage[0];
+    if (dynamicNavbar && $newNavbarInner.length) {
+      router.currentNavbarEl = $newNavbarInner[0];
+    } else {
+      delete router.currentNavbarEl;
+    }
 
-  // Current Route
-  router.currentRoute = options.route;
+    // Current Route
+    router.currentRoute = options.route;
+  }
 
   // Update router history
   const url = options.route.url;
   if (options.history) {
     if (options.reloadCurrent && router.history.length > 0) {
       router.history[router.history.length - (options.reloadPrevious ? 2 : 1)] = url;
+    } else if (options.reloadPrevious) {
+      router.history[router.history.length - 2] = url;
     } else if (options.reloadAll) {
       router.history = [url];
     } else {
@@ -3031,7 +3113,7 @@ function forward(el, forwardOptions = {}) {
   const f7Component = $newPage[0].f7Component;
   if (options.reloadPrevious) {
     if (f7Component && !newPageInDom) {
-      f7Component.mount((componentEl) => {
+      f7Component.$mount((componentEl) => {
         $(componentEl).insertBefore($oldPage);
       });
     } else {
@@ -3050,7 +3132,7 @@ function forward(el, forwardOptions = {}) {
   } else {
     if ($oldPage.next('.page')[0] !== $newPage[0]) {
       if (f7Component && !newPageInDom) {
-        f7Component.mount((componentEl) => {
+        f7Component.$mount((componentEl) => {
           $viewEl.append(componentEl);
         });
       } else {
@@ -3101,6 +3183,20 @@ function forward(el, forwardOptions = {}) {
         }
       }
     });
+  } else if (options.reloadPrevious) {
+    if (router.params.stackPages && router.initialPages.indexOf($oldPage[0]) >= 0) {
+      $oldPage.addClass('stacked');
+      if (separateNavbar) {
+        $oldNavbarInner.addClass('stacked');
+      }
+    } else {
+      // Page remove event
+      router.pageCallback('beforeRemove', $oldPage, $oldNavbarInner, 'previous', undefined, options);
+      router.removePage($oldPage);
+      if (separateNavbar && $oldNavbarInner && $oldNavbarInner.length) {
+        router.removeNavbar($oldNavbarInner);
+      }
+    }
   }
 
   // Load Tab
@@ -3118,6 +3214,11 @@ function forward(el, forwardOptions = {}) {
     router.allowPageChange = true;
     router.pageCallback('beforeIn', $newPage, $newNavbarInner, newPagePosition, 'current', options);
     router.pageCallback('afterIn', $newPage, $newNavbarInner, newPagePosition, 'current', options);
+    if (options.reloadCurrent && options.clearPreviousHistory) router.clearPreviousHistory();
+    return router;
+  }
+  if (options.reloadPrevious) {
+    router.allowPageChange = true;
     return router;
   }
 
@@ -3161,6 +3262,7 @@ function forward(el, forwardOptions = {}) {
         }
       }
     }
+    if (options.clearPreviousHistory) router.clearPreviousHistory();
     router.emit('routeChanged', router.currentRoute, router.previousRoute, router);
 
     if (router.params.pushState) {
@@ -3203,9 +3305,9 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
   const params = loadParams;
   const options = loadOptions;
   const { url, content, el, pageName, template, templateUrl, component, componentUrl } = params;
-  const { ignoreCache } = options;
 
-  if (options.route &&
+  if (!options.reloadCurrent &&
+    options.route &&
     options.route.route &&
     options.route.route.parentPath &&
     router.currentRoute.route &&
@@ -3242,6 +3344,7 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
     !(options.reloadCurrent || options.reloadPrevious) &&
     !router.params.allowDuplicateUrls
   ) {
+    router.allowPageChange = true;
     return false;
   }
 
@@ -3294,7 +3397,7 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
       router.xhr.abort();
       router.xhr = false;
     }
-    router.xhrRequest(url, ignoreCache)
+    router.xhrRequest(url, options)
       .then((pageContent) => {
         router.forward(router.getPageEl(pageContent), options);
       })
@@ -3355,6 +3458,10 @@ function navigate(navigateParams, navigateOptions = {}) {
   } else {
     Utils.extend(options, navigateOptions, { route });
   }
+  if (options && options.context) {
+    route.context = options.context;
+    options.route.context = options.context;
+  }
   ('popup popover sheet loginScreen actions customModal').split(' ').forEach((modalLoadProp) => {
     if (route.route[modalLoadProp]) {
       router.modalLoad(modalLoadProp, route, options);
@@ -3369,6 +3476,11 @@ function navigate(navigateParams, navigateOptions = {}) {
   function asyncResolve(resolveParams, resolveOptions) {
     router.allowPageChange = false;
     let resolvedAsModal = false;
+    if (resolveOptions && resolveOptions.context) {
+      if (!route.context) route.context = resolveOptions.context;
+      else route.context = Utils.extend({}, route.context, resolveOptions.context);
+      options.route.context = route.context;
+    }
     ('popup popover sheet loginScreen actions customModal').split(' ').forEach((modalLoadProp) => {
       if (resolveParams[modalLoadProp]) {
         resolvedAsModal = true;
@@ -3388,7 +3500,7 @@ function navigate(navigateParams, navigateOptions = {}) {
 
     route.route.async.call(router, route, router.currentRoute, asyncResolve, asyncReject);
   }
-  // Retur Router
+  // Return Router
   return router;
 }
 
@@ -3401,7 +3513,6 @@ function tabLoad(tabRoute, loadOptions = {}) {
     on: {},
   }, loadOptions);
 
-  const { ignoreCache } = options;
   if (options.route) {
     // Set Route
     if (options.route !== router.currentRoute) {
@@ -3451,14 +3562,15 @@ function tabLoad(tabRoute, loadOptions = {}) {
     }
   }
 
-  // Load Tab Content
-  const { url, content, el, template, templateUrl, component, componentUrl } = tabRoute;
-
-  function onTabLoaded() {
+  // Tab Content Loaded
+  function onTabLoaded(contentEl) {
     // Remove theme elements
     router.removeThemeElements($newTabEl);
 
-    $newTabEl.trigger('tab:init tab:mounted', tabRoute);
+    let tabEventTarget = $newTabEl;
+    if (typeof contentEl !== 'string') tabEventTarget = $(contentEl);
+
+    tabEventTarget.trigger('tab:init tab:mounted', tabRoute);
     router.emit('tabInit tabMounted', $newTabEl[0], tabRoute);
 
     if ($oldTabEl && router.params.unloadTabContent) {
@@ -3472,75 +3584,91 @@ function tabLoad(tabRoute, loadOptions = {}) {
     }
   }
   if (!router.params.unloadTabContent) {
-    if ($newTabEl[0].f7RouterTabLoaded) return;
+    if ($newTabEl[0].f7RouterTabLoaded) return router;
   }
 
-  const { on = {}, once = {} } = tabRoute;
-  if (options.on) {
-    Utils.extend(on, options.on);
-  }
-  if (options.once) {
-    Utils.extend(once, options.once);
-  }
-
-  // Component/Template Callbacks
-  function resolve(contentEl) {
-    if (!contentEl) return;
-    if (typeof contentEl === 'string') {
-      $newTabEl.html(contentEl);
-    } else {
-      $newTabEl.html('');
-      if (contentEl.f7Component) {
-        contentEl.f7Component.mount((componentEl) => {
-          $newTabEl.append(componentEl);
-        });
+  // Load Tab Content
+  function loadTab(loadTabParams, loadTabOptions) {
+    // Load Tab Props
+    const { url, content, el, template, templateUrl, component, componentUrl } = loadTabParams;
+    // Component/Template Callbacks
+    function resolve(contentEl) {
+      router.allowPageChange = true;
+      if (!contentEl) return;
+      if (typeof contentEl === 'string') {
+        $newTabEl.html(contentEl);
       } else {
-        $newTabEl.append(contentEl);
+        $newTabEl.html('');
+        if (contentEl.f7Component) {
+          contentEl.f7Component.$mount((componentEl) => {
+            $newTabEl.append(componentEl);
+          });
+        } else {
+          $newTabEl.append(contentEl);
+        }
       }
+      if (!router.params.unloadTabContent) {
+        $newTabEl[0].f7RouterTabLoaded = true;
+      }
+      onTabLoaded(contentEl);
     }
-    if (!router.params.unloadTabContent) {
-      $newTabEl[0].f7RouterTabLoaded = true;
+    function reject() {
+      router.allowPageChange = true;
+      return router;
     }
-    onTabLoaded();
-  }
-  function reject() {
-    router.allowPageChange = true;
-    return router;
+
+    if (content) {
+      resolve(content);
+    } else if (template || templateUrl) {
+      try {
+        router.tabTemplateLoader(template, templateUrl, loadTabOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (el) {
+      resolve(el);
+    } else if (component || componentUrl) {
+      // Load from component (F7/Vue/React/...)
+      try {
+        router.tabComponentLoader($newTabEl[0], component, componentUrl, loadTabOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (url) {
+      // Load using XHR
+      if (router.xhr) {
+        router.xhr.abort();
+        router.xhr = false;
+      }
+      router.xhrRequest(url, loadTabOptions)
+        .then((tabContent) => {
+          resolve(tabContent);
+        })
+        .catch(() => {
+          router.allowPageChange = true;
+        });
+    }
   }
 
-  if (content) {
-    resolve(content);
-  } else if (template || templateUrl) {
-    try {
-      router.tabTemplateLoader(template, templateUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
+  ('url content component el componentUrl template templateUrl').split(' ').forEach((tabLoadProp) => {
+    if (tabRoute[tabLoadProp]) {
+      loadTab({ [tabLoadProp]: tabRoute[tabLoadProp] }, options);
     }
-  } else if (el) {
-    resolve(el);
-  } else if (component || componentUrl) {
-    // Load from component (F7/Vue/React/...)
-    try {
-      router.tabComponentLoader($newTabEl[0], component, componentUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
-    }
-  } else if (url) {
-    // Load using XHR
-    if (router.xhr) {
-      router.xhr.abort();
-      router.xhr = false;
-    }
-    router.xhrRequest(url, ignoreCache)
-      .then((tabContent) => {
-        resolve(tabContent);
-      })
-      .catch(() => {
-        router.allowPageChange = true;
-      });
+  });
+
+  // Async
+  function asyncResolve(resolveParams, resolveOptions) {
+    loadTab(resolveParams, Utils.extend(options, resolveOptions));
   }
+  function asyncReject() {
+    router.allowPageChange = true;
+  }
+  if (tabRoute.async) {
+    tabRoute.async.call(router, router.currentRoute, router.previousRoute, asyncResolve, asyncReject);
+  }
+  return router;
 }
 function tabRemove($oldTabEl, $newTabEl, tabRoute) {
   const router = this;
@@ -3548,7 +3676,7 @@ function tabRemove($oldTabEl, $newTabEl, tabRoute) {
   router.emit('tabBeforeRemove', $oldTabEl[0], $newTabEl[0], tabRoute);
   $oldTabEl.children().each((index, tabChild) => {
     if (tabChild.f7Component) {
-      tabChild.f7Component.destroy();
+      tabChild.f7Component.$destroy();
     }
   });
   router.removeTabContent($oldTabEl[0], tabRoute);
@@ -3557,6 +3685,7 @@ function tabRemove($oldTabEl, $newTabEl, tabRoute) {
 function modalLoad(modalType, route, loadOptions = {}) {
   const router = this;
   const app = router.app;
+
   const options = Utils.extend({
     animate: router.params.animate,
     pushState: true,
@@ -3564,13 +3693,8 @@ function modalLoad(modalType, route, loadOptions = {}) {
     on: {},
   }, loadOptions);
 
-  const modalParams = route.route[modalType];
+  const modalParams = Utils.extend({}, route.route[modalType]);
   const modalRoute = route.route;
-
-  const { ignoreCache } = options;
-
-  // Load Modal Props
-  const { url, template, templateUrl, component, componentUrl } = modalParams;
 
   function onModalLoaded() {
     // Create Modal
@@ -3592,10 +3716,10 @@ function modalLoad(modalType, route, loadOptions = {}) {
 
     modal.on('modalClosed', () => {
       modal.$el.trigger(`${modalType.toLowerCase()}:beforeremove`, route, modal);
-      modal.emit(`${modalType}BeforeRemove`, modal.el, route, modal);
+      modal.emit(`modalBeforeRemove ${modalType}BeforeRemove`, modal.el, route, modal);
       const modalComponent = modal.el.f7Component;
       if (modalComponent) {
-        modalComponent.destroy();
+        modalComponent.$destroy();
       }
       Utils.nextTick(() => {
         if (modalComponent) {
@@ -3636,64 +3760,90 @@ function modalLoad(modalType, route, loadOptions = {}) {
 
     // Emit events
     modal.$el.trigger(`${modalType.toLowerCase()}:init ${modalType.toLowerCase()}:mounted`, route, modal);
-    router.emit(`${modalType}Init ${modalType}Mounted`, modal.el, route, modal);
+    router.emit(`modalInit ${modalType}Init ${modalType}Mounted`, modal.el, route, modal);
     // Open
     modal.open();
   }
 
-  // Component/Template Callbacks
-  function resolve(contentEl) {
-    if (contentEl) {
-      if (typeof contentEl === 'string') {
-        modalParams.content = contentEl;
-      } else if (contentEl.f7Component) {
-        contentEl.f7Component.mount((componentEl) => {
-          modalParams.el = componentEl;
-          app.root.append(componentEl);
-        });
-      } else {
-        modalParams.el = contentEl;
+  // Load Modal Content
+  function loadModal(loadModalParams, loadModalOptions) {
+    // Load Modal Props
+    const { url, content, template, templateUrl, component, componentUrl } = loadModalParams;
+
+    // Component/Template Callbacks
+    function resolve(contentEl) {
+      if (contentEl) {
+        if (typeof contentEl === 'string') {
+          modalParams.content = contentEl;
+        } else if (contentEl.f7Component) {
+          contentEl.f7Component.$mount((componentEl) => {
+            modalParams.el = componentEl;
+            app.root.append(componentEl);
+          });
+        } else {
+          modalParams.el = contentEl;
+        }
+        onModalLoaded();
       }
+    }
+    function reject() {
+      router.allowPageChange = true;
+      return router;
+    }
+
+    if (content) {
+      resolve(content);
+    } else if (template || templateUrl) {
+      try {
+        router.modalTemplateLoader(template, templateUrl, loadModalOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (component || componentUrl) {
+      // Load from component (F7/Vue/React/...)
+      try {
+        router.modalComponentLoader(app.root[0], component, componentUrl, loadModalOptions, resolve, reject);
+      } catch (err) {
+        router.allowPageChange = true;
+        throw err;
+      }
+    } else if (url) {
+      // Load using XHR
+      if (router.xhr) {
+        router.xhr.abort();
+        router.xhr = false;
+      }
+      router.xhrRequest(url, loadModalOptions)
+        .then((modalContent) => {
+          modalParams.content = modalContent;
+          onModalLoaded();
+        })
+        .catch(() => {
+          router.allowPageChange = true;
+        });
+    } else {
       onModalLoaded();
     }
   }
-  function reject() {
-    router.allowPageChange = true;
-    return router;
-  }
 
-  if (template || templateUrl) {
-    try {
-      router.modalTemplateLoader(template, templateUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
+  ('url content component el componentUrl template templateUrl').split(' ').forEach((modalLoadProp) => {
+    if (modalParams[modalLoadProp]) {
+      loadModal({ [modalLoadProp]: modalParams[modalLoadProp] }, options);
     }
-  } else if (component || componentUrl) {
-    // Load from component (F7/Vue/React/...)
-    try {
-      router.modalComponentLoader(app.root[0], component, componentUrl, options, resolve, reject);
-    } catch (err) {
-      router.allowPageChange = true;
-      throw err;
-    }
-  } else if (url) {
-    // Load using XHR
-    if (router.xhr) {
-      router.xhr.abort();
-      router.xhr = false;
-    }
-    router.xhrRequest(url, ignoreCache)
-      .then((modalContent) => {
-        modalParams.content = modalContent;
-        onModalLoaded();
-      })
-      .catch(() => {
-        router.allowPageChange = true;
-      });
-  } else {
-    onModalLoaded();
+  });
+
+  // Async
+  function asyncResolve(resolveParams, resolveOptions) {
+    loadModal(resolveParams, Utils.extend(options, resolveOptions));
   }
+  function asyncReject() {
+    router.allowPageChange = true;
+  }
+  if (modalParams.async) {
+    modalParams.async.call(router, options.route, router.currentRoute, asyncResolve, asyncReject);
+  }
+  return router;
 }
 function modalRemove(modal) {
   Utils.extend(modal, { closeByRouter: true });
@@ -3830,7 +3980,7 @@ function backward(el, backwardOptions) {
   function insertPage() {
     if ($newPage.next($oldPage).length === 0) {
       if (!newPageInDom && f7Component) {
-        f7Component.mount((componentEl) => {
+        f7Component.$mount((componentEl) => {
           $(componentEl).insertBefore($oldPage);
         });
       } else {
@@ -3998,7 +4148,6 @@ function loadBack(backParams, backOptions, ignorePageChange) {
   const params = backParams;
   const options = backOptions;
   const { url, content, el, pageName, template, templateUrl, component, componentUrl } = params;
-  const { ignoreCache } = options;
 
   if (
     options.route.url &&
@@ -4057,7 +4206,7 @@ function loadBack(backParams, backOptions, ignorePageChange) {
       router.xhr.abort();
       router.xhr = false;
     }
-    router.xhrRequest(url, ignoreCache)
+    router.xhrRequest(url, options)
       .then((pageContent) => {
         router.backward(router.getPageEl(pageContent), options);
       })
@@ -4176,6 +4325,11 @@ function back(...args) {
     Utils.extend(options, navigateOptions, { route });
   }
 
+  if (options && options.context) {
+    route.context = options.context;
+    options.route.context = options.context;
+  }
+
   if (options.force && router.params.stackPages) {
     router.$el.children('.page-previous.stacked').each((index, pageEl) => {
       if (pageEl.f7Page && pageEl.f7Page.route && pageEl.f7Page.route.url === route.url) {
@@ -4192,6 +4346,11 @@ function back(...args) {
   // Async
   function asyncResolve(resolveParams, resolveOptions) {
     router.allowPageChange = false;
+    if (resolveOptions && resolveOptions.context) {
+      if (!route.context) route.context = resolveOptions.context;
+      else route.context = Utils.extend({}, route.context, resolveOptions.context);
+      options.route.context = route.context;
+    }
     router.loadBack(resolveParams, Utils.extend(options, resolveOptions), true);
   }
   function asyncReject() {
@@ -4206,7 +4365,42 @@ function back(...args) {
   return router;
 }
 
-class Router$1 extends Framework7Class {
+function clearPreviousHistory() {
+  const router = this;
+  const app = router.app;
+  const separateNavbar = router.separateNavbar;
+  const url = router.history[router.history.length - 1];
+
+  const $currentPageEl = $(router.currentPageEl);
+
+  const $pagesToRemove = router.$el
+    .children('.page:not(.stacked)')
+    .filter((index, pageInView) => pageInView !== $currentPageEl[0]);
+
+  $pagesToRemove.each((index, pageEl) => {
+    const $oldPageEl = $(pageEl);
+    const $oldNavbarInnerEl = $(app.navbar.getElByPage($oldPageEl));
+    if (router.params.stackPages && router.initialPages.indexOf($oldPageEl[0]) >= 0) {
+      $oldPageEl.addClass('stacked');
+      if (separateNavbar) {
+        $oldNavbarInnerEl.addClass('stacked');
+      }
+    } else {
+      // Page remove event
+      router.pageCallback('beforeRemove', $oldPageEl, $oldNavbarInnerEl, 'previous', undefined, {});
+      router.removePage($oldPageEl);
+      if (separateNavbar && $oldNavbarInnerEl.length) {
+        router.removeNavbar($oldNavbarInnerEl);
+      }
+    }
+  });
+
+  router.history = [url];
+  router.view.history = [url];
+  router.saveHistory();
+}
+
+class Router extends Framework7Class {
   constructor(app, view) {
     super({}, [typeof view === 'undefined' ? app : view]);
     const router = this;
@@ -4286,6 +4480,7 @@ class Router$1 extends Framework7Class {
       forward,
       load,
       navigate,
+      refreshPage,
       // Tab
       tabLoad,
       tabRemove,
@@ -4296,6 +4491,8 @@ class Router$1 extends Framework7Class {
       backward,
       loadBack,
       back,
+      // Clear history
+      clearPreviousHistory,
     });
 
     return router;
@@ -4619,8 +4816,8 @@ class Router$1 extends Framework7Class {
     const router = this;
     const $el = $(el);
     if ($el.length === 0) return;
-    if ($el[0].f7Component && $el[0].f7Component.destroy) {
-      $el[0].f7Component.destroy();
+    if ($el[0].f7Component && $el[0].f7Component.$destroy) {
+      $el[0].f7Component.$destroy();
     }
     if (!router.params.removeElements) {
       return;
@@ -4816,15 +5013,48 @@ class Router$1 extends Framework7Class {
     }
     if (index !== false) xhrCache.splice(index, 1);
   }
-  xhrRequest(requestUrl, ignoreCache) {
+  xhrRequest(requestUrl, options) {
     const router = this;
     const params = router.params;
+    const { ignoreCache } = options;
     let url = requestUrl;
+
+    let hasQuery = url.indexOf('?') >= 0;
+    if (params.passRouteQueryToRequest &&
+      options &&
+      options.route &&
+      options.route.query &&
+      Object.keys(options.route.query).length
+    ) {
+      url += `${hasQuery ? '&' : '?'}${Utils.serializeObject(options.route.query)}`;
+      hasQuery = true;
+    }
+
+    if (params.passRouteParamsToRequest &&
+      options &&
+      options.route &&
+      options.route.params &&
+      Object.keys(options.route.params).length
+    ) {
+      url += `${hasQuery ? '&' : '?'}${Utils.serializeObject(options.route.params)}`;
+      hasQuery = true;
+    }
+
+    if (url.indexOf('{{') >= 0 &&
+      options &&
+      options.route &&
+      options.route.params &&
+      Object.keys(options.route.params).length
+    ) {
+      Object.keys(options.route.params).forEach((paramName) => {
+        const regExp = new RegExp(`{{${paramName}}}`, 'g');
+        url = url.replace(regExp, options.route.params[paramName] || '');
+      });
+    }
     // should we ignore get params or not
     if (params.xhrCacheIgnoreGetParameters && url.indexOf('?') >= 0) {
       url = url.split('?')[0];
     }
-
     return Utils.promise((resolve, reject) => {
       if (params.xhrCache && !ignoreCache && url.indexOf('nocache') < 0 && params.xhrCacheIgnore.indexOf(url) < 0) {
         for (let i = 0; i < router.cache.xhr.length; i += 1) {
@@ -4842,8 +5072,8 @@ class Router$1 extends Framework7Class {
       router.xhr = router.app.request({
         url,
         method: 'GET',
-        beforeSend() {
-          router.emit('routerAjaxStart', router.xhr);
+        beforeSend(xhr) {
+          router.emit('routerAjaxStart', xhr, options);
         },
         complete(xhr, status) {
           router.emit('routerAjaxComplete', xhr);
@@ -4856,15 +5086,15 @@ class Router$1 extends Framework7Class {
                 content: xhr.responseText,
               });
             }
-            router.emit('routerAjaxSuccess', xhr);
+            router.emit('routerAjaxSuccess', xhr, options);
             resolve(xhr.responseText);
           } else {
-            router.emit('routerAjaxError', xhr);
+            router.emit('routerAjaxError', xhr, options);
             reject(xhr);
           }
         },
         error(xhr) {
-          router.emit('routerAjaxError', xhr);
+          router.emit('routerAjaxError', xhr, options);
           reject(xhr);
         },
       });
@@ -4919,7 +5149,7 @@ class Router$1 extends Framework7Class {
         router.xhr = false;
       }
       router
-        .xhrRequest(templateUrl)
+        .xhrRequest(templateUrl, options)
         .then((templateContent) => {
           compile(templateContent);
         })
@@ -4952,14 +5182,24 @@ class Router$1 extends Framework7Class {
     const router = this;
     const url = typeof component === 'string' ? component : componentUrl;
     function compile(c) {
-      const extendContext = Utils.extend(
+      let context = options.context || {};
+      if (typeof context === 'function') context = context.call(router);
+      else if (typeof context === 'string') {
+        try {
+          context = JSON.parse(context);
+        } catch (err) {
+          reject();
+          throw (err);
+        }
+      }
+      const extendContext = Utils.merge(
         {},
-        options.context || {},
+        context,
         {
           $,
           $$: $,
           $app: router.app,
-          $root: Utils.extend({}, router.app.data, router.app.methods),
+          $root: Utils.merge({}, router.app.data, router.app.methods),
           $route: options.route,
           $router: router,
           $dom7: $,
@@ -4979,7 +5219,7 @@ class Router$1 extends Framework7Class {
         router.xhr = false;
       }
       router
-        .xhrRequest(url)
+        .xhrRequest(url, options)
         .then((loadedComponent) => {
           compile(Component.parse(loadedComponent));
         })
@@ -5164,6 +5404,7 @@ class Router$1 extends Framework7Class {
   clearHistory() {
     const router = this;
     router.history = [];
+    if (router.view) router.view.history = [];
     router.saveHistory();
   }
   init() {
@@ -5336,10 +5577,10 @@ class Router$1 extends Framework7Class {
   }
 }
 
-var Router = {
+var Router$1 = {
   name: 'router',
   static: {
-    Router: Router$1,
+    Router,
   },
   instance: {
     cache: {
@@ -5353,11 +5594,11 @@ var Router = {
     if (instance.app) {
       // View Router
       if (instance.params.router) {
-        instance.router = new Router$1(instance.app, instance);
+        instance.router = new Router(instance.app, instance);
       }
     } else {
       // App Router
-      instance.router = new Router$1(instance);
+      instance.router = new Router(instance);
     }
   },
 };
@@ -5499,7 +5740,7 @@ class View extends Framework7Class {
 }
 
 // Use Router
-View.use(Router);
+View.use(Router$1);
 
 function initClicks(app) {
   function handleClicks(e) {
@@ -5514,9 +5755,9 @@ function initClicks(app) {
       // eslint-disable-next-line
       if (clickedLink.is(app.params.clicks.externalLinks) || (url && url.indexOf('javascript:') >= 0)) {
         const target = clickedLink.attr('target');
-        if (url && (target === '_system' || target === '_blank')) {
+        if (url && (target === '_system' || target === '_blank' || target === '_browser')) {
           e.preventDefault();
-          if (window.cordova && window.cordova.InAppBrowser) {
+          if (target !== '_browser' && window.cordova && window.cordova.InAppBrowser) {
             window.cordova.InAppBrowser.open(url, target);
           } else {
             window.open(url, target);
@@ -5561,6 +5802,13 @@ function initClicks(app) {
         if (app.views.main) view = app.views.main;
       }
       if (!view || !view.router) return;
+      if (clickedLinkData.context && typeof clickedLinkData.context === 'string') {
+        try {
+          clickedLinkData.context = JSON.parse(clickedLinkData.context);
+        } catch (err) {
+          // something wrong there
+        }
+      }
       if (clickedLink.hasClass('back')) view.router.back(url, clickedLinkData);
       else view.router.navigate(url, clickedLinkData);
     }
@@ -5572,12 +5820,12 @@ function initClicks(app) {
   function preventScrolling(e) {
     e.preventDefault();
   }
-  if (Support$1.touch && !Device.android) {
-    const activeListener = Support$1.passiveListener ? { passive: false, capture: false } : false;
+  if (Support.touch && !Device.android) {
+    const activeListener = Support.passiveListener ? { passive: false, capture: false } : false;
     $(document).on((app.params.fastClicks ? 'touchstart' : 'touchmove'), '.panel-backdrop, .dialog-backdrop, .preloader-backdrop, .popup-backdrop, .searchbar-backdrop', preventScrolling, activeListener);
   }
 }
-var Clicks = {
+var ClicksModule = {
   name: 'clicks',
   params: {
     clicks: {
@@ -5593,7 +5841,7 @@ var Clicks = {
   },
 };
 
-var History$2 = {
+var HistoryModule = {
   name: 'history',
   static: {
     history: History,
@@ -5674,7 +5922,7 @@ const Storage = {
   },
 };
 
-var Storage$1 = {
+var StorageModule = {
   name: 'storage',
   static: {
     Storage,
@@ -5769,6 +6017,7 @@ const Statusbar = {
   init() {
     const app = this;
     const params = app.params.statusbar;
+    if (!params.enabled) return;
 
     if (params.overlay === 'auto') {
       if (Device.needsStatusbarOverlay()) {
@@ -5825,6 +6074,7 @@ var Statusbar$1 = {
   name: 'statusbar',
   params: {
     statusbar: {
+      enabled: true,
       overlay: 'auto',
       scrollTopOnClick: true,
       iosOverlaysWebView: true,
@@ -5857,6 +6107,7 @@ var Statusbar$1 = {
   clicks: {
     '.statusbar': function onStatusbarClick() {
       const app = this;
+      if (!app.params.statusbar.enabled) return;
       if (!app.params.statusbar.scrollTopOnClick) return;
       Statusbar.onClick.call(app);
     },
@@ -5892,7 +6143,7 @@ function getCurrentView(app) {
   return undefined;
 }
 
-var View$2 = {
+var View$1 = {
   name: 'view',
   params: {
     view: {
@@ -5915,6 +6166,8 @@ var View$2 = {
       removeElementsTimeout: 0,
       restoreScrollTopOnBack: true,
       unloadTabContent: true,
+      passRouteQueryToRequest: true,
+      passRouteParamsToRequest: false,
       // Swipe Back
       iosSwipeBack: true,
       iosSwipeBackAnimateShadow: true,
@@ -6295,8 +6548,21 @@ var Navbar$1 = {
       if (app.theme === 'ios') {
         app.navbar.size($navbarEl);
       }
-      if (app.params.navbar.hideOnPageScroll || page.$el.find('.hide-navbar-on-scroll').length || page.$el.hasClass('hide-navbar-on-scroll') || page.$el.find('.hide-bars-on-scroll').length) {
-        if (page.$el.find('.keep-navbar-on-scroll').length || page.$el.find('.keep-bars-on-scroll').length) return;
+      if (
+        app.params.navbar.hideOnPageScroll ||
+        page.$el.find('.hide-navbar-on-scroll').length ||
+        page.$el.hasClass('hide-navbar-on-scroll') ||
+        page.$el.find('.hide-bars-on-scroll').length ||
+        page.$el.hasClass('hide-bars-on-scroll')
+      ) {
+        if (
+          page.$el.find('.keep-navbar-on-scroll').length ||
+          page.$el.hasClass('keep-navbar-on-scroll') ||
+          page.$el.find('.keep-bars-on-scroll').length ||
+          page.$el.hasClass('keep-bars-on-scroll')
+        ) {
+          return;
+        }
         app.navbar.initHideNavbarOnScroll(page.el, $navbarEl[0]);
       }
     },
@@ -6429,6 +6695,9 @@ const Toolbar = {
       $toolbarEl = $pageEl.find('.toolbar');
     }
     if ($toolbarEl.length === 0) {
+      $toolbarEl = $pageEl.parents('.views').children('.tabbar, .tabbar-labels');
+    }
+    if ($toolbarEl.length === 0) {
       return;
     }
 
@@ -6508,10 +6777,12 @@ var Toolbar$1 = {
     },
     pageBeforeIn(page) {
       const app = this;
-      if (app.theme !== 'ios') return;
       let $toolbarEl = page.$el.parents('.view').children('.toolbar');
       if ($toolbarEl.length === 0) {
         $toolbarEl = page.$el.find('.toolbar');
+      }
+      if ($toolbarEl.length === 0) {
+        $toolbarEl = page.$el.parents('.views').children('.tabbar, .tabbar-labels');
       }
       if ($toolbarEl.length === 0) {
         return;
@@ -6527,8 +6798,21 @@ var Toolbar$1 = {
       page.$el.find('.tabbar, .tabbar-labels').each((index, tabbarEl) => {
         app.toolbar.init(tabbarEl);
       });
-      if (app.params.toolbar.hideOnPageScroll || page.$el.find('.hide-toolbar-on-scroll').length || page.$el.hasClass('hide-toolbar-on-scroll') || page.$el.find('.hide-bars-on-scroll').length) {
-        if (page.$el.find('.keep-toolbar-on-scroll').length || page.$el.find('.keep-bars-on-scroll').length) return;
+      if (
+        app.params.toolbar.hideOnPageScroll ||
+        page.$el.find('.hide-toolbar-on-scroll').length ||
+        page.$el.hasClass('hide-toolbar-on-scroll') ||
+        page.$el.find('.hide-bars-on-scroll').length ||
+        page.$el.hasClass('hide-bars-on-scroll')
+      ) {
+        if (
+          page.$el.find('.keep-toolbar-on-scroll').length ||
+          page.$el.hasClass('keep-toolbar-on-scroll') ||
+          page.$el.find('.keep-bars-on-scroll').length ||
+          page.$el.hasClass('keep-bars-on-scroll')
+        ) {
+          return;
+        }
         app.toolbar.initHideToolbarOnScroll(page.el);
       }
     },
@@ -6555,7 +6839,7 @@ var Subnavbar = {
   },
 };
 
-class TouchRipple$1 {
+class TouchRipple {
   constructor($el, x, y) {
     const ripple = this;
     if (!$el) return undefined;
@@ -6622,16 +6906,16 @@ class TouchRipple$1 {
   }
 }
 
-var TouchRipple$$1 = {
+var TouchRipple$1 = {
   name: 'touch-ripple',
   static: {
-    TouchRipple: TouchRipple$1,
+    TouchRipple,
   },
   create() {
     const app = this;
     app.touchRipple = {
       create(...args) {
-        return new TouchRipple$1(...args);
+        return new TouchRipple(...args);
       },
     };
   },
@@ -6644,7 +6928,7 @@ function clearDialogsQueue() {
   const dialog = dialogsQueue.shift();
   dialog.open();
 }
-class Modal$1 extends Framework7Class {
+class Modal extends Framework7Class {
   constructor(app, params) {
     super(params, [app]);
 
@@ -6756,7 +7040,7 @@ class Modal$1 extends Framework7Class {
     function transitionEnd() {
       if ($el.hasClass('modal-out')) {
         modal.onClosed();
-      } else {
+      } else if ($el.hasClass('modal-in')) {
         modal.onOpened();
       }
     }
@@ -6807,7 +7091,7 @@ class Modal$1 extends Framework7Class {
     function transitionEnd() {
       if ($el.hasClass('modal-out')) {
         modal.onClosed();
-      } else {
+      } else if ($el.hasClass('modal-in')) {
         modal.onOpened();
       }
     }
@@ -6856,7 +7140,7 @@ class Modal$1 extends Framework7Class {
   }
 }
 
-class CustomModal extends Modal$1 {
+class CustomModal extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       backdrop: true,
@@ -6928,10 +7212,10 @@ class CustomModal extends Modal$1 {
   }
 }
 
-var Modal = {
+var Modal$1 = {
   name: 'modal',
   static: {
-    Modal: Modal$1,
+    Modal,
     CustomModal,
   },
   create() {
@@ -6950,7 +7234,7 @@ var Modal = {
   },
 };
 
-class Dialog$1 extends Modal$1 {
+class Dialog extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       title: app.params.dialog.title,
@@ -6962,6 +7246,9 @@ class Dialog$1 extends Modal$1 {
       cssClass: undefined,
       on: {},
     }, params);
+    if (typeof extendedParams.closeByBackdropClick === 'undefined') {
+      extendedParams.closeByBackdropClick = app.params.dialog.closeByBackdropClick;
+    }
 
     // Extends with open/close Modal methods;
     super(app, extendedParams);
@@ -7031,8 +7318,10 @@ class Dialog$1 extends Modal$1 {
       if (button.close !== false) dialog.close();
     }
     if (buttons && buttons.length > 0) {
-      $el.find('.dialog-button').each((index, buttonEl) => {
-        $(buttonEl).on('click', buttonOnClick);
+      dialog.on('open', () => {
+        $el.find('.dialog-button').each((index, buttonEl) => {
+          $(buttonEl).on('click', buttonOnClick);
+        });
       });
       dialog.on('close', () => {
         $el.find('.dialog-button').each((index, buttonEl) => {
@@ -7077,13 +7366,46 @@ class Dialog$1 extends Modal$1 {
       },
     });
 
+    function handleClick(e) {
+      const target = e.target;
+      const $target = $(target);
+      if ($target.closest(dialog.el).length === 0) {
+        if (
+          dialog.params.closeByBackdropClick &&
+          dialog.backdropEl &&
+          dialog.backdropEl === target
+        ) {
+          dialog.close();
+        }
+      }
+    }
+
+    dialog.on('opened', () => {
+      if (dialog.params.closeByBackdropClick) {
+        app.on('click', handleClick);
+      }
+    });
+    dialog.on('close', () => {
+      if (dialog.params.closeByBackdropClick) {
+        app.off('click', handleClick);
+      }
+    });
+
     $el[0].f7Modal = dialog;
+
+    if (dialog.params.destroyOnClose) {
+      dialog.once('closed', () => {
+        setTimeout(() => {
+          dialog.destroy();
+        }, 0);
+      });
+    }
 
     return dialog;
   }
 }
 
-var ConstructorMethods = function (parameters = {}) {
+function ConstructorMethods (parameters = {}) {
   const {
     defaultSelector,
     constructor,
@@ -7118,9 +7440,9 @@ var ConstructorMethods = function (parameters = {}) {
     });
   }
   return methods;
-};
+}
 
-var ModalMethods = function (parameters = {}) {
+function ModalMethods (parameters = {}) {
   const { defaultSelector, constructor, app } = parameters;
   const methods = Utils.extend(
     ConstructorMethods({
@@ -7146,9 +7468,9 @@ var ModalMethods = function (parameters = {}) {
     }
   );
   return methods;
-};
+}
 
-var Dialog = {
+var Dialog$1 = {
   name: 'dialog',
   params: {
     dialog: {
@@ -7160,18 +7482,20 @@ var Dialog = {
       preloaderTitle: 'Loading... ',
       progressTitle: 'Loading... ',
       closeByBackdropClick: false,
+      destroyPredefinedDialogs: true,
     },
   },
   static: {
-    Dialog: Dialog$1,
+    Dialog,
   },
   create() {
     const app = this;
     const defaultDialogTitle = app.params.dialog.title || app.name;
+    const destroyOnClose = app.params.dialog.destroyPredefinedDialogs;
     app.dialog = Utils.extend(
       ModalMethods({
         app,
-        constructor: Dialog$1,
+        constructor: Dialog,
         defaultSelector: '.dialog.modal-in',
       }),
       {
@@ -7181,7 +7505,7 @@ var Dialog = {
           if (args.length === 2 && typeof args[1] === 'function') {
             [text, callbackOk, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             buttons: [{
@@ -7189,6 +7513,7 @@ var Dialog = {
               bold: true,
               onClick: callbackOk,
             }],
+            destroyOnClose,
           }).open();
         },
         prompt(...args) {
@@ -7196,7 +7521,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: '<div class="dialog-input-field item-input"><div class="item-input-wrap"><input type="text" class="dialog-input"></div></div>',
@@ -7214,6 +7539,7 @@ var Dialog = {
               if (index === 0 && callbackCancel) callbackCancel(inputValue);
               if (index === 1 && callbackOk) callbackOk(inputValue);
             },
+            destroyOnClose,
           }).open();
         },
         confirm(...args) {
@@ -7221,7 +7547,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             buttons: [
@@ -7235,6 +7561,7 @@ var Dialog = {
                 onClick: callbackOk,
               },
             ],
+            destroyOnClose,
           }).open();
         },
         login(...args) {
@@ -7242,7 +7569,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: `
@@ -7271,6 +7598,7 @@ var Dialog = {
               if (index === 0 && callbackCancel) callbackCancel(username, password);
               if (index === 1 && callbackOk) callbackOk(username, password);
             },
+            destroyOnClose,
           }).open();
         },
         password(...args) {
@@ -7278,7 +7606,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: `
@@ -7301,14 +7629,16 @@ var Dialog = {
               if (index === 0 && callbackCancel) callbackCancel(password);
               if (index === 1 && callbackOk) callbackOk(password);
             },
+            destroyOnClose,
           }).open();
         },
         preloader(title) {
           const preloaderInner = app.theme !== 'md' ? '' : Utils.mdPreloaderContent;
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? app.params.dialog.preloaderTitle : title,
             content: `<div class="preloader">${preloaderInner}</div>`,
             cssClass: 'dialog-preloader',
+            destroyOnClose,
           }).open();
         },
         progress(...args) {
@@ -7325,7 +7655,7 @@ var Dialog = {
             }
           }
           const infinite = typeof progress === 'undefined';
-          const dialog = new Dialog$1(app, {
+          const dialog = new Dialog(app, {
             title: typeof title === 'undefined' ? app.params.dialog.progressTitle : title,
             cssClass: 'dialog-progress',
             content: `
@@ -7333,6 +7663,7 @@ var Dialog = {
                 ${!infinite ? '<span></span>' : ''}
               </div>
             `,
+            destroyOnClose,
           });
           if (!infinite) dialog.setProgress(progress);
           return dialog.open();
@@ -7340,16 +7671,9 @@ var Dialog = {
       }
     );
   },
-  clicks: {
-    '.dialog-backdrop': function closeDialog() {
-      const app = this;
-      if (!app.params.dialog.closeByBackdropClick) return;
-      app.dialog.close();
-    },
-  },
 };
 
-class Popup$1 extends Modal$1 {
+class Popup extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -7398,13 +7722,40 @@ class Popup$1 extends Modal$1 {
       type: 'popup',
     });
 
+    function handleClick(e) {
+      const target = e.target;
+      const $target = $(target);
+      if ($target.closest(popup.el).length === 0) {
+        if (
+          popup.params &&
+          popup.params.closeByBackdropClick &&
+          popup.params.backdrop &&
+          popup.backdropEl &&
+          popup.backdropEl === target
+        ) {
+          popup.close();
+        }
+      }
+    }
+
+    popup.on('popupOpened', () => {
+      if (popup.params.closeByBackdropClick) {
+        app.on('click', handleClick);
+      }
+    });
+    popup.on('popupClose', () => {
+      if (popup.params.closeByBackdropClick) {
+        app.off('click', handleClick);
+      }
+    });
+
     $el[0].f7Modal = popup;
 
     return popup;
   }
 }
 
-var Popup = {
+var Popup$1 = {
   name: 'popup',
   params: {
     popup: {
@@ -7413,13 +7764,13 @@ var Popup = {
     },
   },
   static: {
-    Popup: Popup$1,
+    Popup,
   },
   create() {
     const app = this;
     app.popup = ModalMethods({
       app,
-      constructor: Popup$1,
+      constructor: Popup,
       defaultSelector: '.popup.modal-in',
     });
   },
@@ -7432,15 +7783,10 @@ var Popup = {
       const app = this;
       app.popup.close(data.popup, data.animate);
     },
-    '.popup-backdrop': function closePopup() {
-      const app = this;
-      if (!app.params.popup.closeByBackdropClick) return;
-      app.popup.close();
-    },
   },
 };
 
-class LoginScreen$1 extends Modal$1 {
+class LoginScreen extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -7482,16 +7828,16 @@ class LoginScreen$1 extends Modal$1 {
   }
 }
 
-var LoginScreen = {
+var LoginScreen$1 = {
   name: 'loginScreen',
   static: {
-    LoginScreen: LoginScreen$1,
+    LoginScreen,
   },
   create() {
     const app = this;
     app.loginScreen = ModalMethods({
       app,
-      constructor: LoginScreen$1,
+      constructor: LoginScreen,
       defaultSelector: '.login-screen.modal-in',
     });
   },
@@ -7507,7 +7853,7 @@ var LoginScreen = {
   },
 };
 
-class Popover$1 extends Modal$1 {
+class Popover extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -7598,18 +7944,28 @@ class Popover$1 extends Modal$1 {
 
     function handleClick(e) {
       const target = e.target;
-      if ($(target).closest(popover.el).length === 0) {
-        popover.close();
+      const $target = $(target);
+      if ($target.closest(popover.el).length === 0) {
+        if (
+          popover.params.closeByBackdropClick &&
+          popover.params.backdrop &&
+          popover.backdropEl &&
+          popover.backdropEl === target
+        ) {
+          popover.close();
+        } else if (popover.params.closeByOutsideClick) {
+          popover.close();
+        }
       }
     }
 
     popover.on('popoverOpened', () => {
-      if (popover.params.closeByOutsideClick && !popover.params.backdrop) {
+      if (popover.params.closeByOutsideClick || popover.params.closeByBackdropClick) {
         app.on('click', handleClick);
       }
     });
     popover.on('popoverClose', () => {
-      if (popover.params.closeByOutsideClick && !popover.params.backdrop) {
+      if (popover.params.closeByOutsideClick || popover.params.closeByBackdropClick) {
         app.off('click', handleClick);
       }
     });
@@ -7752,31 +8108,31 @@ class Popover$1 extends Modal$1 {
   }
 }
 
-var Popover = {
+var Popover$1 = {
   name: 'popover',
   params: {
     popover: {
       closeByBackdropClick: true,
-      closeByOutsideClick: true,
+      closeByOutsideClick: false,
       backdrop: true,
     },
   },
   static: {
-    Popover: Popover$1,
+    Popover,
   },
   create() {
     const app = this;
     app.popover = Utils.extend(
       ModalMethods({
         app,
-        constructor: Popover$1,
+        constructor: Popover,
         defaultSelector: '.popover.modal-in',
       }),
       {
         open(popoverEl, targetEl, animate) {
           const $popoverEl = $(popoverEl);
           let popover = $popoverEl[0].f7Modal;
-          if (!popover) popover = new Popover$1(app, { el: $popoverEl, targetEl });
+          if (!popover) popover = new Popover(app, { el: $popoverEl, targetEl });
           return popover.open(targetEl, animate);
         },
       }
@@ -7791,16 +8147,12 @@ var Popover = {
       const app = this;
       app.popover.close(data.popover, data.animate);
     },
-    '.popover-backdrop': function closePopover() {
-      const app = this;
-      if (!app.params.popover.closeByBackdropClick) return;
-      app.popover.close();
-    },
   },
 };
 
 /* eslint indent: ["off"] */
-class Actions$1 extends Modal$1 {
+
+class Actions extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -7869,10 +8221,12 @@ class Actions$1 extends Modal$1 {
         buttonIndex = $(buttonEl).index();
         groupIndex = $(buttonEl).parents('.actions-group').index();
       }
-      const button = groups[groupIndex][buttonIndex];
-      if (button.onClick) button.onClick(actions, e);
-      if (actions.params.onClick) actions.params.onClick(actions, e);
-      if (button.close !== false) actions.close();
+      if (typeof groups !== 'undefined') {
+        const button = groups[groupIndex][buttonIndex];
+        if (button.onClick) button.onClick(actions, e);
+        if (actions.params.onClick) actions.params.onClick(actions, e);
+        if (button.close !== false) actions.close();
+      }
     }
     actions.open = function open(animate) {
       let convertToPopover = false;
@@ -7887,7 +8241,7 @@ class Actions$1 extends Modal$1 {
           convertToPopover = true;
         }
       }
-      if (convertToPopover) {
+      if (convertToPopover && actions.popoverHtml) {
         popover = app.popover.create({
           content: actions.popoverHtml,
           backdrop: actions.params.backdrop,
@@ -7913,16 +8267,18 @@ class Actions$1 extends Modal$1 {
           });
         });
       } else {
-        actions.$el = $(actions.actionsHtml);
+        actions.$el = actions.actionsHtml ? $(actions.actionsHtml) : actions.$el;
         actions.$el[0].f7Modal = actions;
-        actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
-          $(buttonEl).on('click', buttonOnClick);
-        });
-        actions.once('actionsClosed', () => {
-          actions.$el.find('.list-button').each((groupIndex, buttonEl) => {
-            $(buttonEl).off('click', buttonOnClick);
+        if (actions.groups) {
+          actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
+            $(buttonEl).on('click', buttonOnClick);
           });
-        });
+          actions.once('actionsClosed', () => {
+            actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
+              $(buttonEl).off('click', buttonOnClick);
+            });
+          });
+        }
         originalOpen.call(actions, animate);
       }
       return actions;
@@ -7946,6 +8302,34 @@ class Actions$1 extends Modal$1 {
       type: 'actions',
     });
 
+    function handleClick(e) {
+      const target = e.target;
+      const $target = $(target);
+      if ($target.closest(actions.el).length === 0) {
+        if (
+          actions.params.closeByBackdropClick &&
+          actions.params.backdrop &&
+          actions.backdropEl &&
+          actions.backdropEl === target
+        ) {
+          actions.close();
+        } else if (actions.params.closeByOutsideClick) {
+          actions.close();
+        }
+      }
+    }
+
+    actions.on('opened', () => {
+      if (actions.params.closeByBackdropClick || actions.params.closeByOutsideClick) {
+        app.on('click', handleClick);
+      }
+    });
+    actions.on('close', () => {
+      if (actions.params.closeByBackdropClick || actions.params.closeByOutsideClick) {
+        app.off('click', handleClick);
+      }
+    });
+
     if ($el) {
       $el[0].f7Modal = actions;
     }
@@ -7964,7 +8348,7 @@ class Actions$1 extends Modal$1 {
               const buttonClasses = [`actions-${button.label ? 'label' : 'button'}`];
               const { color, bg, bold, disabled, label, text, icon } = button;
               if (color) buttonClasses.push(`color-${color}`);
-              if (bg) buttonClasses.push(`bg-${color}`);
+              if (bg) buttonClasses.push(`bg-color-${bg}`);
               if (bold) buttonClasses.push('actions-button-bold');
               if (disabled) buttonClasses.push('disabled');
               if (label) {
@@ -7994,7 +8378,7 @@ class Actions$1 extends Modal$1 {
                   const itemClasses = [];
                   const { color, bg, bold, disabled, label, text, icon } = button;
                   if (color) itemClasses.push(`color-${color}`);
-                  if (bg) itemClasses.push(`bg-${bg}`);
+                  if (bg) itemClasses.push(`bg-color-${bg}`);
                   if (bold) itemClasses.push('popover-from-actions-bold');
                   if (disabled) itemClasses.push('disabled');
                   if (label) {
@@ -8035,7 +8419,7 @@ class Actions$1 extends Modal$1 {
   }
 }
 
-var Actions = {
+var Actions$1 = {
   name: 'actions',
   params: {
     actions: {
@@ -8048,13 +8432,13 @@ var Actions = {
     },
   },
   static: {
-    Actions: Actions$1,
+    Actions,
   },
   create() {
     const app = this;
     app.actions = ModalMethods({
       app,
-      constructor: Actions$1,
+      constructor: Actions,
       defaultSelector: '.actions-modal.modal-in',
     });
   },
@@ -8067,21 +8451,16 @@ var Actions = {
       const app = this;
       app.actions.close(data.actions, data.animate);
     },
-    '.actions-backdrop': function closeActions() {
-      const app = this;
-      if (!app.params.actions.closeByBackdropClick) return;
-      app.actions.close();
-    },
   },
 };
 
-class Sheet$1 extends Modal$1 {
+class Sheet extends Modal {
   constructor(app, params) {
-    const extendedParams = Utils.extend({
-      backdrop: app.theme === 'md',
-      closeByOutsideClick: app.params.sheet.closeByOutsideClick,
-      on: {},
-    }, params);
+    const extendedParams = Utils.extend(
+      { on: {} },
+      app.params.sheet,
+      params
+    );
 
     // Extends with open/close Modal methods;
     super(app, extendedParams);
@@ -8154,8 +8533,18 @@ class Sheet$1 extends Modal$1 {
     }
     function handleClick(e) {
       const target = e.target;
-      if ($(target).closest(sheet.el).length === 0) {
-        sheet.close();
+      const $target = $(target);
+      if ($target.closest(sheet.el).length === 0) {
+        if (
+          sheet.params.closeByBackdropClick &&
+          sheet.params.backdrop &&
+          sheet.backdropEl &&
+          sheet.backdropEl === target
+        ) {
+          sheet.close();
+        } else if (sheet.params.closeByOutsideClick) {
+          sheet.close();
+        }
       }
     }
 
@@ -8165,7 +8554,7 @@ class Sheet$1 extends Modal$1 {
       }
     });
     sheet.on('sheetOpened', () => {
-      if (sheet.params.closeByOutsideClick && !sheet.params.backdrop) {
+      if (sheet.params.closeByOutsideClick || sheet.params.closeByBackdropClick) {
         app.on('click', handleClick);
       }
     });
@@ -8173,7 +8562,7 @@ class Sheet$1 extends Modal$1 {
       if (sheet.params.scrollToEl) {
         scrollToClose();
       }
-      if (sheet.params.closeByOutsideClick && !sheet.params.backdrop) {
+      if (sheet.params.closeByOutsideClick || sheet.params.closeByBackdropClick) {
         app.off('click', handleClick);
       }
     });
@@ -8193,7 +8582,7 @@ class Sheet$1 extends Modal$1 {
   }
 }
 
-var Sheet = {
+var Sheet$1 = {
   name: 'sheet',
   params: {
     sheet: {
@@ -8202,15 +8591,18 @@ var Sheet = {
     },
   },
   static: {
-    Sheet: Sheet$1,
+    Sheet,
   },
   create() {
     const app = this;
+    if (!app.passedParams.sheet || app.passedParams.sheet.backdrop === undefined) {
+      app.params.sheet.backdrop = app.theme === 'md';
+    }
     app.sheet = Utils.extend(
       {},
       ModalMethods({
         app,
-        constructor: Sheet$1,
+        constructor: Sheet,
         defaultSelector: '.sheet-modal.modal-in',
       })
     );
@@ -8227,15 +8619,10 @@ var Sheet = {
       const app = this;
       app.sheet.close(data.sheet, data.animate);
     },
-    '.sheet-backdrop': function closeSheet() {
-      const app = this;
-      if (!app.params.sheet.closeByBackdropClick) return;
-      app.sheet.close();
-    },
   },
 };
 
-class Toast$1 extends Modal$1 {
+class Toast extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -8307,6 +8694,14 @@ class Toast$1 extends Modal$1 {
       window.clearTimeout(timeoutId);
     });
 
+    if (toast.params.destroyOnClose) {
+      toast.once('closed', () => {
+        setTimeout(() => {
+          toast.destroy();
+        }, 0);
+      });
+    }
+
     return toast;
   }
   render() {
@@ -8328,10 +8723,10 @@ class Toast$1 extends Modal$1 {
   }
 }
 
-var Toast = {
+var Toast$1 = {
   name: 'toast',
   static: {
-    Toast: Toast$1,
+    Toast,
   },
   create() {
     const app = this;
@@ -8339,9 +8734,18 @@ var Toast = {
       {},
       ModalMethods({
         app,
-        constructor: Toast$1,
+        constructor: Toast,
         defaultSelector: '.toast.modal-in',
-      })
+      }),
+      {
+        // Shortcuts
+        show(params) {
+          Utils.extend(params, {
+            destroyOnClose: true,
+          });
+          return new Toast(app, params).open();
+        },
+      }
     );
   },
   params: {
@@ -8406,7 +8810,7 @@ var Preloader$1 = {
     photoBrowserOpen(pb) {
       const app = this;
       if (app.theme !== 'md') return;
-      pb.$containerEl.find('.preloader').each((index, preloaderEl) => {
+      pb.$el.find('.preloader').each((index, preloaderEl) => {
         app.preloader.init(preloaderEl);
       });
     },
@@ -8588,6 +8992,10 @@ const Sortable = {
       $sortingEl = $(this).parent('li');
       indexFrom = $sortingEl.index();
       $sortableContainer = $sortingEl.parents('.sortable');
+      const $listGroup = $sortingEl.parents('.list-group');
+      if ($listGroup.length && $listGroup.parents($sortableContainer).length) {
+        $sortableContainer = $listGroup;
+      }
       $sortingItems = $sortableContainer.children('ul').children('li');
       if (app.panel) app.panel.allowOpen = false;
       if (app.swipeout) app.swipeout.allow = false;
@@ -9317,11 +9725,14 @@ var Swipeout$1 = {
   },
 };
 
+/* eslint no-underscore-dangle: ["error", { "allow": ["_clientLeft"] }] */
+
 const Accordion = {
   toggleClicked($clickedEl) {
     const app = this;
     let $accordionItemEl = $clickedEl.closest('.accordion-item').eq(0);
     if (!$accordionItemEl.length) $accordionItemEl = $clickedEl.parents('li').eq(0);
+    if ($clickedEl.parents('li').length > 1 && $clickedEl.parents('li')[0] !== $accordionItemEl[0]) return;
     app.accordion.toggle($accordionItemEl);
   },
   open(el) {
@@ -9337,7 +9748,9 @@ const Accordion = {
     }
     $contentEl.transitionEnd(() => {
       if ($el.hasClass('accordion-item-opened')) {
-        $contentEl.css('height', '');
+        $contentEl.transition(0);
+        $contentEl.css('height', 'auto');
+        $contentEl._clientLeft = $contentEl[0].clientLeft;
         $contentEl.transition('');
         $el.trigger('accordion:opened');
         app.emit('accordionOpened', $el[0]);
@@ -9360,10 +9773,14 @@ const Accordion = {
     $el.removeClass('accordion-item-opened');
     $contentEl.transition(0);
     $contentEl.css('height', `${$contentEl[0].scrollHeight}px`);
+    $contentEl._clientLeft = $contentEl[0].clientLeft;
+    $contentEl.transition('');
     // Close
     $contentEl.transitionEnd(() => {
       if ($el.hasClass('accordion-item-opened')) {
-        $contentEl.css('height', '');
+        $contentEl.transition(0);
+        $contentEl.css('height', 'auto');
+        $contentEl._clientLeft = $contentEl[0].clientLeft;
         $contentEl.transition('');
         $el.trigger('accordion:opened');
         app.emit('accordionOpened', $el[0]);
@@ -9409,7 +9826,7 @@ var Accordion$1 = {
   },
 };
 
-class VirtualList$1 extends Framework7Class {
+class VirtualList extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const vl = this;
@@ -9425,6 +9842,8 @@ class VirtualList$1 extends Framework7Class {
       searchByItem: undefined,
       searchAll: undefined,
       itemTemplate: undefined,
+      ul: null,
+      createUl: true,
       renderItem(item) {
         return `
           <li>
@@ -9464,6 +9883,7 @@ class VirtualList$1 extends Framework7Class {
       vl.renderItem = vl.params.renderItem;
     }
     vl.$pageContentEl = vl.$el.parents('.page-content');
+    vl.pageContentEl = vl.$pageContentEl[0];
 
     // Bad scroll
     if (typeof vl.params.updatableScroll !== 'undefined') {
@@ -9476,14 +9896,21 @@ class VirtualList$1 extends Framework7Class {
     }
 
     // Append <ul>
-    vl.$ul = vl.params.ul ? $(vl.params.ul) : vl.$el.children('ul');
-    if (vl.$ul.length === 0) {
+    const ul = vl.params.ul;
+    vl.$ul = ul ? $(vl.params.ul) : vl.$el.children('ul');
+    if (vl.$ul.length === 0 && vl.params.createUl) {
       vl.$el.append('<ul></ul>');
       vl.$ul = vl.$el.children('ul');
     }
     vl.ul = vl.$ul[0];
 
+    let $itemsWrapEl;
+    if (!vl.ul && !vl.params.createUl) $itemsWrapEl = vl.$el;
+    else $itemsWrapEl = vl.$ul;
+
     Utils.extend(vl, {
+      $itemsWrapEl,
+      itemsWrapEl: $itemsWrapEl[0],
       // DOM cached items
       domCache: {},
       displayDomCache: {},
@@ -9562,7 +9989,7 @@ class VirtualList$1 extends Framework7Class {
     }
 
     if (vl.updatableScroll || vl.params.setListHeight) {
-      vl.$ul.css({ height: `${vl.listHeight}px` });
+      vl.$itemsWrapEl.css({ height: `${vl.listHeight}px` });
     }
   }
   render(force, forceScrollTop) {
@@ -9654,12 +10081,7 @@ class VirtualList$1 extends Framework7Class {
         itemEl.style.top = `${topPosition}px`;
 
         // Before item insert
-        vl.emit({
-          events: 'itemBeforeInsert',
-          data: [itemEl, items[i]],
-          parents: [],
-        });
-        vl.emit('vlItemBeforeInsert', vl, itemEl, items[i]);
+        vl.emit('local::itemBeforeInsert vlItemBeforeInsert', vl, itemEl, items[i]);
 
         // Append item to fragment
         vl.fragment.appendChild(itemEl);
@@ -9669,9 +10091,9 @@ class VirtualList$1 extends Framework7Class {
     // Update list height with not updatable scroll
     if (!vl.updatableScroll) {
       if (vl.dynamicHeight) {
-        vl.ul.style.height = `${heightBeforeLastItem}px`;
+        vl.itemsWrapEl.style.height = `${heightBeforeLastItem}px`;
       } else {
-        vl.ul.style.height = `${(i * vl.params.height) / vl.params.cols}px`;
+        vl.itemsWrapEl.style.height = `${(i * vl.params.height) / vl.params.cols}px`;
       }
     }
 
@@ -9681,34 +10103,19 @@ class VirtualList$1 extends Framework7Class {
         vl.reachEnd = true;
       }
     } else {
-      vl.emit({
-        events: 'beforeClear',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlBeforeClear', vl, vl.fragment);
-      vl.ul.innerHTML = '';
+      vl.emit('local::beforeClear vlBeforeClear', vl, vl.fragment);
+      vl.itemsWrapEl.innerHTML = '';
 
-      vl.emit({
-        events: 'itemsBeforeInsert',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlItemsBeforeInsert', vl, vl.fragment);
+      vl.emit('local::itemsBeforeInsert vlItemsBeforeInsert', vl, vl.fragment);
 
       if (items && items.length === 0) {
         vl.reachEnd = true;
-        if (vl.params.emptyTemplate) vl.ul.innerHTML = vl.params.emptyTemplate;
+        if (vl.params.emptyTemplate) vl.itemsWrapEl.innerHTML = vl.params.emptyTemplate;
       } else {
-        vl.ul.appendChild(vl.fragment);
+        vl.itemsWrapEl.appendChild(vl.fragment);
       }
 
-      vl.emit({
-        events: 'itemsAfterInsert',
-        data: [vl.fragment],
-        parents: [],
-      });
-      vl.emit('vlItemsAfterInsert', vl, vl.fragment);
+      vl.emit('local::itemsAfterInsert vlItemsAfterInsert', vl, vl.fragment);
     }
 
     if (typeof forceScrollTop !== 'undefined' && force) {
@@ -9957,16 +10364,16 @@ class VirtualList$1 extends Framework7Class {
   }
 }
 
-var VirtualList = {
+var VirtualList$1 = {
   name: 'virtualList',
   static: {
-    VirtualList: VirtualList$1,
+    VirtualList,
   },
   create() {
     const app = this;
     app.virtualList = ConstructorMethods({
       defaultSelector: '.virtual-list',
-      constructor: VirtualList$1,
+      constructor: VirtualList,
       app,
       domProp: 'f7VirtualList',
     });
@@ -10098,6 +10505,14 @@ const Tab = {
         $tabLinkEl = $tabLinkEl.filter((index, tabLinkElement) => {
           return $(tabLinkElement).parents('.page')[0] === $newTabEl.parents('.page')[0];
         });
+        if (app.theme === 'ios' && $tabLinkEl.length === 0 && tabRoute) {
+          const $pageEl = $newTabEl.parents('.page');
+          const $navbarEl = $(app.navbar.getElByPage($pageEl));
+          $tabLinkEl = $navbarEl.find(`[data-route-tab-id="${tabRoute.route.tab.id}"]`);
+          if ($tabLinkEl.length === 0) {
+            $tabLinkEl = $navbarEl.find(`.tab-link[href="${tabRoute.url}"]`);
+          }
+        }
       }
     }
     if ($tabLinkEl.length > 0) {
@@ -10106,7 +10521,13 @@ const Tab = {
       if ($oldTabEl && $oldTabEl.length > 0) {
         // Search by id
         const oldTabId = $oldTabEl.attr('id');
-        if (oldTabId) $oldTabLinkEl = $(`.tab-link[href="#${oldTabId}"]`);
+        if (oldTabId) {
+          $oldTabLinkEl = $(`.tab-link[href="#${oldTabId}"]`);
+          // Search by data-route-tab-id
+          if (!$oldTabLinkEl || ($oldTabLinkEl && $oldTabLinkEl.length === 0)) {
+            $oldTabLinkEl = $(`.tab-link[data-route-tab-id="${oldTabId}"]`);
+          }
+        }
         // Search by data-tab
         if (!$oldTabLinkEl || ($oldTabLinkEl && $oldTabLinkEl.length === 0)) {
           $('[data-tab]').each((index, tabLinkElement) => {
@@ -10175,7 +10596,7 @@ var Tabs = {
   },
 };
 
-function swipePanel$1(panel) {
+function swipePanel(panel) {
   const app = panel.app;
   Utils.extend(panel, {
     swipeable: true,
@@ -10209,7 +10630,7 @@ function swipePanel$1(panel) {
       if (otherPanel.opened) return;
     }
     if (e.target && e.target.nodeName.toLowerCase() === 'input' && e.target.type === 'range') return;
-    if ($(e.target).closest('.range-slider, .tabs-swipeable-wrap, .calendar-months').length > 0) return;
+    if ($(e.target).closest('.range-slider, .tabs-swipeable-wrap, .calendar-months, .no-swipe-panel').length > 0) return;
     touchesStart.x = e.type === 'touchstart' ? e.targetTouches[0].pageX : e.pageX;
     touchesStart.y = e.type === 'touchstart' ? e.targetTouches[0].pageY : e.pageY;
     if (params.swipeOnlyClose && !panel.opened) {
@@ -10224,6 +10645,14 @@ function swipePanel$1(panel) {
       }
       if (side === 'right') {
         if (touchesStart.x < app.width - params.swipeActiveArea) return;
+      }
+    }
+    if (params.swipeCloseActiveAreaSide && panel.opened) {
+      if (side === 'left') {
+        if (touchesStart.x < ($el[0].offsetWidth - params.swipeCloseActiveAreaSide)) return;
+      }
+      if (side === 'right') {
+        if (touchesStart.x > ((app.width - $el[0].offsetWidth) + params.swipeCloseActiveAreaSide)) return;
       }
     }
     touchMoves = 0;
@@ -10260,7 +10689,7 @@ function swipePanel$1(panel) {
       }
 
       if (params.swipe === 'both') {
-        if (params.swipeActiveArea > 0) {
+        if (params.swipeActiveArea > 0 && !panel.opened) {
           if (side === 'left' && touchesStart.x > params.swipeActiveArea) {
             isTouched = false;
             return;
@@ -10298,12 +10727,12 @@ function swipePanel$1(panel) {
       const timeDiff = (new Date()).getTime() - touchStartTime;
       if (timeDiff < 300) {
         if (direction === 'to-left') {
-          if (side === 'right') app.openPanel(side);
-          if (side === 'left' && $el.hasClass('panel-active')) app.closePanel();
+          if (side === 'right') app.panel.open(side);
+          if (side === 'left' && $el.hasClass('panel-active')) app.panel.close();
         }
         if (direction === 'to-right') {
-          if (side === 'left') app.openPanel(side);
-          if (side === 'right' && $el.hasClass('panel-active')) app.closePanel();
+          if (side === 'left') app.panel.open(side);
+          if (side === 'right' && $el.hasClass('panel-active')) app.panel.close();
         }
       }
       isTouched = false;
@@ -10381,8 +10810,12 @@ function swipePanel$1(panel) {
     let action;
     const edge = (translate === 0 || Math.abs(translate) === panelWidth);
 
+    const threshold = params.swipeThreshold || 0;
+
     if (!panel.opened) {
-      if (effect === 'cover') {
+      if (Math.abs(touchesDiff) < threshold) {
+        action = 'reset';
+      } else if (effect === 'cover') {
         if (translate === 0) {
           action = 'swap'; // open
         } else if (timeDiff < 300 && Math.abs(translate) > 0) {
@@ -10468,7 +10901,7 @@ function swipePanel$1(panel) {
   });
 }
 
-class Panel$1 extends Framework7Class {
+class Panel extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const panel = this;
@@ -10591,7 +11024,7 @@ class Panel$1 extends Framework7Class {
   }
   initSwipePanel() {
     {
-      swipePanel$1(this);
+      swipePanel(this);
     }
   }
   destroy() {
@@ -10732,7 +11165,7 @@ class Panel$1 extends Framework7Class {
   }
 }
 
-var Panel = {
+var Panel$1 = {
   name: 'panel',
   params: {
     panel: {
@@ -10740,6 +11173,7 @@ var Panel = {
       rightBreakpoint: 0,
       swipe: undefined, // or 'left' or 'right' or 'both'
       swipeActiveArea: 0,
+      swipeCloseActiveAreaSide: 0,
       swipeCloseOpposite: true,
       swipeOnlyClose: false,
       swipeNoFollow: false,
@@ -10748,7 +11182,7 @@ var Panel = {
     },
   },
   static: {
-    Panel: Panel$1,
+    Panel,
   },
   instance: {
     panel: {
@@ -10808,9 +11242,8 @@ var Panel = {
         }
       },
       create(params) {
-        return new Panel$1(app, params);
+        return new Panel(app, params);
       },
-
       open(side, animate) {
         let panelSide = side;
         if (!panelSide) {
@@ -10895,8 +11328,13 @@ var Panel = {
     },
     '.panel-backdrop': function close() {
       const app = this;
-      $('.panel-active').trigger('panel:backdrop-click');
-      app.emit('panelBackdropClick', $('.panel-active')[0]);
+      const $panelEl = $('.panel-active');
+      const instance = $panelEl[0] && $panelEl[0].f7Panel;
+      $panelEl.trigger('panel:backdrop-click');
+      if (instance) {
+        instance.emit('backdropClick', instance);
+      }
+      app.emit('panelBackdropClick', instance || $panelEl[0]);
       if (app.params.panel.closeByBackdropClick) app.panel.close();
     },
   },
@@ -11136,8 +11574,15 @@ function initAjaxForm() {
     if (!url) return;
 
     let data;
-    if (method === 'POST') data = new FormData$1($formEl[0]);
-    else data = Utils.serializeObject(app.form.convertToData($formEl[0]));
+    if (method === 'POST') {
+      if (contentType === 'application/x-www-form-urlencoded') {
+        data = app.form.convertToData($formEl[0]);
+      } else {
+        data = new window.FormData($formEl[0]);
+      }
+    } else {
+      data = Utils.serializeObject(app.form.convertToData($formEl[0]));
+    }
 
     const xhr = app.request({
       method,
@@ -11261,10 +11706,10 @@ const Input = {
     if (currentHeight !== scrollHeight) {
       if (scrollHeight > initialHeight) {
         $textareaEl.css('height', `${scrollHeight}px`);
-        $textareaEl.trigger('textarea:resize', initialHeight, currentHeight, scrollHeight);
+        $textareaEl.trigger('textarea:resize', { initialHeight, currentHeight, scrollHeight });
       } else if (scrollHeight < currentHeight) {
         $textareaEl.css('height', '');
-        $textareaEl.trigger('textarea:resize', initialHeight, currentHeight, initialHeight);
+        $textareaEl.trigger('textarea:resize', { initialHeight, currentHeight, scrollHeight });
       }
     }
   },
@@ -11272,25 +11717,29 @@ const Input = {
     const $inputEl = $(inputEl);
     if (!$inputEl.length) return;
     const $itemInputEl = $inputEl.parents('.item-input');
+    const $inputWrapEl = $inputEl.parents('.input');
     const validity = $inputEl[0].validity;
     const validationMessage = $inputEl.dataset().errorMessage || $inputEl[0].validationMessage || '';
     if (!validity) return;
     if (!validity.valid) {
-      let $errorEl = $inputEl.nextAll('.item-input-error-message');
+      let $errorEl = $inputEl.nextAll('.item-input-error-message, .input-error-message');
       if (validationMessage) {
         if ($errorEl.length === 0) {
-          $errorEl = $('<div class="item-input-error-message"></div>');
+          $errorEl = $(`<div class="${$inputWrapEl.length ? 'input-error-message' : 'item-input-error-message'}"></div>`);
           $errorEl.insertAfter($inputEl);
         }
         $errorEl.text(validationMessage);
       }
       if ($errorEl.length > 0) {
         $itemInputEl.addClass('item-input-with-error-message');
+        $inputWrapEl.addClass('input-with-eror-message');
       }
       $itemInputEl.addClass('item-input-invalid');
+      $inputWrapEl.addClass('input-invalid');
       $inputEl.addClass('input-invalid');
     } else {
       $itemInputEl.removeClass('item-input-invalid item-input-with-error-message');
+      $inputWrapEl.removeClass('input-invalid input-with-error-message');
       $inputEl.removeClass('input-invalid');
     }
   },
@@ -11304,24 +11753,29 @@ const Input = {
     const $inputEl = $(inputEl);
     const type = $inputEl.attr('type');
     if (Input.ignoreTypes.indexOf(type) >= 0) return;
-    const $itemInputEl = $inputEl.parents('.item-input');
-    $itemInputEl.addClass('item-input-focused');
+    $inputEl.parents('.item-input').addClass('item-input-focused');
+    $inputEl.parents('.input').addClass('input-focused');
     $inputEl.addClass('input-focused');
   },
   blur(inputEl) {
-    $(inputEl).parents('.item-input').removeClass('item-input-focused');
-    $(inputEl).removeClass('input-focused');
+    const $inputEl = $(inputEl);
+    $inputEl.parents('.item-input').removeClass('item-input-focused');
+    $inputEl.parents('.input').removeClass('input-focused');
+    $inputEl.removeClass('input-focused');
   },
   checkEmptyState(inputEl) {
     const $inputEl = $(inputEl);
     const value = $inputEl.val();
     const $itemInputEl = $inputEl.parents('.item-input');
+    const $inputWrapEl = $inputEl.parents('.input');
     if ((value && (typeof value === 'string' && value.trim() !== '')) || (Array.isArray(value) && value.length > 0)) {
       $itemInputEl.addClass('item-input-with-value');
+      $inputWrapEl.addClass('input-with-value');
       $inputEl.addClass('input-with-value');
       $inputEl.trigger('input:notempty');
     } else {
       $itemInputEl.removeClass('item-input-with-value');
+      $inputWrapEl.removeClass('input-with-value');
       $inputEl.removeClass('input-with-value');
       $inputEl.trigger('input:empty');
     }
@@ -11363,11 +11817,11 @@ const Input = {
         if (Device.android) {
           $(window).once('resize', () => {
             if (document && document.activeElement === inputEl) {
-              app.input.scrollIntoView(inputEl, app.params.input.scrollIntoViewCentered);
+              app.input.scrollIntoView(inputEl, 0, app.params.input.scrollIntoViewCentered);
             }
           });
         } else {
-          app.input.scrollIntoView(inputEl, app.params.input.scrollIntoViewCentered);
+          app.input.scrollIntoView(inputEl, 0, app.params.input.scrollIntoViewCentered);
         }
       }
       app.input.focus(inputEl);
@@ -11444,7 +11898,7 @@ var Input$1 = {
         focus: Input.focus.bind(app),
         blur: Input.blur.bind(app),
         validate: Input.validate.bind(app),
-        validateInputs: Input.validate.bind(app),
+        validateInputs: Input.validateInputs.bind(app),
         checkEmptyState: Input.checkEmptyState.bind(app),
         resizeTextarea: Input.resizeTextarea.bind(app),
         init: Input.init.bind(app),
@@ -11459,7 +11913,7 @@ var Input$1 = {
     tabMounted(tabEl) {
       const app = this;
       const $tabEl = $(tabEl);
-      $tabEl.find('.item-input').each((itemInputIndex, itemInputEl) => {
+      $tabEl.find('.item-input, .input').each((itemInputIndex, itemInputEl) => {
         const $itemInputEl = $(itemInputEl);
         $itemInputEl.find('input, select, textarea').each((inputIndex, inputEl) => {
           const $inputEl = $(inputEl);
@@ -11474,7 +11928,7 @@ var Input$1 = {
     pageInit(page) {
       const app = this;
       const $pageEl = page.$el;
-      $pageEl.find('.item-input').each((itemInputIndex, itemInputEl) => {
+      $pageEl.find('.item-input, .input').each((itemInputIndex, itemInputEl) => {
         const $itemInputEl = $(itemInputEl);
         $itemInputEl.find('input, select, textarea').each((inputIndex, inputEl) => {
           const $inputEl = $(inputEl);
@@ -11497,7 +11951,7 @@ var Radio = {
   name: 'radio',
 };
 
-class Toggle$1 extends Framework7Class {
+class Toggle extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const toggle = this;
@@ -11629,8 +12083,8 @@ class Toggle$1 extends Framework7Class {
     }
     toggle.attachEvents = function attachEvents() {
       {
-        if (!Support$1.touch) return;
-        const passive = Support$1.passiveListener ? { passive: true } : false;
+        if (!Support.touch) return;
+        const passive = Support.passiveListener ? { passive: true } : false;
         $el.on(app.touchEvents.start, handleTouchStart, passive);
         app.on('touchmove', handleTouchMove);
         app.on('touchend:passive', handleTouchEnd);
@@ -11639,8 +12093,8 @@ class Toggle$1 extends Framework7Class {
     };
     toggle.detachEvents = function detachEvents() {
       {
-        if (!Support$1.touch) return;
-        const passive = Support$1.passiveListener ? { passive: true } : false;
+        if (!Support.touch) return;
+        const passive = Support.passiveListener ? { passive: true } : false;
         $el.off(app.touchEvents.start, handleTouchStart, passive);
         app.off('touchmove', handleTouchMove);
         app.off('touchend:passive', handleTouchEnd);
@@ -11674,19 +12128,19 @@ class Toggle$1 extends Framework7Class {
   }
 }
 
-var Toggle = {
+var Toggle$1 = {
   name: 'toggle',
   create() {
     const app = this;
     app.toggle = ConstructorMethods({
       defaultSelector: '.toggle',
-      constructor: Toggle$1,
+      constructor: Toggle,
       app,
       domProp: 'f7Toggle',
     });
   },
   static: {
-    Toggle: Toggle$1,
+    Toggle,
   },
   on: {
     tabMounted(tabEl) {
@@ -11710,7 +12164,7 @@ var Toggle = {
   },
 };
 
-class Range$1 extends Framework7Class {
+class Range extends Framework7Class {
   constructor(app, params) {
     super(params, [app]);
     const range = this;
@@ -11761,12 +12215,18 @@ class Range$1 extends Framework7Class {
       }
     }
 
-
-    Utils.extend(range, range.params, {
+    const { dual, step, label, min, max, value } = range.params;
+    Utils.extend(range, {
       $el,
       el: $el[0],
       $inputEl,
       inputEl: $inputEl ? $inputEl[0] : undefined,
+      dual,
+      step,
+      label,
+      min,
+      max,
+      value,
     });
 
     if ($inputEl) {
@@ -11775,11 +12235,11 @@ class Range$1 extends Framework7Class {
           range.params[paramName] = parseFloat($inputEl.attr(paramName));
           range[paramName] = parseFloat($inputEl.attr(paramName));
         }
-        if (typeof $inputEl.val() !== 'undefined') {
-          range.params.value = parseFloat($inputEl.val());
-          range.value = parseFloat($inputEl.val());
-        }
       });
+      if (typeof $inputEl.val() !== 'undefined') {
+        range.params.value = parseFloat($inputEl.val());
+        range.value = parseFloat($inputEl.val());
+      }
     }
 
     // Dual
@@ -11839,9 +12299,13 @@ class Range$1 extends Framework7Class {
     let rangeOffsetLeft;
     let $touchedKnobEl;
     let dualValueIndex;
-
+    let valueChangedByTouch;
+    function onTouchChange() {
+      valueChangedByTouch = true;
+    }
     function handleTouchStart(e) {
       if (isTouched) return;
+      valueChangedByTouch = false;
       touchesStart.x = e.type === 'touchstart' ? e.targetTouches[0].pageX : e.pageX;
       touchesStart.y = e.type === 'touchstart' ? e.targetTouches[0].pageY : e.pageY;
 
@@ -11874,7 +12338,8 @@ class Range$1 extends Framework7Class {
       Utils.nextTick(() => {
         if (isTouched) $touchedKnobEl.addClass('range-knob-active-state');
       }, 70);
-      range.setValue(newValue);
+      range.on('change', onTouchChange);
+      range.setValue(newValue, true);
     }
     function handleTouchMove(e) {
       if (!isTouched) return;
@@ -11916,7 +12381,7 @@ class Range$1 extends Framework7Class {
         }
         newValue = [leftValue, rightValue];
       }
-      range.setValue(newValue);
+      range.setValue(newValue, true);
     }
     function handleTouchEnd() {
       if (!isTouched) {
@@ -11924,8 +12389,13 @@ class Range$1 extends Framework7Class {
         isTouched = false;
         return;
       }
+      range.off('change', onTouchChange);
       isTouched = false;
       $touchedKnobEl.removeClass('range-knob-active-state');
+      if (valueChangedByTouch && range.$inputEl && !range.dual) {
+        range.$inputEl.trigger('change');
+      }
+      valueChangedByTouch = false;
     }
 
     function handleResize() {
@@ -11933,7 +12403,7 @@ class Range$1 extends Framework7Class {
       range.layout();
     }
     range.attachEvents = function attachEvents() {
-      const passive = Support$1.passiveListener ? { passive: true } : false;
+      const passive = Support.passiveListener ? { passive: true } : false;
       range.$el.on(app.touchEvents.start, handleTouchStart, passive);
       app.on('touchmove', handleTouchMove);
       app.on('touchend:passive', handleTouchEnd);
@@ -11941,7 +12411,7 @@ class Range$1 extends Framework7Class {
       app.on('resize', handleResize);
     };
     range.detachEvents = function detachEvents() {
-      const passive = Support$1.passiveListener ? { passive: true } : false;
+      const passive = Support.passiveListener ? { passive: true } : false;
       range.$el.off(app.touchEvents.start, handleTouchStart, passive);
       app.off('touchmove', handleTouchMove);
       app.off('touchend:passive', handleTouchEnd);
@@ -12015,10 +12485,12 @@ class Range$1 extends Framework7Class {
       range.$el.removeClass('range-slider-max');
     }
   }
-  setValue(newValue) {
+  setValue(newValue, byTouchMove) {
     const range = this;
     const { step, min, max } = range;
+    let valueChanged;
     if (range.dual) {
+      const oldValue = [range.value[0], range.value[1]];
       let newValues = newValue;
       if (!Array.isArray(newValues)) newValues = [newValue, newValue];
       if (newValue[0] > newValue[1]) {
@@ -12031,16 +12503,25 @@ class Range$1 extends Framework7Class {
       newValues.forEach((value, valueIndex) => {
         range.value[valueIndex] = value;
       });
+      valueChanged = oldValue[0] !== newValues[0] || oldValue[1] !== newValues[1];
       range.layout();
     } else {
+      const oldValue = range.value;
       const value = Math.max(Math.min(Math.round(newValue / step) * step, max), min);
       range.value = value;
       range.layout();
+      valueChanged = oldValue !== value;
     }
     // Events
+    if (!valueChanged) return range;
     range.$el.trigger('range:change', range, range.value);
     if (range.$inputEl && !range.dual) {
-      range.$inputEl.val(range.value).trigger('input change');
+      range.$inputEl.val(range.value);
+      if (!byTouchMove) {
+        range.$inputEl.trigger('input change');
+      } else {
+        range.$inputEl.trigger('input');
+      }
     }
     range.emit('local::change rangeChange', range, range.value);
     return range;
@@ -12066,14 +12547,14 @@ class Range$1 extends Framework7Class {
   }
 }
 
-var Range = {
+var Range$1 = {
   name: 'range',
   create() {
     const app = this;
     app.range = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.range-slider',
-        constructor: Range$1,
+        constructor: Range,
         app,
         domProp: 'f7Range',
       }),
@@ -12092,12 +12573,12 @@ var Range = {
     );
   },
   static: {
-    Range: Range$1,
+    Range,
   },
   on: {
     tabMounted(tabEl) {
       const app = this;
-      $(tabEl).find('.range-slider-init').each((index, rangeEl) => new Range$1(app, {
+      $(tabEl).find('.range-slider-init').each((index, rangeEl) => new Range(app, {
         el: rangeEl,
       }));
     },
@@ -12108,7 +12589,7 @@ var Range = {
     },
     pageInit(page) {
       const app = this;
-      page.$el.find('.range-slider-init').each((index, rangeEl) => new Range$1(app, {
+      page.$el.find('.range-slider-init').each((index, rangeEl) => new Range(app, {
         el: rangeEl,
       }));
     },
@@ -12120,7 +12601,254 @@ var Range = {
   },
 };
 
-class SmartSelect$1 extends Framework7Class {
+class Stepper extends Framework7Class {
+  constructor(app, params) {
+    super(params, [app]);
+    const stepper = this;
+
+    const defaults = {
+      el: null,
+      inputEl: null,
+      valueEl: null,
+      value: 0,
+      formatValue: null,
+      step: 1,
+      min: 0,
+      max: 100,
+      watchInput: true,
+    };
+
+    // Extend defaults with modules params
+    stepper.useModulesParams(defaults);
+
+    stepper.params = Utils.extend(defaults, params);
+    if (stepper.params.value < stepper.params.min) {
+      stepper.params.value = stepper.params.min;
+    }
+    if (stepper.params.value > stepper.params.max) {
+      stepper.params.value = stepper.params.max;
+    }
+
+    const el = stepper.params.el;
+    if (!el) return stepper;
+
+    const $el = $(el);
+    if ($el.length === 0) return stepper;
+
+    let $inputEl;
+    if (stepper.params.inputEl) {
+      $inputEl = $(stepper.params.inputEl);
+    } else if ($el.find('.stepper-input-wrap').find('input, textarea').length) {
+      $inputEl = $el.find('.stepper-input-wrap').find('input, textarea').eq(0);
+    }
+
+    if ($inputEl && $inputEl.length) {
+      ('step min max').split(' ').forEach((paramName) => {
+        if (!params[paramName] && $inputEl.attr(paramName)) {
+          stepper.params[paramName] = parseFloat($inputEl.attr(paramName));
+        }
+      });
+
+      const inputValue = parseFloat($inputEl.val());
+      if (typeof params.value === 'undefined' && !Number.isNaN(inputValue) && (inputValue || inputValue === 0)) {
+        stepper.params.value = inputValue;
+      }
+    }
+
+    let $valueEl;
+    if (stepper.params.valueEl) {
+      $valueEl = $(stepper.params.valueEl);
+    } else if ($el.find('.stepper-value').length) {
+      $valueEl = $el.find('.stepper-value').eq(0);
+    }
+
+    const $buttonPlusEl = $el.find('.stepper-button-plus');
+    const $buttonMinusEl = $el.find('.stepper-button-minus');
+
+    const { step, min, max, value } = stepper.params;
+
+    Utils.extend(stepper, {
+      app,
+      $el,
+      el: $el[0],
+      $buttonPlusEl,
+      buttonPlusEl: $buttonPlusEl[0],
+      $buttonMinusEl,
+      buttonMinusEl: $buttonMinusEl[0],
+      $inputEl,
+      inputEl: $inputEl ? $inputEl[0] : undefined,
+      $valueEl,
+      valueEl: $valueEl ? $valueEl[0] : undefined,
+      step,
+      min,
+      max,
+      value,
+    });
+
+    $el[0].f7Stepper = stepper;
+
+    // Handle Events
+    function onMinusClick() {
+      stepper.decrement();
+    }
+    function onPlusClick() {
+      stepper.increment();
+    }
+    function onInput(e) {
+      if (e.detail && e.detail.sentByF7Stepper) return;
+      stepper.setValue(e.target.value, true);
+    }
+    stepper.attachEvents = function attachEvents() {
+      $buttonMinusEl.on('click', onMinusClick);
+      $buttonPlusEl.on('click', onPlusClick);
+      if (stepper.params.watchInput && $inputEl && $inputEl.length) {
+        $inputEl.on('input', onInput);
+      }
+    };
+    stepper.detachEvents = function detachEvents() {
+      $buttonMinusEl.off('click', onMinusClick);
+      $buttonPlusEl.off('click', onPlusClick);
+      if (stepper.params.watchInput && $inputEl && $inputEl.length) {
+        $inputEl.off('input', onInput);
+      }
+    };
+
+    // Install Modules
+    stepper.useModules();
+
+    // Init
+    stepper.init();
+
+    return stepper;
+  }
+  minus() {
+    return this.decrement();
+  }
+  plus() {
+    return this.increment();
+  }
+  decrement() {
+    const stepper = this;
+    return stepper.setValue(stepper.value - stepper.step);
+  }
+  increment() {
+    const stepper = this;
+    return stepper.setValue(stepper.value + stepper.step);
+  }
+  setValue(newValue, forceUpdate) {
+    const stepper = this;
+    const { step, min, max } = stepper;
+
+    const oldValue = stepper.value;
+    let value = Math.max(Math.min(Math.round(newValue / step) * step, max), min);
+    if (Number.isNaN(value)) {
+      value = oldValue;
+    }
+    stepper.value = value;
+
+    const valueChanged = oldValue !== value;
+
+    // Events
+    if (!valueChanged && !forceUpdate) return stepper;
+    stepper.$el.trigger('stepper:change', stepper, stepper.value);
+    const formattedValue = stepper.formatValue(stepper.value);
+    if (stepper.$inputEl && stepper.$inputEl.length) {
+      stepper.$inputEl.val(formattedValue);
+      stepper.$inputEl.trigger('input change', { sentByF7Stepper: true });
+    }
+    if (stepper.$valueEl && stepper.$valueEl.length) {
+      stepper.$valueEl.html(formattedValue);
+    }
+    stepper.emit('local::change stepperChange', stepper, stepper.value);
+    return stepper;
+  }
+  getValue() {
+    return this.value;
+  }
+  formatValue(value) {
+    const stepper = this;
+    if (!stepper.params.formatValue) return value;
+    return stepper.params.formatValue.call(stepper, value);
+  }
+  init() {
+    const stepper = this;
+    stepper.attachEvents();
+    if (stepper.$valueEl && stepper.$valueEl.length) {
+      const formattedValue = stepper.formatValue(stepper.value);
+      stepper.$valueEl.html(formattedValue);
+    }
+    return stepper;
+  }
+  destroy() {
+    let stepper = this;
+    stepper.$el.trigger('stepper:beforedestroy', stepper);
+    stepper.emit('local::beforeDestroy stepperBeforeDestroy', stepper);
+    delete stepper.$el[0].f7Stepper;
+    stepper.detachEvents();
+    Utils.deleteProps(stepper);
+    stepper = null;
+  }
+}
+
+var Stepper$1 = {
+  name: 'stepper',
+  create() {
+    const app = this;
+    app.stepper = Utils.extend(
+      ConstructorMethods({
+        defaultSelector: '.stepper',
+        constructor: Stepper,
+        app,
+        domProp: 'f7Stepper',
+      }),
+      {
+        getValue(el = '.stepper') {
+          const stepper = app.stepper.get(el);
+          if (stepper) return stepper.getValue();
+          return undefined;
+        },
+        setValue(el = '.stepper', value) {
+          const stepper = app.stepper.get(el);
+          if (stepper) return stepper.setValue(value);
+          return undefined;
+        },
+      }
+    );
+  },
+  static: {
+    Stepper,
+  },
+  on: {
+    tabMounted(tabEl) {
+      const app = this;
+      $(tabEl).find('.stepper-init').each((index, stepperEl) => {
+        const dataset = $(stepperEl).dataset();
+        // eslint-disable-next-line
+        new Stepper(app, Utils.extend({ el: stepperEl }, dataset || {}));
+      });
+    },
+    tabBeforeRemove(tabEl) {
+      $(tabEl).find('.stepper-init').each((index, stepperEl) => {
+        if (stepperEl.f7Stepper) stepperEl.f7Stepper.destroy();
+      });
+    },
+    pageInit(page) {
+      const app = this;
+      page.$el.find('.stepper-init').each((index, stepperEl) => {
+        const dataset = $(stepperEl).dataset();
+        // eslint-disable-next-line
+        new Stepper(app, Utils.extend({ el: stepperEl }, dataset || {}));
+      });
+    },
+    pageBeforeRemove(page) {
+      page.$el.find('.stepper-init').each((index, stepperEl) => {
+        if (stepperEl.f7Stepper) stepperEl.f7Stepper.destroy();
+      });
+    },
+  },
+};
+
+class SmartSelect extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const ss = this;
@@ -12145,7 +12873,10 @@ class SmartSelect$1 extends Framework7Class {
     ss.useModulesParams(defaults);
 
     // View
-    const view = $el.parents('.view').length && $el.parents('.view')[0].f7View;
+    let view = params.view;
+    if (!view) {
+      view = $el.parents('.view').length && $el.parents('.view')[0].f7View;
+    }
     if (!view) {
       throw Error('Smart Select requires initialized View');
     }
@@ -12189,11 +12920,11 @@ class SmartSelect$1 extends Framework7Class {
     }
     ss.attachEvents = function attachEvents() {
       $el.on('click', onClick);
-      $el.on('change', 'input[type="checkbox"], input[type="radio"]', onChange);
+      $el.on('change', 'select', onChange);
     };
     ss.detachEvents = function detachEvents() {
       $el.off('click', onClick);
-      $el.off('change', 'input[type="checkbox"], input[type="radio"]', onChange);
+      $el.off('change', 'select', onChange);
     };
 
     function handleInputChange() {
@@ -12765,7 +13496,7 @@ class SmartSelect$1 extends Framework7Class {
   }
 }
 
-var SmartSelect = {
+var SmartSelect$1 = {
   name: 'smartSelect',
   params: {
     smartSelect: {
@@ -12799,14 +13530,14 @@ var SmartSelect = {
     },
   },
   static: {
-    SmartSelect: SmartSelect$1,
+    SmartSelect,
   },
   create() {
     const app = this;
     app.smartSelect = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.smart-select',
-        constructor: SmartSelect$1,
+        constructor: SmartSelect,
         app,
         domProp: 'f7SmartSelect',
       }),
@@ -12864,7 +13595,11 @@ var SmartSelect = {
   },
 };
 
-class Calendar$1 extends Framework7Class {
+var Grid = {
+  name: 'grid',
+};
+
+class Calendar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const calendar = this;
@@ -13290,6 +14025,7 @@ class Calendar$1 extends Framework7Class {
     const nextMonthHtml = calendar.renderMonth(currentDate, 'next');
 
     $wrapperEl
+      .transition(0)
       .html(`${prevMonthHtml}${currentMonthHtml}${nextMonthHtml}`)
       .transform('translate3d(0,0,0)');
     calendar.$months = $wrapperEl.find('.calendar-month');
@@ -14096,7 +14832,7 @@ class Calendar$1 extends Framework7Class {
       targetEl: $inputEl,
       scrollToEl: calendar.params.scrollToInput ? $inputEl : undefined,
       content: modalContent,
-      backdrop: modalType !== 'sheet',
+      backdrop: modalType === 'popover' && app.params.popover.backdrop !== false,
       on: {
         open() {
           const modal = this;
@@ -14192,16 +14928,16 @@ class Calendar$1 extends Framework7Class {
   }
 }
 
-var Calendar = {
+var Calendar$1 = {
   name: 'calendar',
   static: {
-    Calendar: Calendar$1,
+    Calendar,
   },
   create() {
     const app = this;
     app.calendar = ConstructorMethods({
       defaultSelector: '.calendar',
-      constructor: Calendar$1,
+      constructor: Calendar,
       app,
       domProp: 'f7Calendar',
     });
@@ -14272,7 +15008,7 @@ var Calendar = {
   },
 };
 
-var pickerColumn = function (colEl, updateItems) {
+function pickerColumn (colEl, updateItems) {
   const picker = this;
   const app = picker.app;
   const $colEl = $(colEl);
@@ -14281,6 +15017,7 @@ var pickerColumn = function (colEl, updateItems) {
   if (col.divider) return;
 
   col.$el = $colEl;
+  col.el = $colEl[0];
   col.$itemsEl = col.$el.find('.picker-items');
   col.items = col.$itemsEl.find('.picker-item');
 
@@ -14561,9 +15298,9 @@ var pickerColumn = function (colEl, updateItems) {
   };
 
   col.init();
-};
+}
 
-class Picker$1 extends Framework7Class {
+class Picker extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const picker = this;
@@ -14743,9 +15480,7 @@ class Picker$1 extends Framework7Class {
     }
     picker.value = newValue;
     picker.displayValue = newDisplayValue;
-    if (picker.params.onChange) {
-      picker.emit('local::change pickerChange', picker, picker.value, picker.displayValue);
-    }
+    picker.emit('local::change pickerChange', picker, picker.value, picker.displayValue);
     if (picker.inputEl) {
       picker.$inputEl.val(picker.formatValue());
       picker.$inputEl.trigger('change');
@@ -15075,16 +15810,16 @@ class Picker$1 extends Framework7Class {
   }
 }
 
-var Picker = {
+var Picker$1 = {
   name: 'picker',
   static: {
-    Picker: Picker$1,
+    Picker,
   },
   create() {
     const app = this;
     app.picker = ConstructorMethods({
       defaultSelector: '.picker',
-      constructor: Picker$1,
+      constructor: Picker,
       app,
       domProp: 'f7Picker',
     });
@@ -15120,11 +15855,7 @@ var Picker = {
       view: null,
       url: 'select/',
       // Render functions
-      renderColumn: null,
       renderToolbar: null,
-      renderInline: null,
-      renderPopover: null,
-      renderSheet: null,
       render: null,
     },
   },
@@ -15218,7 +15949,7 @@ var InfiniteScroll$1 = {
   },
 };
 
-class PullToRefresh$1 extends Framework7Class {
+class PullToRefresh extends Framework7Class {
   constructor(app, el) {
     super({}, [app]);
     const ptr = this;
@@ -15227,6 +15958,7 @@ class PullToRefresh$1 extends Framework7Class {
 
     ptr.$el = $el;
     ptr.el = $el[0];
+    ptr.app = app;
 
     // Extend defaults with modules params
     ptr.useModulesParams({});
@@ -15450,13 +16182,13 @@ class PullToRefresh$1 extends Framework7Class {
 
     // Events
     ptr.attachEvents = function attachEvents() {
-      const passive = Support$1.passiveListener ? { passive: true } : false;
+      const passive = Support.passiveListener ? { passive: true } : false;
       $el.on(app.touchEvents.start, handleTouchStart, passive);
       app.on('touchmove', handleTouchMove);
       app.on('touchend:passive', handleTouchEnd);
     };
     ptr.detachEvents = function detachEvents() {
-      const passive = Support$1.passiveListener ? { passive: true } : false;
+      const passive = Support.passiveListener ? { passive: true } : false;
       $el.off(app.touchEvents.start, handleTouchStart, passive);
       app.off('touchmove', handleTouchMove);
       app.off('touchend:passive', handleTouchEnd);
@@ -15485,14 +16217,14 @@ class PullToRefresh$1 extends Framework7Class {
   }
 }
 
-var PullToRefresh = {
+var PullToRefresh$1 = {
   name: 'pullToRefresh',
   create() {
     const app = this;
     app.ptr = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.ptr-content',
-        constructor: PullToRefresh$1,
+        constructor: PullToRefresh,
         app,
         domProp: 'f7PullToRefresh',
       }),
@@ -15511,7 +16243,7 @@ var PullToRefresh = {
     );
   },
   static: {
-    PullToRefresh: PullToRefresh$1,
+    PullToRefresh,
   },
   on: {
     tabMounted(tabEl) {
@@ -15547,11 +16279,11 @@ const Lazy = {
   destroy(pageEl) {
     const $pageEl = $(pageEl).closest('.page');
     if (!$pageEl.length) return;
-    if ($pageEl[0].f7DestroyLazy) {
-      $pageEl[0].f7DestroyLazy();
+    if ($pageEl[0].f7LazyDestroy) {
+      $pageEl[0].f7LazyDestroy();
     }
   },
-  init(pageEl) {
+  create(pageEl) {
     const app = this;
     const $pageEl = $(pageEl).closest('.page').eq(0);
 
@@ -15595,12 +16327,15 @@ const Lazy = {
     }
 
     function attachEvents() {
+      $pageEl[0].f7LazyAttached = true;
       $pageEl.on('lazy', lazyHandler);
       $pageEl.on('scroll', lazyHandler, true);
       $pageEl.find('.tab').on('tab:mounted tab:show', lazyHandler);
       app.on('resize', lazyHandler);
     }
     function detachEvents() {
+      $pageEl[0].f7LazyAttached = false;
+      delete $pageEl[0].f7LazyAttached;
       $pageEl.off('lazy', lazyHandler);
       $pageEl.off('scroll', lazyHandler, true);
       $pageEl.find('.tab').off('tab:mounted tab:show', lazyHandler);
@@ -15608,10 +16343,14 @@ const Lazy = {
     }
 
     // Store detach function
-    $pageEl[0].f7DestroyLazy = detachEvents;
+    if (!$pageEl[0].f7LazyDestroy) {
+      $pageEl[0].f7LazyDestroy = detachEvents;
+    }
 
     // Attach events
-    attachEvents();
+    if (!$pageEl[0].f7LazyAttached) {
+      attachEvents();
+    }
 
     // Run loader on page load/init
     lazyHandler();
@@ -15702,7 +16441,7 @@ var Lazy$1 = {
     const app = this;
     Utils.extend(app, {
       lazy: {
-        init: Lazy.init.bind(app),
+        create: Lazy.create.bind(app),
         destroy: Lazy.destroy.bind(app),
         loadImage: Lazy.loadImage.bind(app),
         load: Lazy.load.bind(app),
@@ -15714,13 +16453,13 @@ var Lazy$1 = {
     pageInit(page) {
       const app = this;
       if (page.$el.find('.lazy').length > 0 || page.$el.hasClass('lazy')) {
-        app.lazy.init(page.$el);
+        app.lazy.create(page.$el);
       }
     },
     pageAfterIn(page) {
       const app = this;
       if (page.$el.find('.lazy').length > 0 || page.$el.hasClass('lazy')) {
-        app.lazy.init(page.$el);
+        app.lazy.create(page.$el);
       }
     },
     pageBeforeRemove(page) {
@@ -15733,7 +16472,7 @@ var Lazy$1 = {
       const app = this;
       const $tabEl = $(tabEl);
       if ($tabEl.find('.lazy').length > 0 || $tabEl.hasClass('lazy')) {
-        app.lazy.init($tabEl);
+        app.lazy.create($tabEl);
       }
     },
     tabBeforeRemove(tabEl) {
@@ -15746,7 +16485,7 @@ var Lazy$1 = {
   },
 };
 
-class DataTable$1 extends Framework7Class {
+class DataTable extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -15818,14 +16557,18 @@ class DataTable$1 extends Framework7Class {
     function handleSortableClick() {
       const $cellEl = $(this);
       const isActive = $cellEl.hasClass('sortable-cell-active');
-      let currentSort;
+      const currentSort = $cellEl.hasClass('sortable-desc') ? 'desc' : 'asc';
+      let newSort;
       if (isActive) {
-        currentSort = $cellEl.hasClass('sortable-desc') ? 'desc' : 'asc';
-        $cellEl.removeClass('sortable-desc sortable-asc').addClass(`sortable-${currentSort === 'desc' ? 'asc' : 'desc'}`);
+        newSort = currentSort === 'desc' ? 'asc' : 'desc';
+        $cellEl.removeClass('sortable-desc sortable-asc').addClass(`sortable-${newSort}`);
       } else {
         $el.find('thead .sortable-cell-active').removeClass('sortable-cell-active');
         $cellEl.addClass('sortable-cell-active');
+        newSort = currentSort;
       }
+      $cellEl.trigger('datatable:sort', newSort);
+      table.emit('local::sort dataTableSort', table, newSort);
     }
     table.attachEvents = function attachEvents() {
       table.$el.on('change', '.checkbox-cell input[type="checkbox"]', handleChange);
@@ -15884,16 +16627,16 @@ class DataTable$1 extends Framework7Class {
   }
 }
 
-var DataTable = {
+var DataTable$1 = {
   name: 'dataTable',
   static: {
-    DataTable: DataTable$1,
+    DataTable,
   },
   create() {
     const app = this;
     app.dataTable = ConstructorMethods({
       defaultSelector: '.data-table',
-      constructor: DataTable$1,
+      constructor: DataTable,
       app,
       domProp: 'f7DataTable',
     });
@@ -16131,7 +16874,7 @@ var Fab$1 = {
   },
 };
 
-class Searchbar$1 extends Framework7Class {
+class Searchbar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -16272,7 +17015,7 @@ class Searchbar$1 extends Framework7Class {
       $inputEl,
       inputEl: $inputEl[0],
       $disableButtonEl,
-      disableButtonEl: $disableButtonEl[0],
+      disableButtonEl: $disableButtonEl && $disableButtonEl[0],
       disableButtonHasMargin: false,
       $pageEl,
       pageEl: $pageEl && $pageEl[0],
@@ -16310,7 +17053,7 @@ class Searchbar$1 extends Framework7Class {
       if (
         (
           (sb.$searchContainer && sb.$searchContainer.length > 0) &&
-          (sb.params.searchIn || sb.isVirtualList)
+          (sb.params.searchIn || sb.isVirtualList || sb.params.searchIn === sb.params.searchItem)
         ) ||
         sb.params.customSearch
       ) {
@@ -16319,7 +17062,7 @@ class Searchbar$1 extends Framework7Class {
     }
     function onInputClear(e, previousValue) {
       sb.$el.trigger('searchbar:clear', previousValue);
-      sb.emit('local::clear searchbarClear', previousValue);
+      sb.emit('local::clear searchbarClear', sb, previousValue);
     }
     function disableOnClick(e) {
       sb.disable(e);
@@ -16388,7 +17131,7 @@ class Searchbar$1 extends Framework7Class {
     const previousQuery = sb.value;
     sb.$inputEl.val('').trigger('change').focus();
     sb.$el.trigger('searchbar:clear', previousQuery);
-    sb.emit('local::clear searchbarClear', previousQuery);
+    sb.emit('local::clear searchbarClear', sb, previousQuery);
     return sb;
   }
   setDisableButtonMargin() {
@@ -16418,9 +17161,9 @@ class Searchbar$1 extends Framework7Class {
         }
         sb.$disableButtonEl.css(`margin-${app.rtl ? 'left' : 'right'}`, '0px');
       }
-      if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.hide();
+      if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.addClass('hidden-by-searchbar');
       sb.$el.trigger('searchbar:enable');
-      sb.emit('local::enable searchbarEnable');
+      sb.emit('local::enable searchbarEnable', sb);
     }
     let needsFocus = false;
     if (setFocus === true) {
@@ -16471,10 +17214,10 @@ class Searchbar$1 extends Framework7Class {
 
     sb.$inputEl.blur();
 
-    if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.show();
+    if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.removeClass('hidden-by-searchbar');
 
     sb.$el.trigger('searchbar:disable');
-    sb.emit('local::disable searchbarDisable');
+    sb.emit('local::disable searchbarDisable', sb);
     return sb;
   }
   toggle() {
@@ -16516,9 +17259,9 @@ class Searchbar$1 extends Framework7Class {
 
     // Hide on search element
     if (query.length > 0 && $hideOnSearchEl) {
-      $hideOnSearchEl.hide();
+      $hideOnSearchEl.addClass('hidden-by-searchbar');
     } else if ($hideOnSearchEl) {
-      $hideOnSearchEl.show();
+      $hideOnSearchEl.removeClass('hidden-by-searchbar');
     }
     // Add active/inactive classes on overlay
     if (query.length === 0) {
@@ -16529,7 +17272,7 @@ class Searchbar$1 extends Framework7Class {
 
     if (sb.params.customSearch) {
       $el.trigger('searchbar:search', query, sb.previousQuery);
-      sb.emit('local::search searchbarSearch', query, sb.previousQuery);
+      sb.emit('local::search searchbarSearch', sb, query, sb.previousQuery);
       return sb;
     }
 
@@ -16562,7 +17305,11 @@ class Searchbar$1 extends Framework7Class {
       $searchContainer.find(sb.params.searchItem).removeClass('hidden-by-searchbar').each((itemIndex, itemEl) => {
         const $itemEl = $(itemEl);
         let compareWithText = [];
-        $itemEl.find(sb.params.searchIn).each((searchInIndex, searchInEl) => {
+        let $searchIn = sb.params.searchIn ? $itemEl.find(sb.params.searchIn) : $itemEl;
+        if (sb.params.searchIn === sb.params.searchItem) {
+          $searchIn = $itemEl;
+        }
+        $searchIn.each((searchInIndex, searchInEl) => {
           let itemText = $(searchInEl).text().trim().toLowerCase();
           if (sb.params.removeDiacritics) itemText = Utils.removeDiacritics(itemText);
           compareWithText.push(itemText);
@@ -16622,7 +17369,7 @@ class Searchbar$1 extends Framework7Class {
     }
 
     $el.trigger('searchbar:search', query, sb.previousQuery, foundItems);
-    sb.emit('local::search searchbarSearch', query, sb.previousQuery, foundItems);
+    sb.emit('local::search searchbarSearch', sb, query, sb.previousQuery, foundItems);
 
     return sb;
   }
@@ -16640,16 +17387,16 @@ class Searchbar$1 extends Framework7Class {
   }
 }
 
-var Searchbar = {
+var Searchbar$1 = {
   name: 'searchbar',
   static: {
-    Searchbar: Searchbar$1,
+    Searchbar,
   },
   create() {
     const app = this;
     app.searchbar = ConstructorMethods({
       defaultSelector: '.searchbar',
-      constructor: Searchbar$1,
+      constructor: Searchbar,
       app,
       domProp: 'f7Searchbar',
       addMethods: 'clear enable disable toggle search'.split(' '),
@@ -16723,7 +17470,7 @@ var Searchbar = {
   },
 };
 
-class Messages$1 extends Framework7Class {
+class Messages extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -16824,7 +17571,7 @@ class Messages$1 extends Framework7Class {
       type: 'sent',
     }, messageToRender);
     if (m.params.renderMessage) {
-      return m.params.renderMessage(message);
+      return m.params.renderMessage.call(m, message);
     }
     if (message.isTitle) {
       return `<div class="messages-title">${message.text}</div>`;
@@ -16954,6 +17701,9 @@ class Messages$1 extends Framework7Class {
     if (typeof messageToRemove === 'number') {
       index = messageToRemove;
       $el = m.$el.find('.message, .messages-title').eq(index);
+    } else if (m.messages && m.messages.indexOf(messageToRemove) >= 0) {
+      index = m.messages.indexOf(messageToRemove);
+      $el = m.$el.children().eq(index);
     } else {
       $el = $(messageToRemove);
       index = $el.index();
@@ -17150,16 +17900,16 @@ class Messages$1 extends Framework7Class {
   }
 }
 
-var Messages = {
+var Messages$1 = {
   name: 'messages',
   static: {
-    Messages: Messages$1,
+    Messages,
   },
   create() {
     const app = this;
     app.messages = ConstructorMethods({
       defaultSelector: '.messages',
-      constructor: Messages$1,
+      constructor: Messages,
       app,
       domProp: 'f7Messages',
       addMethods: 'renderMessages layout scroll clear removeMessage removeMessages addMessage addMessages'.split(' '),
@@ -17196,7 +17946,7 @@ var Messages = {
   },
 };
 
-class Messagebar$1 extends Framework7Class {
+class Messagebar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -17281,17 +18031,25 @@ class Messagebar$1 extends Framework7Class {
       const index = $(this).index();
       if ($(e.target).closest('.messagebar-attachment-delete').length) {
         $(this).trigger('messagebar:attachmentdelete', index);
-        messagebar.emit('local::attachmentDelete messagebarAttachmentDelete', this, index);
+        messagebar.emit('local::attachmentDelete messagebarAttachmentDelete', messagebar, this, index);
       } else {
         $(this).trigger('messagebar:attachmentclick', index);
-        messagebar.emit('local::attachmentClick messagebarAttachmentClick', this, index);
+        messagebar.emit('local::attachmentClick messagebarAttachmentClick', messagebar, this, index);
       }
     }
     function onTextareaChange() {
       messagebar.checkEmptyState();
+      messagebar.$el.trigger('messagebar:change');
+      messagebar.emit('local::change messagebarChange', messagebar);
     }
     function onTextareaFocus() {
       messagebar.sheetHide();
+      messagebar.$el.trigger('messagebar:focus');
+      messagebar.emit('local::focus messagebarFocus', messagebar);
+    }
+    function onTextareaBlur() {
+      messagebar.$el.trigger('messagebar:blur');
+      messagebar.emit('local::blur messagebarBlur', messagebar);
     }
 
     messagebar.attachEvents = function attachEvents() {
@@ -17300,6 +18058,7 @@ class Messagebar$1 extends Framework7Class {
       $el.on('click', '.messagebar-attachment', onAttachmentClick);
       $textareaEl.on('change input', onTextareaChange);
       $textareaEl.on('focus', onTextareaFocus);
+      $textareaEl.on('blur', onTextareaBlur);
       app.on('resize', onAppResize);
     };
     messagebar.detachEvents = function detachEvents() {
@@ -17307,7 +18066,8 @@ class Messagebar$1 extends Framework7Class {
       $el.off('submit', onSubmit);
       $el.off('click', '.messagebar-attachment', onAttachmentClick);
       $textareaEl.off('change input', onTextareaChange);
-      $textareaEl.on('focus', onTextareaFocus);
+      $textareaEl.off('focus', onTextareaFocus);
+      $textareaEl.off('blur', onTextareaBlur);
       app.off('resize', onAppResize);
     };
 
@@ -17397,7 +18157,7 @@ class Messagebar$1 extends Framework7Class {
           $pageContentEl.scrollTop($pageContentEl[0].scrollHeight - pageOffsetHeight);
         }
         $el.trigger('messagebar:resizepage');
-        messagebar.emit('local::resizePage messagebarResizePage');
+        messagebar.emit('local::resizePage messagebarResizePage', messagebar);
       }
     }
   }
@@ -17455,7 +18215,7 @@ class Messagebar$1 extends Framework7Class {
   renderAttachment(attachment) {
     const messagebar = this;
     if (messagebar.params.renderAttachment) {
-      return messagebar.params.renderAttachment(attachment);
+      return messagebar.params.renderAttachment.call(messagebar, attachment);
     }
     return `
       <div class="messagebar-attachment">
@@ -17468,7 +18228,7 @@ class Messagebar$1 extends Framework7Class {
     const messagebar = this;
     let html;
     if (messagebar.params.renderAttachments) {
-      html = messagebar.params.renderAttachments(messagebar.attachments);
+      html = messagebar.params.renderAttachments.call(messagebar, messagebar.attachments);
     } else {
       html = `${messagebar.attachments.map(attachment => messagebar.renderAttachment(attachment)).join('')}`;
     }
@@ -17536,16 +18296,16 @@ class Messagebar$1 extends Framework7Class {
   }
 }
 
-var Messagebar = {
+var Messagebar$1 = {
   name: 'messagebar',
   static: {
-    Messagebar: Messagebar$1,
+    Messagebar,
   },
   create() {
     const app = this;
     app.messagebar = ConstructorMethods({
       defaultSelector: '.messagebar',
-      constructor: Messagebar$1,
+      constructor: Messagebar,
       app,
       domProp: 'f7Messagebar',
       addMethods: 'clear getValue setValue setPlaceholder resizePage focus blur attachmentsCreate attachmentsShow attachmentsHide attachmentsToggle renderAttachments sheetCreate sheetShow sheetHide sheetToggle'.split(' '),
@@ -17577,12 +18337,9 @@ var Messagebar = {
       });
     },
   },
-  clicks: {
-
-  },
 };
 
-var updateSize = function () {
+function updateSize () {
   const swiper = this;
   let width;
   let height;
@@ -17610,13 +18367,15 @@ var updateSize = function () {
     height,
     size: swiper.isHorizontal() ? width : height,
   });
-};
+}
 
-var updateSlides = function () {
+function updateSlides () {
   const swiper = this;
   const params = swiper.params;
 
-  const { $wrapperEl, size: swiperSize, rtl, wrongRTL } = swiper;
+  const {
+    $wrapperEl, size: swiperSize, rtlTranslate: rtl, wrongRTL,
+  } = swiper;
   const slides = $wrapperEl.children(`.${swiper.params.slideClass}`);
   const isVirtual = swiper.virtual && params.virtual.enabled;
   const slidesLength = isVirtual ? swiper.virtual.slides.length : slides.length;
@@ -17712,8 +18471,18 @@ var updateSlides = function () {
         .attr('data-swiper-row', row);
     }
     if (slide.css('display') === 'none') continue; // eslint-disable-line
+
     if (params.slidesPerView === 'auto') {
-      slideSize = swiper.isHorizontal() ? slide.outerWidth(true) : slide.outerHeight(true);
+      const slideStyles = window.getComputedStyle(slide[0], null);
+      if (swiper.isHorizontal()) {
+        slideSize = slide[0].getBoundingClientRect().width +
+          parseFloat(slideStyles.getPropertyValue('margin-left')) +
+          parseFloat(slideStyles.getPropertyValue('margin-right'));
+      } else {
+        slideSize = slide[0].getBoundingClientRect().height +
+          parseFloat(slideStyles.getPropertyValue('margin-top')) +
+          parseFloat(slideStyles.getPropertyValue('margin-bottom'));
+      }
       if (params.roundLengths) slideSize = Math.floor(slideSize);
     } else {
       slideSize = (swiperSize - ((params.slidesPerView - 1) * spaceBetween)) / params.slidesPerView;
@@ -17759,7 +18528,7 @@ var updateSlides = function () {
     rtl && wrongRTL && (params.effect === 'slide' || params.effect === 'coverflow')) {
     $wrapperEl.css({ width: `${swiper.virtualSize + params.spaceBetween}px` });
   }
-  if (!Support$1.flexbox || params.setWrapperSize) {
+  if (!Support.flexbox || params.setWrapperSize) {
     if (swiper.isHorizontal()) $wrapperEl.css({ width: `${swiper.virtualSize + params.spaceBetween}px` });
     else $wrapperEl.css({ height: `${swiper.virtualSize + params.spaceBetween}px` });
   }
@@ -17811,6 +18580,7 @@ var updateSlides = function () {
     swiper.emit('slidesLengthChange');
   }
   if (snapGrid.length !== previousSnapGridLength) {
+    if (swiper.params.watchOverflow) swiper.checkOverflow();
     swiper.emit('snapGridLengthChange');
   }
   if (slidesGrid.length !== previousSlidesGridLength) {
@@ -17820,14 +18590,18 @@ var updateSlides = function () {
   if (params.watchSlidesProgress || params.watchSlidesVisibility) {
     swiper.updateSlidesOffset();
   }
-};
+}
 
-var updateAutoHeight = function () {
+function updateAutoHeight (speed) {
   const swiper = this;
   const activeSlides = [];
   let newHeight = 0;
   let i;
-
+  if (typeof speed === 'number') {
+    swiper.setTransition(speed);
+  } else if (speed === true) {
+    swiper.setTransition(swiper.params.speed);
+  }
   // Find slides currently in view
   if (swiper.params.slidesPerView !== 'auto' && swiper.params.slidesPerView > 1) {
     for (i = 0; i < Math.ceil(swiper.params.slidesPerView); i += 1) {
@@ -17849,21 +18623,21 @@ var updateAutoHeight = function () {
 
   // Update Height
   if (newHeight) swiper.$wrapperEl.css('height', `${newHeight}px`);
-};
+}
 
-var updateSlidesOffset = function () {
+function updateSlidesOffset () {
   const swiper = this;
   const slides = swiper.slides;
   for (let i = 0; i < slides.length; i += 1) {
     slides[i].swiperSlideOffset = swiper.isHorizontal() ? slides[i].offsetLeft : slides[i].offsetTop;
   }
-};
+}
 
-var updateSlidesProgress = function (translate = this.translate || 0) {
+function updateSlidesProgress (translate = this.translate || 0) {
   const swiper = this;
   const params = swiper.params;
 
-  const { slides, rtl } = swiper;
+  const { slides, rtlTranslate: rtl } = swiper;
 
   if (slides.length === 0) return;
   if (typeof slides[0].swiperSlideOffset === 'undefined') swiper.updateSlidesOffset();
@@ -17893,9 +18667,9 @@ var updateSlidesProgress = function (translate = this.translate || 0) {
     }
     slide.progress = rtl ? -slideProgress : slideProgress;
   }
-};
+}
 
-var updateProgress = function (translate = this.translate || 0) {
+function updateProgress (translate = this.translate || 0) {
   const swiper = this;
   const params = swiper.params;
 
@@ -17931,12 +18705,14 @@ var updateProgress = function (translate = this.translate || 0) {
   }
 
   swiper.emit('progress', progress);
-};
+}
 
-var updateSlidesClasses = function () {
+function updateSlidesClasses () {
   const swiper = this;
 
-  const { slides, params, $wrapperEl, activeIndex, realIndex } = swiper;
+  const {
+    slides, params, $wrapperEl, activeIndex, realIndex,
+  } = swiper;
   const isVirtual = swiper.virtual && params.virtual.enabled;
 
   slides.removeClass(`${params.slideActiveClass} ${params.slideNextClass} ${params.slidePrevClass} ${params.slideDuplicateActiveClass} ${params.slideDuplicateNextClass} ${params.slideDuplicatePrevClass}`);
@@ -17996,12 +18772,14 @@ var updateSlidesClasses = function () {
         .addClass(params.slideDuplicatePrevClass);
     }
   }
-};
+}
 
-var updateActiveIndex = function (newActiveIndex) {
+function updateActiveIndex (newActiveIndex) {
   const swiper = this;
-  const translate = swiper.rtl ? swiper.translate : -swiper.translate;
-  const { slidesGrid, snapGrid, params, activeIndex: previousIndex, realIndex: previousRealIndex, snapIndex: previousSnapIndex } = swiper;
+  const translate = swiper.rtlTranslate ? swiper.translate : -swiper.translate;
+  const {
+    slidesGrid, snapGrid, params, activeIndex: previousIndex, realIndex: previousRealIndex, snapIndex: previousSnapIndex,
+  } = swiper;
   let activeIndex = newActiveIndex;
   let snapIndex;
   if (typeof activeIndex === 'undefined') {
@@ -18050,9 +18828,9 @@ var updateActiveIndex = function (newActiveIndex) {
     swiper.emit('realIndexChange');
   }
   swiper.emit('slideChange');
-};
+}
 
-var updateClickedSlide = function (e) {
+function updateClickedSlide (e) {
   const swiper = this;
   const params = swiper.params;
   const slide = $(e.target).closest(`.${params.slideClass}`)[0];
@@ -18078,7 +18856,7 @@ var updateClickedSlide = function (e) {
   if (params.slideToClickedSlide && swiper.clickedIndex !== undefined && swiper.clickedIndex !== swiper.activeIndex) {
     swiper.slideToClickedSlide();
   }
-};
+}
 
 var update = {
   updateSize,
@@ -18092,10 +18870,12 @@ var update = {
   updateClickedSlide,
 };
 
-var getTranslate = function (axis = this.isHorizontal() ? 'x' : 'y') {
+function getTranslate (axis = this.isHorizontal() ? 'x' : 'y') {
   const swiper = this;
 
-  const { params, rtl, translate, $wrapperEl } = swiper;
+  const {
+    params, rtlTranslate: rtl, translate, $wrapperEl,
+  } = swiper;
 
   if (params.virtualTranslate) {
     return rtl ? -translate : translate;
@@ -18105,11 +18885,13 @@ var getTranslate = function (axis = this.isHorizontal() ? 'x' : 'y') {
   if (rtl) currentTranslate = -currentTranslate;
 
   return currentTranslate || 0;
-};
+}
 
-var setTranslate = function (translate, byController) {
+function setTranslate (translate, byController) {
   const swiper = this;
-  const { rtl, params, $wrapperEl, progress } = swiper;
+  const {
+    rtlTranslate: rtl, params, $wrapperEl, progress,
+  } = swiper;
   let x = 0;
   let y = 0;
   const z = 0;
@@ -18126,7 +18908,7 @@ var setTranslate = function (translate, byController) {
   }
 
   if (!params.virtualTranslate) {
-    if (Support$1.transforms3d) $wrapperEl.transform(`translate3d(${x}px, ${y}px, ${z}px)`);
+    if (Support.transforms3d) $wrapperEl.transform(`translate3d(${x}px, ${y}px, ${z}px)`);
     else $wrapperEl.transform(`translate(${x}px, ${y}px)`);
   }
 
@@ -18145,15 +18927,15 @@ var setTranslate = function (translate, byController) {
   }
 
   swiper.emit('setTranslate', swiper.translate, byController);
-};
+}
 
-var minTranslate = function () {
+function minTranslate () {
   return (-this.snapGrid[0]);
-};
+}
 
-var maxTranslate = function () {
+function maxTranslate () {
   return (-this.snapGrid[this.snapGrid.length - 1]);
-};
+}
 
 var translate = {
   getTranslate,
@@ -18162,51 +18944,72 @@ var translate = {
   maxTranslate,
 };
 
-var setTransition = function (duration, byController) {
+function setTransition (duration, byController) {
   const swiper = this;
 
   swiper.$wrapperEl.transition(duration);
 
   swiper.emit('setTransition', duration, byController);
-};
+}
 
-var transitionStart = function (runCallbacks = true) {
+function transitionStart (runCallbacks = true, direction) {
   const swiper = this;
   const { activeIndex, params, previousIndex } = swiper;
   if (params.autoHeight) {
     swiper.updateAutoHeight();
   }
+
+  let dir = direction;
+  if (!dir) {
+    if (activeIndex > previousIndex) dir = 'next';
+    else if (activeIndex < previousIndex) dir = 'prev';
+    else dir = 'reset';
+  }
+
   swiper.emit('transitionStart');
 
-  if (!runCallbacks) return;
-  if (activeIndex !== previousIndex) {
+  if (runCallbacks && activeIndex !== previousIndex) {
+    if (dir === 'reset') {
+      swiper.emit('slideResetTransitionStart');
+      return;
+    }
     swiper.emit('slideChangeTransitionStart');
-    if (activeIndex > previousIndex) {
+    if (dir === 'next') {
       swiper.emit('slideNextTransitionStart');
     } else {
       swiper.emit('slidePrevTransitionStart');
     }
   }
-};
+}
 
-var transitionEnd = function (runCallbacks = true) {
+function transitionEnd (runCallbacks = true, direction) {
   const swiper = this;
   const { activeIndex, previousIndex } = swiper;
   swiper.animating = false;
   swiper.setTransition(0);
 
+  let dir = direction;
+  if (!dir) {
+    if (activeIndex > previousIndex) dir = 'next';
+    else if (activeIndex < previousIndex) dir = 'prev';
+    else dir = 'reset';
+  }
+
   swiper.emit('transitionEnd');
-  if (runCallbacks) {
-    if (activeIndex !== previousIndex) {
-      swiper.emit('slideChangeTransitionEnd');
-      if (activeIndex > previousIndex) {
-        swiper.emit('slideNextTransitionEnd');
-      } else {
-        swiper.emit('slidePrevTransitionEnd');
-      }
+
+  if (runCallbacks && activeIndex !== previousIndex) {
+    if (dir === 'reset') {
+      swiper.emit('slideResetTransitionEnd');
+      return;
+    }
+    swiper.emit('slideChangeTransitionEnd');
+    if (dir === 'next') {
+      swiper.emit('slideNextTransitionEnd');
+    } else {
+      swiper.emit('slidePrevTransitionEnd');
     }
   }
-};
+}
 
 var transition = {
   setTransition,
@@ -18214,35 +19017,17 @@ var transition = {
   transitionEnd,
 };
 
-const Browser = (function Browser() {
-  function isIE9() {
-    // create temporary DIV
-    const div = document.createElement('div');
-    // add content to tmp DIV which is wrapped into the IE HTML conditional statement
-    div.innerHTML = '<!--[if lte IE 9]><i></i><![endif]-->';
-    // return true / false value based on what will browser render
-    return div.getElementsByTagName('i').length === 1;
-  }
-  function isSafari() {
-    const ua = window.navigator.userAgent.toLowerCase();
-    return (ua.indexOf('safari') >= 0 && ua.indexOf('chrome') < 0 && ua.indexOf('android') < 0);
-  }
-  return {
-    isSafari: isSafari(),
-    isUiWebView: /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(window.navigator.userAgent),
-    ie: window.navigator.pointerEnabled || window.navigator.msPointerEnabled,
-    ieTouch: (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints > 1) ||
-             (window.navigator.pointerEnabled && window.navigator.maxTouchPoints > 1),
-    lteIE9: isIE9(),
-  };
-}());
-
-var slideTo = function (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
+function slideTo (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   let slideIndex = index;
   if (slideIndex < 0) slideIndex = 0;
 
-  const { params, snapGrid, slidesGrid, previousIndex, activeIndex, rtl, $wrapperEl } = swiper;
+  const {
+    params, snapGrid, slidesGrid, previousIndex, activeIndex, rtlTranslate: rtl, $wrapperEl,
+  } = swiper;
+  if (swiper.animating && params.preventIntercationOnTransition) {
+    return false;
+  }
 
   let snapIndex = Math.floor(slideIndex / params.slidesPerGroup);
   if (snapIndex >= snapGrid.length) snapIndex = snapGrid.length - 1;
@@ -18264,14 +19049,21 @@ var slideTo = function (index = 0, speed = this.params.speed, runCallbacks = tru
       }
     }
   }
-
   // Directions locks
-  if (!swiper.allowSlideNext && translate < swiper.translate && translate < swiper.minTranslate()) {
-    return false;
+  if (swiper.initialized && slideIndex !== activeIndex) {
+    if (!swiper.allowSlideNext && translate < swiper.translate && translate < swiper.minTranslate()) {
+      return false;
+    }
+    if (!swiper.allowSlidePrev && translate > swiper.translate && translate > swiper.maxTranslate()) {
+      if ((activeIndex || 0) !== slideIndex) return false;
+    }
   }
-  if (!swiper.allowSlidePrev && translate > swiper.translate && translate > swiper.maxTranslate()) {
-    if ((activeIndex || 0) !== slideIndex) return false;
-  }
+
+  let direction;
+  if (slideIndex > activeIndex) direction = 'next';
+  else if (slideIndex < activeIndex) direction = 'prev';
+  else direction = 'reset';
+
 
   // Update Index
   if ((rtl && -translate === swiper.translate) || (!rtl && translate === swiper.translate)) {
@@ -18284,38 +19076,52 @@ var slideTo = function (index = 0, speed = this.params.speed, runCallbacks = tru
     if (params.effect !== 'slide') {
       swiper.setTranslate(translate);
     }
+    if (direction !== 'reset') {
+      swiper.transitionStart(runCallbacks, direction);
+      swiper.transitionEnd(runCallbacks, direction);
+    }
     return false;
   }
 
-  if (speed === 0 || Browser.lteIE9) {
+  if (speed === 0 || !Support.transition) {
     swiper.setTransition(0);
     swiper.setTranslate(translate);
     swiper.updateActiveIndex(slideIndex);
     swiper.updateSlidesClasses();
     swiper.emit('beforeTransitionStart', speed, internal);
-    swiper.transitionStart(runCallbacks);
-    swiper.transitionEnd(runCallbacks);
+    swiper.transitionStart(runCallbacks, direction);
+    swiper.transitionEnd(runCallbacks, direction);
   } else {
     swiper.setTransition(speed);
     swiper.setTranslate(translate);
     swiper.updateActiveIndex(slideIndex);
     swiper.updateSlidesClasses();
     swiper.emit('beforeTransitionStart', speed, internal);
-    swiper.transitionStart(runCallbacks);
+    swiper.transitionStart(runCallbacks, direction);
     if (!swiper.animating) {
       swiper.animating = true;
       $wrapperEl.transitionEnd(() => {
         if (!swiper || swiper.destroyed) return;
-        swiper.transitionEnd(runCallbacks);
+        swiper.transitionEnd(runCallbacks, direction);
       });
     }
   }
 
   return true;
-};
+}
+
+function slideToLoop (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
+  const swiper = this;
+  let newIndex = index;
+  if (swiper.params.loop) {
+    newIndex += swiper.loopedSlides;
+  }
+
+  return swiper.slideTo(newIndex, speed, runCallbacks, internal);
+}
 
 /* eslint no-unused-vars: "off" */
-var slideNext = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slideNext (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   const { params, animating } = swiper;
   if (params.loop) {
@@ -18326,10 +19132,10 @@ var slideNext = function (speed = this.params.speed, runCallbacks = true, intern
     return swiper.slideTo(swiper.activeIndex + params.slidesPerGroup, speed, runCallbacks, internal);
   }
   return swiper.slideTo(swiper.activeIndex + params.slidesPerGroup, speed, runCallbacks, internal);
-};
+}
 
 /* eslint no-unused-vars: "off" */
-var slidePrev = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slidePrev (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   const { params, animating } = swiper;
 
@@ -18341,15 +19147,35 @@ var slidePrev = function (speed = this.params.speed, runCallbacks = true, intern
     return swiper.slideTo(swiper.activeIndex - 1, speed, runCallbacks, internal);
   }
   return swiper.slideTo(swiper.activeIndex - 1, speed, runCallbacks, internal);
-};
+}
 
 /* eslint no-unused-vars: "off" */
-var slideReset = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slideReset (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   return swiper.slideTo(swiper.activeIndex, speed, runCallbacks, internal);
-};
+}
 
-var slideToClickedSlide = function () {
+/* eslint no-unused-vars: "off" */
+function slideToClosest (speed = this.params.speed, runCallbacks = true, internal) {
+  const swiper = this;
+  let index = swiper.activeIndex;
+  const snapIndex = Math.floor(index / swiper.params.slidesPerGroup);
+
+  if (snapIndex < swiper.snapGrid.length - 1) {
+    const translate = swiper.rtlTranslate ? swiper.translate : -swiper.translate;
+
+    const currentSnap = swiper.snapGrid[snapIndex];
+    const nextSnap = swiper.snapGrid[snapIndex + 1];
+
+    if ((translate - currentSnap) > (nextSnap - currentSnap) / 2) {
+      index = swiper.params.slidesPerGroup;
+    }
+  }
+
+  return swiper.slideTo(index, speed, runCallbacks, internal);
+}
+
+function slideToClickedSlide () {
   const swiper = this;
   const { params, $wrapperEl } = swiper;
 
@@ -18392,17 +19218,19 @@ var slideToClickedSlide = function () {
   } else {
     swiper.slideTo(slideToIndex);
   }
-};
+}
 
 var slide = {
   slideTo,
+  slideToLoop,
   slideNext,
   slidePrev,
   slideReset,
+  slideToClosest,
   slideToClickedSlide,
 };
 
-var loopCreate = function () {
+function loopCreate () {
   const swiper = this;
   const { params, $wrapperEl } = swiper;
   // Remove duplicated slides
@@ -18443,35 +19271,48 @@ var loopCreate = function () {
   for (let i = prependSlides.length - 1; i >= 0; i -= 1) {
     $wrapperEl.prepend($(prependSlides[i].cloneNode(true)).addClass(params.slideDuplicateClass));
   }
-};
+}
 
-var loopFix = function () {
+function loopFix () {
   const swiper = this;
-  const { params, activeIndex, slides, loopedSlides, allowSlidePrev, allowSlideNext } = swiper;
+  const {
+    params, activeIndex, slides, loopedSlides, allowSlidePrev, allowSlideNext, snapGrid, rtlTranslate: rtl,
+  } = swiper;
   let newIndex;
   swiper.allowSlidePrev = true;
   swiper.allowSlideNext = true;
+
+  const snapTranslate = -snapGrid[activeIndex];
+  const diff = snapTranslate - swiper.getTranslate();
+
+
   // Fix For Negative Oversliding
   if (activeIndex < loopedSlides) {
     newIndex = (slides.length - (loopedSlides * 3)) + activeIndex;
     newIndex += loopedSlides;
-    swiper.slideTo(newIndex, 0, false, true);
+    const slideChanged = swiper.slideTo(newIndex, 0, false, true);
+    if (slideChanged && diff !== 0) {
+      swiper.setTranslate((rtl ? -swiper.translate : swiper.translate) - diff);
+    }
   } else if ((params.slidesPerView === 'auto' && activeIndex >= loopedSlides * 2) || (activeIndex > slides.length - (params.slidesPerView * 2))) {
     // Fix For Positive Oversliding
     newIndex = -slides.length + activeIndex + loopedSlides;
     newIndex += loopedSlides;
-    swiper.slideTo(newIndex, 0, false, true);
+    const slideChanged = swiper.slideTo(newIndex, 0, false, true);
+    if (slideChanged && diff !== 0) {
+      swiper.setTranslate((rtl ? -swiper.translate : swiper.translate) - diff);
+    }
   }
   swiper.allowSlidePrev = allowSlidePrev;
   swiper.allowSlideNext = allowSlideNext;
-};
+}
 
-var loopDestroy = function () {
+function loopDestroy () {
   const swiper = this;
   const { $wrapperEl, params, slides } = swiper;
   $wrapperEl.children(`.${params.slideClass}.${params.slideDuplicateClass}`).remove();
   slides.removeAttr('data-swiper-slide-index');
-};
+}
 
 var loop = {
   loopCreate,
@@ -18479,28 +19320,28 @@ var loop = {
   loopDestroy,
 };
 
-var setGrabCursor = function (moving) {
+function setGrabCursor (moving) {
   const swiper = this;
-  if (Support$1.touch || !swiper.params.simulateTouch) return;
+  if (Support.touch || !swiper.params.simulateTouch) return;
   const el = swiper.el;
   el.style.cursor = 'move';
   el.style.cursor = moving ? '-webkit-grabbing' : '-webkit-grab';
   el.style.cursor = moving ? '-moz-grabbin' : '-moz-grab';
   el.style.cursor = moving ? 'grabbing' : 'grab';
-};
+}
 
-var unsetGrabCursor = function () {
+function unsetGrabCursor () {
   const swiper = this;
-  if (Support$1.touch) return;
+  if (Support.touch) return;
   swiper.el.style.cursor = '';
-};
+}
 
 var grabCursor = {
   setGrabCursor,
   unsetGrabCursor,
 };
 
-var appendSlide = function (slides) {
+function appendSlide (slides) {
   const swiper = this;
   const { $wrapperEl, params } = swiper;
   if (params.loop) {
@@ -18516,12 +19357,12 @@ var appendSlide = function (slides) {
   if (params.loop) {
     swiper.loopCreate();
   }
-  if (!(params.observer && Support$1.observer)) {
+  if (!(params.observer && Support.observer)) {
     swiper.update();
   }
-};
+}
 
-var prependSlide = function (slides) {
+function prependSlide (slides) {
   const swiper = this;
   const { params, $wrapperEl, activeIndex } = swiper;
 
@@ -18540,13 +19381,13 @@ var prependSlide = function (slides) {
   if (params.loop) {
     swiper.loopCreate();
   }
-  if (!(params.observer && Support$1.observer)) {
+  if (!(params.observer && Support.observer)) {
     swiper.update();
   }
   swiper.slideTo(newActiveIndex, 0, false);
-};
+}
 
-var removeSlide = function (slidesIndexes) {
+function removeSlide (slidesIndexes) {
   const swiper = this;
   const { params, $wrapperEl, activeIndex } = swiper;
 
@@ -18575,7 +19416,7 @@ var removeSlide = function (slidesIndexes) {
     swiper.loopCreate();
   }
 
-  if (!(params.observer && Support$1.observer)) {
+  if (!(params.observer && Support.observer)) {
     swiper.update();
   }
   if (params.loop) {
@@ -18583,9 +19424,9 @@ var removeSlide = function (slidesIndexes) {
   } else {
     swiper.slideTo(newActiveIndex, 0, false);
   }
-};
+}
 
-var removeAllSlides = function () {
+function removeAllSlides () {
   const swiper = this;
 
   const slidesIndexes = [];
@@ -18593,7 +19434,7 @@ var removeAllSlides = function () {
     slidesIndexes.push(i);
   }
   swiper.removeSlide(slidesIndexes);
-};
+}
 
 var manipulation = {
   appendSlide,
@@ -18602,16 +19443,19 @@ var manipulation = {
   removeAllSlides,
 };
 
-var onTouchStart = function (event) {
+function onTouchStart (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
   const { params, touches } = swiper;
+  if (swiper.animating && params.preventIntercationOnTransition) {
+    return;
+  }
   let e = event;
   if (e.originalEvent) e = e.originalEvent;
   data.isTouchEvent = e.type === 'touchstart';
   if (!data.isTouchEvent && 'which' in e && e.which === 3) return;
   if (data.isTouched && data.isMoved) return;
-  if (params.noSwiping && $(e.target).closest(`.${params.noSwipingClass}`)[0]) {
+  if (params.noSwiping && $(e.target).closest(params.noSwipingSelector ? params.noSwipingSelector : `.${params.noSwipingClass}`)[0]) {
     swiper.allowClick = true;
     return;
   }
@@ -18654,7 +19498,11 @@ var onTouchStart = function (event) {
   if (e.type !== 'touchstart') {
     let preventDefault = true;
     if ($(e.target).is(data.formElements)) preventDefault = false;
-    if (document.activeElement && $(document.activeElement).is(data.formElements)) {
+    if (
+      document.activeElement &&
+      $(document.activeElement).is(data.formElements) &&
+      document.activeElement !== e.target
+    ) {
       document.activeElement.blur();
     }
     if (preventDefault && swiper.allowTouchMove) {
@@ -18662,14 +19510,20 @@ var onTouchStart = function (event) {
     }
   }
   swiper.emit('touchStart', e);
-};
+}
 
-var onTouchMove = function (event) {
+function onTouchMove (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
-  const { params, touches, rtl } = swiper;
+  const { params, touches, rtlTranslate: rtl } = swiper;
   let e = event;
   if (e.originalEvent) e = e.originalEvent;
+  if (!data.isTouched) {
+    if (data.startMoving && data.isScrolling) {
+      swiper.emit('touchMoveOpposite', e);
+    }
+    return;
+  }
   if (data.isTouchEvent && e.type === 'mousemove') return;
   const pageX = e.type === 'touchmove' ? e.targetTouches[0].pageX : e.pageX;
   const pageY = e.type === 'touchmove' ? e.targetTouches[0].pageY : e.pageY;
@@ -18748,7 +19602,6 @@ var onTouchMove = function (event) {
       data.startMoving = true;
     }
   }
-  if (!data.isTouched) return;
   if (data.isScrolling) {
     data.isTouched = false;
     return;
@@ -18857,20 +19710,29 @@ var onTouchMove = function (event) {
   swiper.updateProgress(data.currentTranslate);
   // Update translate
   swiper.setTranslate(data.currentTranslate);
-};
+}
 
-var onTouchEnd = function (event) {
+function onTouchEnd (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
 
-  const { params, touches, rtl, $wrapperEl, slidesGrid, snapGrid } = swiper;
+  const {
+    params, touches, rtlTranslate: rtl, $wrapperEl, slidesGrid, snapGrid,
+  } = swiper;
   let e = event;
   if (e.originalEvent) e = e.originalEvent;
   if (data.allowTouchCallbacks) {
     swiper.emit('touchEnd', e);
   }
   data.allowTouchCallbacks = false;
-  if (!data.isTouched) return;
+  if (!data.isTouched) {
+    if (data.isMoved && params.grabCursor) {
+      swiper.setGrabCursor(false);
+    }
+    data.isMoved = false;
+    data.startMoving = false;
+    return;
+  }
   // Return Grab Cursor
   if (params.grabCursor && data.isMoved && data.isTouched && (swiper.allowSlideNext === true || swiper.allowSlidePrev === true)) {
     swiper.setGrabCursor(false);
@@ -18905,10 +19767,12 @@ var onTouchEnd = function (event) {
   if (!data.isTouched || !data.isMoved || !swiper.swipeDirection || touches.diff === 0 || data.currentTranslate === data.startTranslate) {
     data.isTouched = false;
     data.isMoved = false;
+    data.startMoving = false;
     return;
   }
   data.isTouched = false;
   data.isMoved = false;
+  data.startMoving = false;
 
   let currentPos;
   if (params.followFinger) {
@@ -18916,6 +19780,7 @@ var onTouchEnd = function (event) {
   } else {
     currentPos = -data.currentTranslate;
   }
+
   if (params.freeMode) {
     if (currentPos < -swiper.minTranslate()) {
       swiper.slideTo(swiper.activeIndex);
@@ -18957,6 +19822,7 @@ var onTouchEnd = function (event) {
 
       let newPosition = swiper.translate + momentumDistance;
       if (rtl) newPosition = -newPosition;
+
       let doBounce = false;
       let afterBouncePosition;
       const bounceAmount = Math.abs(swiper.velocity) * 20 * params.freeModeMomentumBounceRatio;
@@ -18990,6 +19856,7 @@ var onTouchEnd = function (event) {
             break;
           }
         }
+
         if (Math.abs(snapGrid[nextSlide] - newPosition) < Math.abs(snapGrid[nextSlide - 1] - newPosition) || swiper.swipeDirection === 'next') {
           newPosition = snapGrid[nextSlide];
         } else {
@@ -19005,7 +19872,7 @@ var onTouchEnd = function (event) {
           momentumDuration = Math.abs((newPosition - swiper.translate) / swiper.velocity);
         }
       } else if (params.freeModeSticky) {
-        swiper.slideReset();
+        swiper.slideToClosest();
         return;
       }
 
@@ -19013,7 +19880,7 @@ var onTouchEnd = function (event) {
         swiper.updateProgress(afterBouncePosition);
         swiper.setTransition(momentumDuration);
         swiper.setTranslate(newPosition);
-        swiper.transitionStart();
+        swiper.transitionStart(true, swiper.swipeDirection);
         swiper.animating = true;
         $wrapperEl.transitionEnd(() => {
           if (!swiper || swiper.destroyed || !data.allowMomentumBounce) return;
@@ -19030,7 +19897,7 @@ var onTouchEnd = function (event) {
         swiper.updateProgress(newPosition);
         swiper.setTransition(momentumDuration);
         swiper.setTranslate(newPosition);
-        swiper.transitionStart();
+        swiper.transitionStart(true, swiper.swipeDirection);
         if (!swiper.animating) {
           swiper.animating = true;
           $wrapperEl.transitionEnd(() => {
@@ -19044,7 +19911,11 @@ var onTouchEnd = function (event) {
 
       swiper.updateActiveIndex();
       swiper.updateSlidesClasses();
+    } else if (params.freeModeSticky) {
+      swiper.slideToClosest();
+      return;
     }
+
     if (!params.freeModeMomentum || timeDiff >= params.longSwipesMs) {
       swiper.updateProgress();
       swiper.updateActiveIndex();
@@ -19098,9 +19969,9 @@ var onTouchEnd = function (event) {
       swiper.slideTo(stopIndex);
     }
   }
-};
+}
 
-var onResize = function () {
+function onResize () {
   const swiper = this;
 
   const { params, el } = swiper;
@@ -19142,9 +20013,9 @@ var onResize = function () {
   // Return locks after resize
   swiper.allowSlidePrev = allowSlidePrev;
   swiper.allowSlideNext = allowSlideNext;
-};
+}
 
-var onClick = function (e) {
+function onClick (e) {
   const swiper = this;
   if (!swiper.allowClick) {
     if (swiper.params.preventClicks) e.preventDefault();
@@ -19153,12 +20024,13 @@ var onClick = function (e) {
       e.stopImmediatePropagation();
     }
   }
-};
+}
 
 function attachEvents() {
   const swiper = this;
-
-  const { params, touchEvents, el, wrapperEl } = swiper;
+  const {
+    params, touchEvents, el, wrapperEl,
+  } = swiper;
 
   {
     swiper.onTouchStart = onTouchStart.bind(swiper);
@@ -19173,18 +20045,18 @@ function attachEvents() {
 
   // Touch Events
   {
-    if (Browser.ie) {
+    if (!Support.touch && (Support.pointerEvents || Support.prefixedPointerEvents)) {
       target.addEventListener(touchEvents.start, swiper.onTouchStart, false);
-      (Support$1.touch ? target : document).addEventListener(touchEvents.move, swiper.onTouchMove, capture);
-      (Support$1.touch ? target : document).addEventListener(touchEvents.end, swiper.onTouchEnd, false);
+      document.addEventListener(touchEvents.move, swiper.onTouchMove, capture);
+      document.addEventListener(touchEvents.end, swiper.onTouchEnd, false);
     } else {
-      if (Support$1.touch) {
-        const passiveListener = touchEvents.start === 'touchstart' && Support$1.passiveListener && params.passiveListeners ? { passive: true, capture: false } : false;
+      if (Support.touch) {
+        const passiveListener = touchEvents.start === 'touchstart' && Support.passiveListener && params.passiveListeners ? { passive: true, capture: false } : false;
         target.addEventListener(touchEvents.start, swiper.onTouchStart, passiveListener);
-        target.addEventListener(touchEvents.move, swiper.onTouchMove, Support$1.passiveListener ? { passive: false, capture } : capture);
+        target.addEventListener(touchEvents.move, swiper.onTouchMove, Support.passiveListener ? { passive: false, capture } : capture);
         target.addEventListener(touchEvents.end, swiper.onTouchEnd, passiveListener);
       }
-      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support$1.touch && Device.ios)) {
+      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
         target.addEventListener('mousedown', swiper.onTouchStart, false);
         document.addEventListener('mousemove', swiper.onTouchMove, capture);
         document.addEventListener('mouseup', swiper.onTouchEnd, false);
@@ -19197,31 +20069,33 @@ function attachEvents() {
   }
 
   // Resize handler
-  swiper.on('resize observerUpdate', onResize);
+  swiper.on('resize observerUpdate', onResize, true);
 }
 
 function detachEvents() {
   const swiper = this;
 
-  const { params, touchEvents, el, wrapperEl } = swiper;
+  const {
+    params, touchEvents, el, wrapperEl,
+  } = swiper;
 
   const target = params.touchEventsTarget === 'container' ? el : wrapperEl;
   const capture = !!params.nested;
 
   // Touch Events
   {
-    if (Browser.ie) {
+    if (!Support.touch && (Support.pointerEvents || Support.prefixedPointerEvents)) {
       target.removeEventListener(touchEvents.start, swiper.onTouchStart, false);
-      (Support$1.touch ? target : document).removeEventListener(touchEvents.move, swiper.onTouchMove, capture);
-      (Support$1.touch ? target : document).removeEventListener(touchEvents.end, swiper.onTouchEnd, false);
+      document.removeEventListener(touchEvents.move, swiper.onTouchMove, capture);
+      document.removeEventListener(touchEvents.end, swiper.onTouchEnd, false);
     } else {
-      if (Support$1.touch) {
-        const passiveListener = touchEvents.start === 'onTouchStart' && Support$1.passiveListener && params.passiveListeners ? { passive: true, capture: false } : false;
+      if (Support.touch) {
+        const passiveListener = touchEvents.start === 'onTouchStart' && Support.passiveListener && params.passiveListeners ? { passive: true, capture: false } : false;
         target.removeEventListener(touchEvents.start, swiper.onTouchStart, passiveListener);
         target.removeEventListener(touchEvents.move, swiper.onTouchMove, capture);
         target.removeEventListener(touchEvents.end, swiper.onTouchEnd, passiveListener);
       }
-      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support$1.touch && Device.ios)) {
+      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
         target.removeEventListener('mousedown', swiper.onTouchStart, false);
         document.removeEventListener('mousemove', swiper.onTouchMove, capture);
         document.removeEventListener('mouseup', swiper.onTouchEnd, false);
@@ -19242,7 +20116,7 @@ var events = {
   detachEvents,
 };
 
-var setBreakpoint = function () {
+function setBreakpoint () {
   const swiper = this;
   const { activeIndex, loopedSlides = 0, params } = swiper;
   const breakpoints = params.breakpoints;
@@ -19271,9 +20145,9 @@ var setBreakpoint = function () {
     }
     swiper.emit('breakpoint', breakPointsParams);
   }
-};
+}
 
-var getBreakpoint = function (breakpoints) {
+function getBreakpoint (breakpoints) {
   // Get breakpoint for window width
   if (!breakpoints) return undefined;
   let breakpoint = false;
@@ -19289,13 +20163,27 @@ var getBreakpoint = function (breakpoints) {
     }
   }
   return breakpoint || 'max';
-};
+}
 
 var breakpoints = { setBreakpoint, getBreakpoint };
 
-var addClasses = function () {
+const Browser = (function Browser() {
+  function isSafari() {
+    const ua = window.navigator.userAgent.toLowerCase();
+    return (ua.indexOf('safari') >= 0 && ua.indexOf('chrome') < 0 && ua.indexOf('android') < 0);
+  }
+  return {
+    isIE: !!window.navigator.userAgent.match(/Trident/g) || !!window.navigator.userAgent.match(/MSIE/g),
+    isSafari: isSafari(),
+    isUiWebView: /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(window.navigator.userAgent),
+  };
+}());
+
+function addClasses () {
   const swiper = this;
-  const { classNames, params, rtl, $el } = swiper;
+  const {
+    classNames, params, rtl, $el,
+  } = swiper;
   const suffixes = [];
 
   suffixes.push(params.direction);
@@ -19303,7 +20191,7 @@ var addClasses = function () {
   if (params.freeMode) {
     suffixes.push('free-mode');
   }
-  if (!Support$1.flexbox) {
+  if (!Support.flexbox) {
     suffixes.push('no-flexbox');
   }
   if (params.autoHeight) {
@@ -19322,7 +20210,7 @@ var addClasses = function () {
     suffixes.push('ios');
   }
   // WP8 Touch Events Fix
-  if (window.navigator.pointerEnabled || window.navigator.msPointerEnabled) {
+  if (Browser.isIE && (Support.pointerEvents || Support.prefixedPointerEvents)) {
     suffixes.push(`wp8-${params.direction}`);
   }
 
@@ -19331,18 +20219,18 @@ var addClasses = function () {
   });
 
   $el.addClass(classNames.join(' '));
-};
+}
 
-var removeClasses = function () {
+function removeClasses () {
   const swiper = this;
   const { $el, classNames } = swiper;
 
   $el.removeClass(classNames.join(' '));
-};
+}
 
 var classes = { addClasses, removeClasses };
 
-var loadImage = function (imageEl, src, srcset, sizes, checkForComplete, callback) {
+function loadImage (imageEl, src, srcset, sizes, checkForComplete, callback) {
   let image;
   function onReady() {
     if (callback) callback();
@@ -19368,9 +20256,9 @@ var loadImage = function (imageEl, src, srcset, sizes, checkForComplete, callbac
     // image already loaded...
     onReady();
   }
-};
+}
 
-var preloadImages = function () {
+function preloadImages () {
   const swiper = this;
   swiper.imagesToLoad = swiper.$el.find('img');
   function onReady() {
@@ -19392,12 +20280,27 @@ var preloadImages = function () {
       onReady
     );
   }
-};
+}
 
 var images = {
   loadImage,
   preloadImages,
 };
+
+function checkOverflow() {
+  const swiper = this;
+  const wasLocked = swiper.isLocked;
+
+  swiper.isLocked = swiper.snapGrid.length === 1;
+  swiper.allowTouchMove = !swiper.isLocked;
+
+  if (wasLocked && wasLocked !== swiper.isLocked) {
+    swiper.isEnd = false;
+    swiper.navigation.update();
+  }
+}
+
+var checkOverflow$1 = { checkOverflow };
 
 var defaults = {
   init: true,
@@ -19405,6 +20308,8 @@ var defaults = {
   touchEventsTarget: 'container',
   initialSlide: 0,
   speed: 300,
+  //
+  preventIntercationOnTransition: false,
 
   // To support iOS's swipe-to-go-back gesture (when being used in-app, with UIWebView).
   iOSEdgeSwipeDetection: false,
@@ -19445,6 +20350,9 @@ var defaults = {
   slidesOffsetBefore: 0, // in px
   slidesOffsetAfter: 0, // in px
   normalizeSlideIndex: true,
+
+  // Disable swiper and hide navigation when container not overflow
+  watchOverflow: false,
 
   // Round length
   roundLengths: false,
@@ -19498,6 +20406,7 @@ var defaults = {
   swipeHandler: null, // '.swipe-handler',
   noSwiping: true,
   noSwipingClass: 'swiper-no-swiping',
+  noSwipingSelector: null,
 
   // Passive Listeners
   passiveListeners: true,
@@ -19530,13 +20439,14 @@ const prototypes = {
   manipulation,
   events,
   breakpoints,
+  checkOverflow: checkOverflow$1,
   classes,
   images,
 };
 
 const extendedDefaults = {};
 
-class Swiper$2 extends Framework7Class {
+class Swiper extends Framework7Class {
   constructor(...args) {
     let el;
     let params;
@@ -19554,8 +20464,8 @@ class Swiper$2 extends Framework7Class {
 
     Object.keys(prototypes).forEach((prototypeGroup) => {
       Object.keys(prototypes[prototypeGroup]).forEach((protoMethod) => {
-        if (!Swiper$2.prototype[protoMethod]) {
-          Swiper$2.prototype[protoMethod] = prototypes[prototypeGroup][protoMethod];
+        if (!Swiper.prototype[protoMethod]) {
+          Swiper.prototype[protoMethod] = prototypes[prototypeGroup][protoMethod];
         }
       });
     });
@@ -19594,6 +20504,9 @@ class Swiper$2 extends Framework7Class {
     swiper.originalParams = Utils.extend({}, swiper.params);
     swiper.passedParams = Utils.extend({}, params);
 
+    // Save Dom lib
+    swiper.$ = $;
+
     // Find el
     const $el = $(swiper.params.el);
     el = $el[0];
@@ -19606,7 +20519,7 @@ class Swiper$2 extends Framework7Class {
       const swipers = [];
       $el.each((index, containerEl) => {
         const newParams = Utils.extend({}, params, { el: containerEl });
-        swipers.push(new Swiper$2(newParams));
+        swipers.push(new Swiper(newParams));
       });
       return swipers;
     }
@@ -19641,7 +20554,8 @@ class Swiper$2 extends Framework7Class {
         return swiper.params.direction === 'vertical';
       },
       // RTL
-      rtl: swiper.params.direction === 'horizontal' && (el.dir.toLowerCase() === 'rtl' || $el.css('direction') === 'rtl'),
+      rtl: (el.dir.toLowerCase() === 'rtl' || $el.css('direction') === 'rtl'),
+      rtlTranslate: swiper.params.direction === 'horizontal' && (el.dir.toLowerCase() === 'rtl' || $el.css('direction') === 'rtl'),
       wrongRTL: $wrapperEl.css('display') === '-webkit-box',
 
       // Indexes
@@ -19666,17 +20580,22 @@ class Swiper$2 extends Framework7Class {
       touchEvents: (function touchEvents() {
         const touch = ['touchstart', 'touchmove', 'touchend'];
         let desktop = ['mousedown', 'mousemove', 'mouseup'];
-        if (window.navigator.pointerEnabled) {
+        if (Support.pointerEvents) {
           desktop = ['pointerdown', 'pointermove', 'pointerup'];
-        } else if (window.navigator.msPointerEnabled) {
-          desktop = ['MSPointerDown', 'MsPointerMove', 'MsPointerUp'];
+        } else if (Support.prefixedPointerEvents) {
+          desktop = ['MSPointerDown', 'MSPointerMove', 'MSPointerUp'];
         }
-
-        return {
-          start: Support$1.touch || !swiper.params.simulateTouch ? touch[0] : desktop[0],
-          move: Support$1.touch || !swiper.params.simulateTouch ? touch[1] : desktop[1],
-          end: Support$1.touch || !swiper.params.simulateTouch ? touch[2] : desktop[2],
+        swiper.touchEventsTouch = {
+          start: touch[0],
+          move: touch[1],
+          end: touch[2],
         };
+        swiper.touchEventsDesktop = {
+          start: desktop[0],
+          move: desktop[1],
+          end: desktop[2],
+        };
+        return Support.touch || !swiper.params.simulateTouch ? swiper.touchEventsTouch : swiper.touchEventsDesktop;
       }()),
       touchEventsData: {
         isTouched: undefined,
@@ -19732,7 +20651,9 @@ class Swiper$2 extends Framework7Class {
   }
   slidesPerViewDynamic() {
     const swiper = this;
-    const { params, slides, slidesGrid, size: swiperSize, activeIndex } = swiper;
+    const {
+      params, slides, slidesGrid, size: swiperSize, activeIndex,
+    } = swiper;
     let spv = 1;
     if (params.centeredSlides) {
       let slideSize = slides[activeIndex].swiperSlideSize;
@@ -19768,9 +20689,9 @@ class Swiper$2 extends Framework7Class {
     swiper.updateProgress();
     swiper.updateSlidesClasses();
 
-    let newTranslate;
     function setTranslate() {
-      newTranslate = Math.min(Math.max(swiper.translate, swiper.maxTranslate()), swiper.minTranslate());
+      const translateValue = swiper.rtlTranslate ? swiper.translate * -1 : swiper.translate;
+      const newTranslate = Math.min(Math.max(translateValue, swiper.maxTranslate()), swiper.minTranslate());
       swiper.setTranslate(newTranslate);
       swiper.updateActiveIndex();
       swiper.updateSlidesClasses();
@@ -19818,6 +20739,10 @@ class Swiper$2 extends Framework7Class {
     // Update slides
     swiper.updateSlides();
 
+    if (swiper.params.watchOverflow) {
+      swiper.checkOverflow();
+    }
+
     // Set Grab Cursor
     if (swiper.params.grabCursor) {
       swiper.setGrabCursor();
@@ -19845,7 +20770,9 @@ class Swiper$2 extends Framework7Class {
   }
   destroy(deleteInstance = true, cleanStyles = true) {
     const swiper = this;
-    const { params, $el, $wrapperEl, slides } = swiper;
+    const {
+      params, $el, $wrapperEl, slides,
+    } = swiper;
     swiper.emit('beforeDestroy');
 
     // Init Flag
@@ -19910,7 +20837,7 @@ class Swiper$2 extends Framework7Class {
   }
 }
 
-var Device$4 = {
+var Device$1 = {
   name: 'device',
   proto: {
     device: Device,
@@ -19920,17 +20847,17 @@ var Device$4 = {
   },
 };
 
-var Support$4 = {
+var Support$1 = {
   name: 'support',
   proto: {
-    support: Support$1,
+    support: Support,
   },
   static: {
-    support: Support$1,
+    support: Support,
   },
 };
 
-var Browser$2 = {
+var Browser$1 = {
   name: 'browser',
   proto: {
     browser: Browser,
@@ -19940,18 +20867,19 @@ var Browser$2 = {
   },
 };
 
-var Resize$1 = {
+var Resize = {
   name: 'resize',
   create() {
     const swiper = this;
     Utils.extend(swiper, {
       resize: {
         resizeHandler() {
-          if (!swiper || !swiper.initialized) return;
+          if (!swiper || swiper.destroyed || !swiper.initialized) return;
+          swiper.emit('beforeResize');
           swiper.emit('resize');
         },
         orientationChangeHandler() {
-          if (!swiper || !swiper.initialized) return;
+          if (!swiper || swiper.destroyed || !swiper.initialized) return;
           swiper.emit('orientationchange');
         },
       },
@@ -19996,7 +20924,7 @@ const Observer = {
   },
   init() {
     const swiper = this;
-    if (!Support$1.observer || !swiper.params.observer) return;
+    if (!Support.observer || !swiper.params.observer) return;
     if (swiper.params.observeParents) {
       const containerParents = swiper.$el.parents();
       for (let i = 0; i < containerParents.length; i += 1) {
@@ -20063,7 +20991,7 @@ const Virtual = {
     const activeIndex = swiper.activeIndex || 0;
 
     let offsetProp;
-    if (swiper.rtl && swiper.isHorizontal()) offsetProp = 'right';
+    if (swiper.rtlTranslate) offsetProp = 'right';
     else offsetProp = swiper.isHorizontal() ? 'left' : 'top';
 
     let slidesAfter;
@@ -20242,6 +21170,7 @@ const Navigation = {
       } else {
         $prevEl.removeClass(params.disabledClass);
       }
+      $prevEl[swiper.params.watchOverflow && swiper.isLocked ? 'addClass' : 'removeClass'](params.lockClass);
     }
     if ($nextEl && $nextEl.length > 0) {
       if (swiper.isEnd) {
@@ -20249,6 +21178,7 @@ const Navigation = {
       } else {
         $nextEl.removeClass(params.disabledClass);
       }
+      $nextEl[swiper.params.watchOverflow && swiper.isLocked ? 'addClass' : 'removeClass'](params.lockClass);
     }
   },
   init() {
@@ -20327,6 +21257,7 @@ var Navigation$1 = {
       hideOnClick: false,
       disabledClass: 'swiper-button-disabled',
       hiddenClass: 'swiper-button-hidden',
+      lockClass: 'swiper-button-lock',
     },
   },
   create() {
@@ -20399,22 +21330,44 @@ const Pagination = {
     // Types
     if (params.type === 'bullets' && swiper.pagination.bullets && swiper.pagination.bullets.length > 0) {
       const bullets = swiper.pagination.bullets;
+      let firstIndex;
+      let lastIndex;
+      let midIndex;
       if (params.dynamicBullets) {
         swiper.pagination.bulletSize = bullets.eq(0)[swiper.isHorizontal() ? 'outerWidth' : 'outerHeight'](true);
-        $el.css(swiper.isHorizontal() ? 'width' : 'height', `${swiper.pagination.bulletSize * 5}px`);
+        $el.css(swiper.isHorizontal() ? 'width' : 'height', `${swiper.pagination.bulletSize * (params.dynamicMainBullets + 4)}px`);
+        if (params.dynamicMainBullets > 1 && swiper.previousIndex !== undefined) {
+          swiper.pagination.dynamicBulletIndex += (current - swiper.previousIndex);
+          if (swiper.pagination.dynamicBulletIndex > (params.dynamicMainBullets - 1)) {
+            swiper.pagination.dynamicBulletIndex = params.dynamicMainBullets - 1;
+          } else if (swiper.pagination.dynamicBulletIndex < 0) {
+            swiper.pagination.dynamicBulletIndex = 0;
+          }
+        }
+        firstIndex = current - swiper.pagination.dynamicBulletIndex;
+        lastIndex = firstIndex + (Math.min(bullets.length, params.dynamicMainBullets) - 1);
+        midIndex = (lastIndex + firstIndex) / 2;
       }
-      bullets.removeClass(`${params.bulletActiveClass} ${params.bulletActiveClass}-next ${params.bulletActiveClass}-next-next ${params.bulletActiveClass}-prev ${params.bulletActiveClass}-prev-prev`);
+      bullets.removeClass(`${params.bulletActiveClass} ${params.bulletActiveClass}-next ${params.bulletActiveClass}-next-next ${params.bulletActiveClass}-prev ${params.bulletActiveClass}-prev-prev ${params.bulletActiveClass}-main`);
       if ($el.length > 1) {
         bullets.each((index, bullet) => {
           const $bullet = $(bullet);
-          if ($bullet.index() === current) {
+          const bulletIndex = $bullet.index();
+          if (bulletIndex === current) {
             $bullet.addClass(params.bulletActiveClass);
-            if (params.dynamicBullets) {
+          }
+          if (params.dynamicBullets) {
+            if (bulletIndex >= firstIndex && bulletIndex <= lastIndex) {
+              $bullet.addClass(`${params.bulletActiveClass}-main`);
+            }
+            if (bulletIndex === firstIndex) {
               $bullet
                 .prev()
                 .addClass(`${params.bulletActiveClass}-prev`)
                 .prev()
                 .addClass(`${params.bulletActiveClass}-prev-prev`);
+            }
+            if (bulletIndex === lastIndex) {
               $bullet
                 .next()
                 .addClass(`${params.bulletActiveClass}-next`)
@@ -20427,12 +21380,17 @@ const Pagination = {
         const $bullet = bullets.eq(current);
         $bullet.addClass(params.bulletActiveClass);
         if (params.dynamicBullets) {
-          $bullet
+          const $firstDisplayedBullet = bullets.eq(firstIndex);
+          const $lastDisplayedBullet = bullets.eq(lastIndex);
+          for (let i = firstIndex; i <= lastIndex; i += 1) {
+            bullets.eq(i).addClass(`${params.bulletActiveClass}-main`);
+          }
+          $firstDisplayedBullet
             .prev()
             .addClass(`${params.bulletActiveClass}-prev`)
             .prev()
             .addClass(`${params.bulletActiveClass}-prev-prev`);
-          $bullet
+          $lastDisplayedBullet
             .next()
             .addClass(`${params.bulletActiveClass}-next`)
             .next()
@@ -20440,8 +21398,8 @@ const Pagination = {
         }
       }
       if (params.dynamicBullets) {
-        const dynamicBulletsLength = Math.min(bullets.length, 5);
-        const bulletsOffset = (((swiper.pagination.bulletSize * dynamicBulletsLength) - (swiper.pagination.bulletSize)) / 2) - (current * swiper.pagination.bulletSize);
+        const dynamicBulletsLength = Math.min(bullets.length, params.dynamicMainBullets + 4);
+        const bulletsOffset = (((swiper.pagination.bulletSize * dynamicBulletsLength) - (swiper.pagination.bulletSize)) / 2) - (midIndex * swiper.pagination.bulletSize);
         const offsetProp = rtl ? 'right' : 'left';
         bullets.css(swiper.isHorizontal() ? offsetProp : 'top', `${bulletsOffset}px`);
       }
@@ -20466,6 +21424,7 @@ const Pagination = {
     } else {
       swiper.emit('paginationUpdate', swiper, $el[0]);
     }
+    $el[swiper.params.watchOverflow && swiper.isLocked ? 'addClass' : 'removeClass'](params.lockClass);
   },
   render() {
     // Render Container
@@ -20536,6 +21495,10 @@ const Pagination = {
 
     if (params.type === 'bullets' && params.dynamicBullets) {
       $el.addClass(`${params.modifierClass}${params.type}-dynamic`);
+      swiper.pagination.dynamicBulletIndex = 0;
+      if (params.dynamicMainBullets < 1) {
+        params.dynamicMainBullets = 1;
+      }
     }
 
     if (params.clickable) {
@@ -20581,7 +21544,7 @@ var Pagination$1 = {
       renderCustom: null,
       type: 'bullets', // 'bullets' or 'progressbar' or 'fraction' or 'custom'
       dynamicBullets: false,
-
+      dynamicMainBullets: 1,
       bulletClass: 'swiper-pagination-bullet',
       bulletActiveClass: 'swiper-pagination-bullet-active',
       modifierClass: 'swiper-pagination-', // NEW
@@ -20590,6 +21553,7 @@ var Pagination$1 = {
       hiddenClass: 'swiper-pagination-hidden',
       progressbarFillClass: 'swiper-pagination-progressbar-fill',
       clickableClass: 'swiper-pagination-clickable', // NEW
+      lockClass: 'swiper-pagination-lock',
     },
   },
   create() {
@@ -20600,6 +21564,7 @@ var Pagination$1 = {
         render: Pagination.render.bind(swiper),
         update: Pagination.update.bind(swiper),
         destroy: Pagination.destroy.bind(swiper),
+        dynamicBulletIndex: 0,
       },
     });
   },
@@ -20660,13 +21625,15 @@ const Scrollbar = {
   setTranslate() {
     const swiper = this;
     if (!swiper.params.scrollbar.el || !swiper.scrollbar.el) return;
-    const { scrollbar, rtl, progress } = swiper;
-    const { dragSize, trackSize, $dragEl, $el } = scrollbar;
+    const { scrollbar, rtlTranslate: rtl, progress } = swiper;
+    const {
+      dragSize, trackSize, $dragEl, $el,
+    } = scrollbar;
     const params = swiper.params.scrollbar;
 
     let newSize = dragSize;
     let newPos = (trackSize - dragSize) * progress;
-    if (rtl && swiper.isHorizontal()) {
+    if (rtl) {
       newPos = -newPos;
       if (newPos > 0) {
         newSize = dragSize - newPos;
@@ -20681,14 +21648,14 @@ const Scrollbar = {
       newSize = trackSize - newPos;
     }
     if (swiper.isHorizontal()) {
-      if (Support$1.transforms3d) {
+      if (Support.transforms3d) {
         $dragEl.transform(`translate3d(${newPos}px, 0, 0)`);
       } else {
         $dragEl.transform(`translateX(${newPos}px)`);
       }
       $dragEl[0].style.width = `${newSize}px`;
     } else {
-      if (Support$1.transforms3d) {
+      if (Support.transforms3d) {
         $dragEl.transform(`translate3d(0px, ${newPos}px, 0)`);
       } else {
         $dragEl.transform(`translateY(${newPos}px)`);
@@ -20749,10 +21716,11 @@ const Scrollbar = {
       moveDivider,
       dragSize,
     });
+    scrollbar.$el[swiper.params.watchOverflow && swiper.isLocked ? 'addClass' : 'removeClass'](swiper.params.scrollbar.lockClass);
   },
   setDragPosition(e) {
     const swiper = this;
-    const { scrollbar } = swiper;
+    const { scrollbar, rtlTranslate: rtl } = swiper;
     const { $el, dragSize, trackSize } = scrollbar;
 
     let pointerPosition;
@@ -20764,7 +21732,7 @@ const Scrollbar = {
     let positionRatio;
     positionRatio = ((pointerPosition) - $el.offset()[swiper.isHorizontal() ? 'left' : 'top'] - (dragSize / 2)) / (trackSize - dragSize);
     positionRatio = Math.max(Math.min(positionRatio, 1), 0);
-    if (swiper.rtl) {
+    if (rtl) {
       positionRatio = 1 - positionRatio;
     }
 
@@ -20828,33 +21796,67 @@ const Scrollbar = {
     }
     swiper.emit('scrollbarDragEnd', e);
     if (params.snapOnRelease) {
-      swiper.slideReset();
+      swiper.slideToClosest();
     }
   },
   enableDraggable() {
     const swiper = this;
     if (!swiper.params.scrollbar.el) return;
-    const { scrollbar } = swiper;
+    const {
+      scrollbar, touchEvents, touchEventsDesktop, params,
+    } = swiper;
     const $el = scrollbar.$el;
-    const target = Support$1.touch ? $el[0] : document;
-    $el.on(swiper.scrollbar.dragEvents.start, swiper.scrollbar.onDragStart);
-    $(target).on(swiper.scrollbar.dragEvents.move, swiper.scrollbar.onDragMove);
-    $(target).on(swiper.scrollbar.dragEvents.end, swiper.scrollbar.onDragEnd);
+    const target = $el[0];
+    const activeListener = Support.passiveListener && params.passiveListener ? { passive: false, capture: false } : false;
+    const passiveListener = Support.passiveListener && params.passiveListener ? { passive: true, capture: false } : false;
+    if (!Support.touch && (Support.pointerEvents || Support.prefixedPointerEvents)) {
+      target.addEventListener(touchEventsDesktop.start, swiper.scrollbar.onDragStart, activeListener);
+      document.addEventListener(touchEventsDesktop.move, swiper.scrollbar.onDragMove, activeListener);
+      document.addEventListener(touchEventsDesktop.end, swiper.scrollbar.onDragEnd, passiveListener);
+    } else {
+      if (Support.touch) {
+        target.addEventListener(touchEvents.start, swiper.scrollbar.onDragStart, activeListener);
+        target.addEventListener(touchEvents.move, swiper.scrollbar.onDragMove, activeListener);
+        target.addEventListener(touchEvents.end, swiper.scrollbar.onDragEnd, passiveListener);
+      }
+      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
+        target.addEventListener('mousedown', swiper.scrollbar.onDragStart, activeListener);
+        document.addEventListener('mousemove', swiper.scrollbar.onDragMove, activeListener);
+        document.addEventListener('mouseup', swiper.scrollbar.onDragEnd, passiveListener);
+      }
+    }
   },
   disableDraggable() {
     const swiper = this;
     if (!swiper.params.scrollbar.el) return;
-    const { scrollbar } = swiper;
+    const {
+      scrollbar, touchEvents, touchEventsDesktop, params,
+    } = swiper;
     const $el = scrollbar.$el;
-    const target = Support$1.touch ? $el[0] : document;
-    $el.off(swiper.scrollbar.dragEvents.start);
-    $(target).off(swiper.scrollbar.dragEvents.move);
-    $(target).off(swiper.scrollbar.dragEvents.end);
+    const target = $el[0];
+    const activeListener = Support.passiveListener && params.passiveListener ? { passive: false, capture: false } : false;
+    const passiveListener = Support.passiveListener && params.passiveListener ? { passive: true, capture: false } : false;
+    if (!Support.touch && (Support.pointerEvents || Support.prefixedPointerEvents)) {
+      target.removeEventListener(touchEventsDesktop.start, swiper.scrollbar.onDragStart, activeListener);
+      document.removeEventListener(touchEventsDesktop.move, swiper.scrollbar.onDragMove, activeListener);
+      document.removeEventListener(touchEventsDesktop.end, swiper.scrollbar.onDragEnd, passiveListener);
+    } else {
+      if (Support.touch) {
+        target.removeEventListener(touchEvents.start, swiper.scrollbar.onDragStart, activeListener);
+        target.removeEventListener(touchEvents.move, swiper.scrollbar.onDragMove, activeListener);
+        target.removeEventListener(touchEvents.end, swiper.scrollbar.onDragEnd, passiveListener);
+      }
+      if ((params.simulateTouch && !Device.ios && !Device.android) || (params.simulateTouch && !Support.touch && Device.ios)) {
+        target.removeEventListener('mousedown', swiper.scrollbar.onDragStart, activeListener);
+        document.removeEventListener('mousemove', swiper.scrollbar.onDragMove, activeListener);
+        document.removeEventListener('mouseup', swiper.scrollbar.onDragEnd, passiveListener);
+      }
+    }
   },
   init() {
     const swiper = this;
     if (!swiper.params.scrollbar.el) return;
-    const { scrollbar, $el: $swiperEl, touchEvents } = swiper;
+    const { scrollbar, $el: $swiperEl } = swiper;
     const params = swiper.params.scrollbar;
 
     let $el = $(params.el);
@@ -20862,22 +21864,11 @@ const Scrollbar = {
       $el = $swiperEl.find(params.el);
     }
 
-    let $dragEl = $el.find('.swiper-scrollbar-drag');
+    let $dragEl = $el.find(`.${swiper.params.scrollbar.dragClass}`);
     if ($dragEl.length === 0) {
-      $dragEl = $('<div class="swiper-scrollbar-drag"></div>');
+      $dragEl = $(`<div class="${swiper.params.scrollbar.dragClass}"></div>`);
       $el.append($dragEl);
     }
-
-    swiper.scrollbar.dragEvents = (function dragEvents() {
-      if ((swiper.params.simulateTouch === false && !Support$1.touch)) {
-        return {
-          start: 'mousedown',
-          move: 'mousemove',
-          end: 'mouseup',
-        };
-      }
-      return touchEvents;
-    }());
 
     Utils.extend(scrollbar, {
       $el,
@@ -20905,6 +21896,8 @@ var Scrollbar$1 = {
       hide: false,
       draggable: false,
       snapOnRelease: true,
+      lockClass: 'swiper-scrollbar-lock',
+      dragClass: 'swiper-scrollbar-drag',
     },
   },
   create() {
@@ -21011,7 +22004,9 @@ const Parallax = {
   },
   setTranslate() {
     const swiper = this;
-    const { $el, slides, progress, snapGrid } = swiper;
+    const {
+      $el, slides, progress, snapGrid,
+    } = swiper;
     $el.children('[data-swiper-parallax], [data-swiper-parallax-x], [data-swiper-parallax-y]')
       .each((index, el) => {
         swiper.parallax.setTransform(el, progress);
@@ -21061,6 +22056,7 @@ var Parallax$1 = {
   on: {
     beforeInit() {
       const swiper = this;
+      if (!swiper.params.parallax.enabled) return;
       swiper.params.watchSlidesProgress = true;
     },
     init() {
@@ -21100,7 +22096,7 @@ const Zoom = {
     const { gesture } = zoom;
     zoom.fakeGestureTouched = false;
     zoom.fakeGestureMoved = false;
-    if (!Support$1.gestures) {
+    if (!Support.gestures) {
       if (e.type !== 'touchstart' || (e.type === 'touchstart' && e.targetTouches.length < 2)) {
         return;
       }
@@ -21108,7 +22104,7 @@ const Zoom = {
       gesture.scaleStart = Zoom.getDistanceBetweenTouches(e);
     }
     if (!gesture.$slideEl || !gesture.$slideEl.length) {
-      gesture.$slideEl = $(this);
+      gesture.$slideEl = $(e.target).closest('.swiper-slide');
       if (gesture.$slideEl.length === 0) gesture.$slideEl = swiper.slides.eq(swiper.activeIndex);
       gesture.$imageEl = gesture.$slideEl.find('img, svg, canvas');
       gesture.$imageWrapEl = gesture.$imageEl.parent(`.${params.containerClass}`);
@@ -21126,7 +22122,7 @@ const Zoom = {
     const params = swiper.params.zoom;
     const zoom = swiper.zoom;
     const { gesture } = zoom;
-    if (!Support$1.gestures) {
+    if (!Support.gestures) {
       if (e.type !== 'touchmove' || (e.type === 'touchmove' && e.targetTouches.length < 2)) {
         return;
       }
@@ -21134,7 +22130,7 @@ const Zoom = {
       gesture.scaleMove = Zoom.getDistanceBetweenTouches(e);
     }
     if (!gesture.$imageEl || gesture.$imageEl.length === 0) return;
-    if (Support$1.gestures) {
+    if (Support.gestures) {
       swiper.zoom.scale = e.scale * zoom.currentScale;
     } else {
       zoom.scale = (gesture.scaleMove / gesture.scaleStart) * zoom.currentScale;
@@ -21152,7 +22148,7 @@ const Zoom = {
     const params = swiper.params.zoom;
     const zoom = swiper.zoom;
     const { gesture } = zoom;
-    if (!Support$1.gestures) {
+    if (!Support.gestures) {
       if (!zoom.fakeGestureTouched || !zoom.fakeGestureMoved) {
         return;
       }
@@ -21196,8 +22192,10 @@ const Zoom = {
       gesture.slideWidth = gesture.$slideEl[0].offsetWidth;
       gesture.slideHeight = gesture.$slideEl[0].offsetHeight;
       gesture.$imageWrapEl.transition(0);
-      if (swiper.rtl) image.startX = -image.startX;
-      if (swiper.rtl) image.startY = -image.startY;
+      if (swiper.rtl) {
+        image.startX = -image.startX;
+        image.startY = -image.startY;
+      }
     }
     // Define if we need image drag
     const scaledWidth = image.width * zoom.scale;
@@ -21450,28 +22448,21 @@ const Zoom = {
     if (zoom.enabled) return;
     zoom.enabled = true;
 
-    const slides = swiper.slides;
-
-    const passiveListener = swiper.touchEvents.start === 'touchstart' && Support$1.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
+    const passiveListener = swiper.touchEvents.start === 'touchstart' && Support.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
 
     // Scale image
-    if (Support$1.gestures) {
-      slides.on('gesturestart', zoom.onGestureStart, passiveListener);
-      slides.on('gesturechange', zoom.onGestureChange, passiveListener);
-      slides.on('gestureend', zoom.onGestureEnd, passiveListener);
+    if (Support.gestures) {
+      swiper.$wrapperEl.on('gesturestart', '.swiper-slide', zoom.onGestureStart, passiveListener);
+      swiper.$wrapperEl.on('gesturechange', '.swiper-slide', zoom.onGestureChange, passiveListener);
+      swiper.$wrapperEl.on('gestureend', '.swiper-slide', zoom.onGestureEnd, passiveListener);
     } else if (swiper.touchEvents.start === 'touchstart') {
-      slides.on(swiper.touchEvents.start, zoom.onGestureStart, passiveListener);
-      slides.on(swiper.touchEvents.move, zoom.onGestureChange, passiveListener);
-      slides.on(swiper.touchEvents.end, zoom.onGestureEnd, passiveListener);
+      swiper.$wrapperEl.on(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
+      swiper.$wrapperEl.on(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
+      swiper.$wrapperEl.on(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
     }
 
     // Move image
-    swiper.slides.each((index, slideEl) => {
-      const $slideEl = $(slideEl);
-      if ($slideEl.find(`.${swiper.params.zoom.containerClass}`).length > 0) {
-        $slideEl.on(swiper.touchEvents.move, zoom.onTouchMove);
-      }
-    });
+    swiper.$wrapperEl.on(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove);
   },
   disable() {
     const swiper = this;
@@ -21480,28 +22471,21 @@ const Zoom = {
 
     swiper.zoom.enabled = false;
 
-    const slides = swiper.slides;
-
-    const passiveListener = swiper.touchEvents.start === 'touchstart' && Support$1.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
+    const passiveListener = swiper.touchEvents.start === 'touchstart' && Support.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
 
     // Scale image
-    if (Support$1.gestures) {
-      slides.off('gesturestart', zoom.onGestureStart, passiveListener);
-      slides.off('gesturechange', zoom.onGestureChange, passiveListener);
-      slides.off('gestureend', zoom.onGestureEnd, passiveListener);
+    if (Support.gestures) {
+      swiper.$wrapperEl.off('gesturestart', '.swiper-slide', zoom.onGestureStart, passiveListener);
+      swiper.$wrapperEl.off('gesturechange', '.swiper-slide', zoom.onGestureChange, passiveListener);
+      swiper.$wrapperEl.off('gestureend', '.swiper-slide', zoom.onGestureEnd, passiveListener);
     } else if (swiper.touchEvents.start === 'touchstart') {
-      slides.off(swiper.touchEvents.start, zoom.onGestureStart, passiveListener);
-      slides.off(swiper.touchEvents.move, zoom.onGestureChange, passiveListener);
-      slides.off(swiper.touchEvents.end, zoom.onGestureEnd, passiveListener);
+      swiper.$wrapperEl.off(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
+      swiper.$wrapperEl.off(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
+      swiper.$wrapperEl.off(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
     }
 
     // Move image
-    swiper.slides.each((index, slideEl) => {
-      const $slideEl = $(slideEl);
-      if ($slideEl.find(`.${swiper.params.zoom.containerClass}`).length > 0) {
-        $slideEl.off(swiper.touchEvents.move, zoom.onTouchMove);
-      }
-    });
+    swiper.$wrapperEl.off(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove);
   },
 };
 
@@ -21666,7 +22650,9 @@ const Lazy$2 = {
   },
   load() {
     const swiper = this;
-    const { $wrapperEl, params: swiperParams, slides, activeIndex } = swiper;
+    const {
+      $wrapperEl, params: swiperParams, slides, activeIndex,
+    } = swiper;
     const isVirtual = swiper.virtual && swiperParams.virtual.enabled;
     const params = swiperParams.lazy;
 
@@ -21802,8 +22788,9 @@ var Lazy$3 = {
 };
 
 /* eslint no-bitwise: ["error", { "allow": [">>"] }] */
+
 const Controller = {
-  LinearSpline(x, y) {
+  LinearSpline: function LinearSpline(x, y) {
     const binarySearch = (function search() {
       let maxIndex;
       let minIndex;
@@ -21863,7 +22850,7 @@ const Controller = {
       // x is the Grid of the scrolled scroller and y will be the controlled scroller
       // it makes sense to create this only once and recall it for the interpolation
       // the function does a lot of value caching for performance
-      const translate = c.rtl && c.params.direction === 'horizontal' ? -swiper.translate : swiper.translate;
+      const translate = swiper.rtlTranslate ? -swiper.translate : swiper.translate;
       if (swiper.params.controller.by === 'slide') {
         swiper.controller.getInterpolateFunction(c);
         // i am not sure why the values have to be multiplicated this way, tried to invert the snapGrid
@@ -21886,11 +22873,11 @@ const Controller = {
     }
     if (Array.isArray(controlled)) {
       for (let i = 0; i < controlled.length; i += 1) {
-        if (controlled[i] !== byController && controlled[i] instanceof Swiper$2) {
+        if (controlled[i] !== byController && controlled[i] instanceof Swiper) {
           setControlledTranslate(controlled[i]);
         }
       }
-    } else if (controlled instanceof Swiper$2 && byController !== controlled) {
+    } else if (controlled instanceof Swiper && byController !== controlled) {
       setControlledTranslate(controlled);
     }
   },
@@ -21913,11 +22900,11 @@ const Controller = {
     }
     if (Array.isArray(controlled)) {
       for (i = 0; i < controlled.length; i += 1) {
-        if (controlled[i] !== byController && controlled[i] instanceof Swiper$2) {
+        if (controlled[i] !== byController && controlled[i] instanceof Swiper) {
           setControlledTransition(controlled[i]);
         }
       }
-    } else if (controlled instanceof Swiper$2 && byController !== controlled) {
+    } else if (controlled instanceof Swiper && byController !== controlled) {
       setControlledTransition(controlled);
     }
   },
@@ -22132,7 +23119,7 @@ var A11y = {
   name: 'a11y',
   params: {
     a11y: {
-      enabled: false,
+      enabled: true,
       notificationClass: 'swiper-notification',
       prevSlideMessage: 'Previous slide',
       nextSlideMessage: 'Next slide',
@@ -22191,7 +23178,21 @@ const Autoplay = {
       delay = $activeSlideEl.attr('data-swiper-autoplay') || swiper.params.autoplay.delay;
     }
     swiper.autoplay.timeout = Utils.nextTick(() => {
-      if (swiper.params.loop) {
+      if (swiper.params.autoplay.reverseDirection) {
+        if (swiper.params.loop) {
+          swiper.loopFix();
+          swiper.slidePrev(swiper.params.speed, true, true);
+          swiper.emit('autoplay');
+        } else if (!swiper.isBeginning) {
+          swiper.slidePrev(swiper.params.speed, true, true);
+          swiper.emit('autoplay');
+        } else if (!swiper.params.autoplay.stopOnLastSlide) {
+          swiper.slideTo(swiper.slides.length - 1, swiper.params.speed, true, true);
+          swiper.emit('autoplay');
+        } else {
+          swiper.autoplay.stop();
+        }
+      } else if (swiper.params.loop) {
         swiper.loopFix();
         swiper.slideNext(swiper.params.speed, true, true);
         swiper.emit('autoplay');
@@ -22234,7 +23235,7 @@ const Autoplay = {
     if (swiper.autoplay.paused) return;
     if (swiper.autoplay.timeout) clearTimeout(swiper.autoplay.timeout);
     swiper.autoplay.paused = true;
-    if (speed === 0) {
+    if (speed === 0 || !swiper.params.autoplay.waitForTransition) {
       swiper.autoplay.paused = false;
       swiper.autoplay.run();
     } else {
@@ -22257,8 +23258,10 @@ var Autoplay$1 = {
     autoplay: {
       enabled: false,
       delay: 3000,
+      waitForTransition: true,
       disableOnInteraction: true,
       stopOnLastSlide: false,
+      reverseDirection: false,
     },
   },
   create() {
@@ -22402,7 +23405,9 @@ var EffectFade = {
 const Cube = {
   setTranslate() {
     const swiper = this;
-    const { $el, $wrapperEl, slides, width: swiperWidth, height: swiperHeight, rtl, size: swiperSize } = swiper;
+    const {
+      $el, $wrapperEl, slides, width: swiperWidth, height: swiperHeight, rtlTranslate: rtl, size: swiperSize,
+    } = swiper;
     const params = swiper.params.cubeEffect;
     const isHorizontal = swiper.isHorizontal();
     const isVirtual = swiper.virtual && swiper.params.virtual.enabled;
@@ -22577,7 +23582,7 @@ var EffectCube = {
 const Flip = {
   setTranslate() {
     const swiper = this;
-    const { slides } = swiper;
+    const { slides, rtlTranslate: rtl } = swiper;
     for (let i = 0; i < slides.length; i += 1) {
       const $slideEl = slides.eq(i);
       let progress = $slideEl[0].progress;
@@ -22595,7 +23600,7 @@ const Flip = {
         tx = 0;
         rotateX = -rotateY;
         rotateY = 0;
-      } else if (swiper.rtl) {
+      } else if (rtl) {
         rotateY = -rotateY;
       }
 
@@ -22695,7 +23700,9 @@ var EffectFlip = {
 const Coverflow = {
   setTranslate() {
     const swiper = this;
-    const { width: swiperWidth, height: swiperHeight, slides, $wrapperEl, slidesSizesGrid } = swiper;
+    const {
+      width: swiperWidth, height: swiperHeight, slides, $wrapperEl, slidesSizesGrid,
+    } = swiper;
     const params = swiper.params.coverflowEffect;
     const isHorizontal = swiper.isHorizontal();
     const transform = swiper.translate;
@@ -22746,7 +23753,7 @@ const Coverflow = {
     }
 
     // Set correct perspective for IE10
-    if (Browser.ie) {
+    if (Support.pointerEvents || Support.prefixedPointerEvents) {
       const ws = $wrapperEl[0].style;
       ws.perspectiveOrigin = `${center}px 50%`;
     }
@@ -22805,13 +23812,12 @@ var EffectCoverflow = {
 };
 
 // Swiper Class
-// Core Modules
-// Components
-Swiper$2.use([
-  Device$4,
-  Browser$2,
-  Support$4,
-  Resize$1,
+
+Swiper.use([
+  Device$1,
+  Browser$1,
+  Support$1,
+  Resize,
   Observer$1,
   Virtual$1,
   Navigation$1,
@@ -22886,16 +23892,16 @@ function initSwipers(swiperEl) {
   }
 }
 
-var Swiper = {
+var Swiper$1 = {
   name: 'swiper',
   static: {
-    Swiper: Swiper$2,
+    Swiper,
   },
   create() {
     const app = this;
     app.swiper = ConstructorMethods({
       defaultSelector: '.swiper-container',
-      constructor: Swiper$2,
+      constructor: Swiper,
       domProp: 'swiper',
     });
   },
@@ -22929,7 +23935,8 @@ var Swiper = {
 };
 
 /* eslint indent: ["off"] */
-class PhotoBrowser$1 extends Framework7Class {
+
+class PhotoBrowser extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -22989,10 +23996,10 @@ class PhotoBrowser$1 extends Framework7Class {
       ? swiper.$wrapperEl.find(`.swiper-slide[data-swiper-slide-index="${swiper.previousIndex}"]`)
       : swiper.slides.eq(swiper.previousIndex);
 
-    let $currentEl = pb.$containerEl.find('.photo-browser-current');
-    let $totalEl = pb.$containerEl.find('.photo-browser-total');
+    let $currentEl = pb.$el.find('.photo-browser-current');
+    let $totalEl = pb.$el.find('.photo-browser-total');
     if (pb.params.type === 'page' && pb.params.navbar && $currentEl.length === 0 && pb.app.theme === 'ios') {
-      const navbarEl = pb.app.navbar.getElByPage(pb.$containerEl);
+      const navbarEl = pb.app.navbar.getElByPage(pb.$el);
       if (navbarEl) {
         $currentEl = $(navbarEl).find('.photo-browser-current');
         $totalEl = $(navbarEl).find('.photo-browser-total');
@@ -23057,9 +24064,9 @@ class PhotoBrowser$1 extends Framework7Class {
     const timeDiff = (new Date()).getTime() - swipeToClose.timeStart;
     if ((timeDiff < 300 && diff > 20) || (timeDiff >= 300 && diff > 100)) {
       Utils.nextTick(() => {
-        if (pb.$containerEl) {
-          if (swipeToClose.diff < 0) pb.$containerEl.addClass('swipe-close-to-bottom');
-          else pb.$containerEl.addClass('swipe-close-to-top');
+        if (pb.$el) {
+          if (swipeToClose.diff < 0) pb.$el.addClass('swipe-close-to-bottom');
+          else pb.$el.addClass('swipe-close-to-top');
         }
         pb.emit('local::swipeToClose', pb);
         pb.close();
@@ -23229,22 +24236,23 @@ class PhotoBrowser$1 extends Framework7Class {
   }
 
   // Callbacks
-  onOpen(type, containerEl) {
+  onOpen(type, el) {
     const pb = this;
     const app = pb.app;
-    const $containerEl = $(containerEl);
+    const $el = $(el);
 
-    $containerEl[0].f7PhotoBrowser = pb;
+    $el[0].f7PhotoBrowser = pb;
 
-    pb.$containerEl = $containerEl;
+    pb.$el = $el;
+    pb.el = $el[0];
     pb.openedIn = type;
     pb.opened = true;
 
-    pb.$swiperContainerEl = pb.$containerEl.find('.photo-browser-swiper-container');
-    pb.$swiperWrapperEl = pb.$containerEl.find('.photo-browser-swiper-wrapper');
-    pb.slides = pb.$containerEl.find('.photo-browser-slide');
-    pb.$captionsContainerEl = pb.$containerEl.find('.photo-browser-captions');
-    pb.captions = pb.$containerEl.find('.photo-browser-caption');
+    pb.$swiperContainerEl = pb.$el.find('.photo-browser-swiper-container');
+    pb.$swiperWrapperEl = pb.$el.find('.photo-browser-swiper-wrapper');
+    pb.slides = pb.$el.find('.photo-browser-slide');
+    pb.$captionsContainerEl = pb.$el.find('.photo-browser-captions');
+    pb.captions = pb.$el.find('.photo-browser-caption');
 
     // Init Swiper
     const swiperParams = Utils.extend({}, pb.params.swiper, {
@@ -23326,12 +24334,17 @@ class PhotoBrowser$1 extends Framework7Class {
     if (pb.activeIndex === 0) {
       pb.onSlideChange(pb.swiper);
     }
-
+    if (pb.$el) {
+      pb.$el.trigger('photobrowser:open');
+    }
     pb.emit('local::open photoBrowserOpen', pb);
   }
   onOpened() {
     const pb = this;
 
+    if (pb.$el) {
+      pb.$el.trigger('photobrowser:opened');
+    }
     pb.emit('local::opened photoBrowserOpened', pb);
   }
   onClose() {
@@ -23344,16 +24357,22 @@ class PhotoBrowser$1 extends Framework7Class {
       pb.swiper = null;
       delete pb.swiper;
     }
-
+    if (pb.$el) {
+      pb.$el.trigger('photobrowser:close');
+    }
     pb.emit('local::close photoBrowserClose', pb);
   }
   onClosed() {
     const pb = this;
     if (pb.destroyed) return;
     pb.opened = false;
-    pb.$containerEl = null;
-    delete pb.$containerEl;
-
+    pb.$el = null;
+    pb.el = null;
+    delete pb.$el;
+    delete pb.el;
+    if (pb.$el) {
+      pb.$el.trigger('photobrowser:closed');
+    }
     pb.emit('local::closed photoBrowserClosed', pb);
   }
 
@@ -23473,7 +24492,7 @@ class PhotoBrowser$1 extends Framework7Class {
     if (pb.params.type === 'page') {
       pb.view.$el.addClass('with-photo-browser-page-exposed');
     }
-    if (pb.$containerEl) pb.$containerEl.addClass('photo-browser-exposed');
+    if (pb.$el) pb.$el.addClass('photo-browser-exposed');
     if (pb.params.expositionHideCaptions) pb.$captionsContainerEl.addClass('photo-browser-captions-exposed');
     pb.exposed = true;
     return pb;
@@ -23483,7 +24502,7 @@ class PhotoBrowser$1 extends Framework7Class {
     if (pb.params.type === 'page') {
       pb.view.$el.removeClass('with-photo-browser-page-exposed');
     }
-    if (pb.$containerEl) pb.$containerEl.removeClass('photo-browser-exposed');
+    if (pb.$el) pb.$el.removeClass('photo-browser-exposed');
     if (pb.params.expositionHideCaptions) pb.$captionsContainerEl.removeClass('photo-browser-captions-exposed');
     pb.exposed = false;
     return pb;
@@ -23493,7 +24512,7 @@ class PhotoBrowser$1 extends Framework7Class {
     if (pb.params.type === 'page') {
       pb.view.$el.toggleClass('with-photo-browser-page-exposed');
     }
-    if (pb.$containerEl) pb.$containerEl.toggleClass('photo-browser-exposed');
+    if (pb.$el) pb.$el.toggleClass('photo-browser-exposed');
     if (pb.params.expositionHideCaptions) pb.$captionsContainerEl.toggleClass('photo-browser-captions-exposed');
     pb.exposed = !pb.exposed;
     return pb;
@@ -23541,16 +24560,16 @@ class PhotoBrowser$1 extends Framework7Class {
   destroy() {
     let pb = this;
     pb.emit('local::beforeDestroy photoBrowserBeforeDestroy', pb);
-    if (pb.$containerEl) {
-      pb.$containerEl.trigger('photobrowser:beforedestroy');
-      delete pb.$containerEl[0].f7PhotoBrowser;
+    if (pb.$el) {
+      pb.$el.trigger('photobrowser:beforedestroy');
+      delete pb.$el[0].f7PhotoBrowser;
     }
     Utils.deleteProps(pb);
     pb = null;
   }
 }
 
-var PhotoBrowser = {
+var PhotoBrowser$1 = {
   name: 'photoBrowser',
   params: {
     photoBrowser: {
@@ -23606,17 +24625,17 @@ var PhotoBrowser = {
     const app = this;
     app.photoBrowser = ConstructorMethods({
       defaultSelector: '.photo-browser',
-      constructor: PhotoBrowser$1,
+      constructor: PhotoBrowser,
       app,
       domProp: 'f7PhotoBrowser',
     });
   },
   static: {
-    PhotoBrowser: PhotoBrowser$1,
+    PhotoBrowser,
   },
 };
 
-class Notification$1 extends Modal$1 {
+class Notification extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -23830,10 +24849,10 @@ class Notification$1 extends Modal$1 {
   }
 }
 
-var Notification = {
+var Notification$1 = {
   name: 'notification',
   static: {
-    Notification: Notification$1,
+    Notification,
   },
   create() {
     const app = this;
@@ -23841,7 +24860,7 @@ var Notification = {
       {},
       ModalMethods({
         app,
-        constructor: Notification$1,
+        constructor: Notification,
         defaultSelector: '.notification.modal-in',
       })
     );
@@ -23864,7 +24883,8 @@ var Notification = {
 };
 
 /* eslint "no-useless-escape": "off" */
-class Autocomplete$1 extends Framework7Class {
+
+class Autocomplete extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -23873,7 +24893,7 @@ class Autocomplete$1 extends Framework7Class {
 
     const defaults = Utils.extend({
       on: {},
-    }, app.modules.autocomplete.params.autocomplete);
+    }, app.params.autocomplete);
 
 
     // Extend defaults with modules params
@@ -24044,7 +25064,7 @@ class Autocomplete$1 extends Framework7Class {
     }
     function onHtmlClick(e) {
       const $targetEl = $(e.target);
-      if ($targetEl.is(ac.$inputEl[0]) || ($targetEl.closest(ac.$dropdownEl[0]).length)) return;
+      if ($targetEl.is(ac.$inputEl[0]) || (ac.$dropdownEl && $targetEl.closest(ac.$dropdownEl[0]).length)) return;
       ac.close();
     }
     function onOpenerClick() {
@@ -24131,9 +25151,9 @@ class Autocomplete$1 extends Framework7Class {
     };
 
     ac.attachPageEvents = function attachPageEvents() {
-      ac.$containerEl.on('change', 'input[type="radio"], input[type="checkbox"]', onPageInputChange);
+      ac.$el.on('change', 'input[type="radio"], input[type="checkbox"]', onPageInputChange);
       if (ac.params.closeOnSelect && !ac.params.multiple) {
-        ac.$containerEl.once('click', '.list label', () => {
+        ac.$el.once('click', '.list label', () => {
           Utils.nextTick(() => {
             ac.close();
           });
@@ -24141,7 +25161,7 @@ class Autocomplete$1 extends Framework7Class {
       }
     };
     ac.detachPageEvents = function detachPageEvents() {
-      ac.$containerEl.off('change', 'input[type="radio"], input[type="checkbox"]', onPageInputChange);
+      ac.$el.off('change', 'input[type="radio"], input[type="checkbox"]', onPageInputChange);
     };
 
     // Install Modules
@@ -24188,13 +25208,13 @@ class Autocomplete$1 extends Framework7Class {
   }
   focus() {
     const ac = this;
-    ac.$containerEl.find('input[type=search]').focus();
+    ac.$el.find('input[type=search]').focus();
   }
   source(query) {
     const ac = this;
     if (!ac.params.source) return;
 
-    const { $containerEl } = ac;
+    const { $el } = ac;
 
     ac.params.source.call(ac, query, (items) => {
       let itemsHTML = '';
@@ -24216,18 +25236,18 @@ class Autocomplete$1 extends Framework7Class {
           selected,
         }, i);
       }
-      $containerEl.find('.autocomplete-found ul').html(itemsHTML);
+      $el.find('.autocomplete-found ul').html(itemsHTML);
       if (items.length === 0) {
         if (query.length !== 0) {
-          $containerEl.find('.autocomplete-not-found').show();
-          $containerEl.find('.autocomplete-found, .autocomplete-values').hide();
+          $el.find('.autocomplete-not-found').show();
+          $el.find('.autocomplete-found, .autocomplete-values').hide();
         } else {
-          $containerEl.find('.autocomplete-values').show();
-          $containerEl.find('.autocomplete-found, .autocomplete-not-found').hide();
+          $el.find('.autocomplete-values').show();
+          $el.find('.autocomplete-found, .autocomplete-not-found').hide();
         }
       } else {
-        $containerEl.find('.autocomplete-found').show();
-        $containerEl.find('.autocomplete-not-found, .autocomplete-values').hide();
+        $el.find('.autocomplete-found').show();
+        $el.find('.autocomplete-not-found, .autocomplete-values').hide();
       }
     });
   }
@@ -24244,7 +25264,7 @@ class Autocomplete$1 extends Framework7Class {
         selected: true,
       }, i);
     }
-    ac.$containerEl.find('.autocomplete-values ul').html(valuesHTML);
+    ac.$el.find('.autocomplete-values ul').html(valuesHTML);
   }
   preloaderHide() {
     const ac = this;
@@ -24338,7 +25358,7 @@ class Autocomplete$1 extends Framework7Class {
       <div class="navbar ${ac.params.navbarColorTheme ? `color-theme-${ac.params.navbarColorTheme}` : ''}">
         <div class="navbar-inner ${ac.params.navbarColorTheme ? `color-theme-${ac.params.navbarColorTheme}` : ''}">
           <div class="left sliding">
-            <a href="#" class="link ${ac.params.openIn === 'page' ? 'back' : 'popup-close'}">
+            <a href="#" class="link ${ac.params.openIn === 'page' ? 'back' : 'popup-close'}" ${ac.params.openIn === 'popup' ? 'data-popup=".autocomplete-popup"' : ''}>
               <i class="icon icon-back"></i>
               <span class="ios-only">${ac.params.openIn === 'page' ? ac.params.pageBackLinkText : ac.params.popupCloseLinkText}</span>
             </a>
@@ -24407,11 +25427,12 @@ class Autocomplete$1 extends Framework7Class {
     `.trim();
     return popupHtml;
   }
-  onOpen(type, containerEl) {
+  onOpen(type, el) {
     const ac = this;
     const app = ac.app;
-    const $containerEl = $(containerEl);
-    ac.$containerEl = $containerEl;
+    const $el = $(el);
+    ac.$el = $el;
+    ac.el = $el[0];
     ac.openedIn = type;
     ac.opened = true;
 
@@ -24422,16 +25443,16 @@ class Autocomplete$1 extends Framework7Class {
       ac.$inputEl.trigger('input');
     } else {
       // Init SB
-      let $searchbarEl = $containerEl.find('.searchbar');
+      let $searchbarEl = $el.find('.searchbar');
       if (ac.params.openIn === 'page' && app.theme === 'ios' && $searchbarEl.length === 0) {
-        $searchbarEl = $(app.navbar.getElByPage($containerEl)).find('.searchbar');
+        $searchbarEl = $(app.navbar.getElByPage($el)).find('.searchbar');
       }
       ac.searchbar = app.searchbar.create({
         el: $searchbarEl,
-        backdropEl: $containerEl.find('.searchbar-backdrop'),
+        backdropEl: $el.find('.searchbar-backdrop'),
         customSearch: true,
         on: {
-          searchbarSearch(query) {
+          searchbarSearch(sb, query) {
             if (query.length === 0 && ac.searchbar.enabled) {
               ac.searchbar.backdropShow();
             } else {
@@ -24486,8 +25507,10 @@ class Autocomplete$1 extends Framework7Class {
     const ac = this;
     if (ac.destroyed) return;
     ac.opened = false;
-    ac.$containerEl = null;
-    delete ac.$containerEl;
+    ac.$el = null;
+    ac.el = null;
+    delete ac.$el;
+    delete ac.el;
 
     ac.emit('local::closed autocompleteClosed', ac);
   }
@@ -24570,8 +25593,8 @@ class Autocomplete$1 extends Framework7Class {
     }
     ac.positionDropDown();
     const $pageContentEl = ac.$inputEl.parents('.page-content');
-    if (ac.params.dropdownContainerEl) {
-      $(ac.params.dropdownContainerEl).append(ac.$dropdownEl);
+    if (ac.params.dropdownel) {
+      $(ac.params.dropdownel).append(ac.$dropdownEl);
     } else if ($pageContentEl.length === 0) {
       ac.$dropdownEl.insertAfter(ac.$inputEl);
     } else {
@@ -24628,7 +25651,7 @@ class Autocomplete$1 extends Framework7Class {
   }
 }
 
-var Autocomplete = {
+var Autocomplete$1 = {
   name: 'autocomplete',
   params: {
     autocomplete: {
@@ -24655,6 +25678,7 @@ var Autocomplete = {
       openIn: 'page', // or 'popup' or 'dropdown'
       pageBackLinkText: 'Back',
       popupCloseLinkText: 'Close',
+      pageTitle: undefined,
       searchbarPlaceholder: 'Search...',
       searchbarDisableText: 'Cancel',
 
@@ -24675,13 +25699,12 @@ var Autocomplete = {
 
       // Routing
       routableModals: true,
-      url: 'select',
+      url: 'select/',
 
       // Custom render functions
       renderDropdown: undefined,
       renderPage: undefined,
       renderPopup: undefined,
-      renderItems: undefined,
       renderItem: undefined,
       renderSearchbar: undefined,
       renderNavbar: undefined,
@@ -24689,14 +25712,14 @@ var Autocomplete = {
     },
   },
   static: {
-    Autocomplete: Autocomplete$1,
+    Autocomplete,
   },
   create() {
     const app = this;
     app.autocomplete = Utils.extend(
       ConstructorMethods({
         defaultSelector: undefined,
-        constructor: Autocomplete$1,
+        constructor: Autocomplete,
         app,
         domProp: 'f7Autocomplete',
       }),
@@ -24833,6 +25856,7 @@ class ViAd extends Framework7Class {
         vi.emit('local::stopped', reason);
         if (reason === 'complete') {
           vi.emit('local::complete');
+          vi.emit('local::completed');
         }
         if (reason === 'userexit') {
           vi.emit('local::userexit');
@@ -24943,7 +25967,7 @@ var Vi = {
           app.emit('viSdkReady');
           app.vi.skdReady = true;
         };
-        script.src = 'http://c.vi-serve.com/viadshtml/vi.min.js';
+        script.src = 'https://c.vi-serve.com/viadshtml/vi.min.js';
         $('head').append(script);
       },
     };
@@ -24956,68 +25980,73 @@ var Vi = {
   },
 };
 
-// F7 Class
-// Core Modules
-// Core Components
+var Typography = {
+  name: 'typography',
+};
+
 // Install Core Modules & Components
-Framework7$1.use([
-  Device$2,
-  Support,
-  Utils$2,
-  Resize,
-  Request,
-  Touch,
-  Clicks,
-  Router,
-  History$2,
-  Storage$1,
+Framework7.use([
+  DeviceModule,
+  SupportModule,
+  UtilsModule,
+  ResizeModule,
+  RequestModule,
+  TouchModule,
+  ClicksModule,
+  Router$1,
+  HistoryModule,
+  StorageModule,
   Statusbar$1,
-  View$2,
+  View$1,
   Navbar$1,
   Toolbar$1,
   Subnavbar,
-  TouchRipple$$1,
-  Modal,
-  Dialog,
-  Popup,
-  LoginScreen,
-  Popover,
-  Actions,
-  Sheet,
-  Toast,
+  TouchRipple$1,
+  Modal$1,
+  Dialog$1,
+  Popup$1,
+  LoginScreen$1,
+  Popover$1,
+  Actions$1,
+  Sheet$1,
+  Toast$1,
   Preloader$1,
   Progressbar$1,
   Sortable$1,
   Swipeout$1,
   Accordion$1,
-  VirtualList,
+  VirtualList$1,
   Timeline,
   Tabs,
-  Panel,
+  Panel$1,
   Card,
   Chip,
   Form,
   Input$1,
   Checkbox,
   Radio,
-  Toggle,
-  Range,
-  SmartSelect,
-  Calendar,
-  Picker,
+  Toggle$1,
+  Range$1,
+  Stepper$1,
+  SmartSelect$1,
+  Grid,
+  Calendar$1,
+  Picker$1,
   InfiniteScroll$1,
-  PullToRefresh,
+  PullToRefresh$1,
   Lazy$1,
-  DataTable,
+  DataTable$1,
   Fab$1,
-  Searchbar,
-  Messages,
-  Messagebar,
-  Swiper,
-  PhotoBrowser,
-  Notification,
-  Autocomplete,
-  Vi
+  Searchbar$1,
+  Messages$1,
+  Messagebar$1,
+  Swiper$1,
+  PhotoBrowser$1,
+  Notification$1,
+  Autocomplete$1,
+  Vi,
+  Typography
 ]);
 
-export default Framework7$1;
+export default Framework7;
+export { Request, Utils, Device, Support };

@@ -78,8 +78,8 @@
   display: none;
 }
 .hidden-by-searchbar {
-  &, .list &, .list.li& {
-    display: none;
+  &, .list &, .list.li&, .list li& {
+    display: none !important;
   }
 }
 & when (@includeIosTheme) {

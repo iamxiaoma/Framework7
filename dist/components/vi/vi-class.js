@@ -1,4 +1,5 @@
 import $ from 'dom7';
+import { window } from 'ssr-window';
 import Utils from '../../utils/utils';
 import Device from '../../utils/device';
 import Framework7Class from '../../utils/class';
@@ -120,6 +121,7 @@ class ViAd extends Framework7Class {
         vi.emit('local::stopped', reason);
         if (reason === 'complete') {
           vi.emit('local::complete');
+          vi.emit('local::completed');
         }
         if (reason === 'userexit') {
           vi.emit('local::userexit');

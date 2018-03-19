@@ -1,7 +1,16 @@
 import $ from 'dom7';
+import { document } from 'ssr-window';
 import Utils from '../../utils/utils';
 import History from '../../utils/history';
 import redirect from './redirect';
+
+function refreshPage() {
+  const router = this;
+  return router.navigate(router.currentRoute.url, {
+    ignoreCache: true,
+    reloadCurrent: true,
+  });
+}
 
 function forward(el, forwardOptions = {}) {
   const router = this;
@@ -15,6 +24,7 @@ function forward(el, forwardOptions = {}) {
     reloadCurrent: router.params.reloadPages,
     reloadPrevious: false,
     reloadAll: false,
+    clearPreviousHistory: false,
     on: {},
   }, forwardOptions);
 
@@ -155,22 +165,26 @@ function forward(el, forwardOptions = {}) {
     );
   }
 
-  // Current Page & Navbar
-  router.currentPageEl = $newPage[0];
-  if (dynamicNavbar && $newNavbarInner.length) {
-    router.currentNavbarEl = $newNavbarInner[0];
-  } else {
-    delete router.currentNavbarEl;
-  }
+  if (!options.reloadPrevious) {
+    // Current Page & Navbar
+    router.currentPageEl = $newPage[0];
+    if (dynamicNavbar && $newNavbarInner.length) {
+      router.currentNavbarEl = $newNavbarInner[0];
+    } else {
+      delete router.currentNavbarEl;
+    }
 
-  // Current Route
-  router.currentRoute = options.route;
+    // Current Route
+    router.currentRoute = options.route;
+  }
 
   // Update router history
   const url = options.route.url;
   if (options.history) {
     if (options.reloadCurrent && router.history.length > 0) {
       router.history[router.history.length - (options.reloadPrevious ? 2 : 1)] = url;
+    } else if (options.reloadPrevious) {
+      router.history[router.history.length - 2] = url;
     } else if (options.reloadAll) {
       router.history = [url];
     } else {
@@ -184,7 +198,7 @@ function forward(el, forwardOptions = {}) {
   const f7Component = $newPage[0].f7Component;
   if (options.reloadPrevious) {
     if (f7Component && !newPageInDom) {
-      f7Component.mount((componentEl) => {
+      f7Component.$mount((componentEl) => {
         $(componentEl).insertBefore($oldPage);
       });
     } else {
@@ -203,7 +217,7 @@ function forward(el, forwardOptions = {}) {
   } else {
     if ($oldPage.next('.page')[0] !== $newPage[0]) {
       if (f7Component && !newPageInDom) {
-        f7Component.mount((componentEl) => {
+        f7Component.$mount((componentEl) => {
           $viewEl.append(componentEl);
         });
       } else {
@@ -254,6 +268,20 @@ function forward(el, forwardOptions = {}) {
         }
       }
     });
+  } else if (options.reloadPrevious) {
+    if (router.params.stackPages && router.initialPages.indexOf($oldPage[0]) >= 0) {
+      $oldPage.addClass('stacked');
+      if (separateNavbar) {
+        $oldNavbarInner.addClass('stacked');
+      }
+    } else {
+      // Page remove event
+      router.pageCallback('beforeRemove', $oldPage, $oldNavbarInner, 'previous', undefined, options);
+      router.removePage($oldPage);
+      if (separateNavbar && $oldNavbarInner && $oldNavbarInner.length) {
+        router.removeNavbar($oldNavbarInner);
+      }
+    }
   }
 
   // Load Tab
@@ -271,6 +299,11 @@ function forward(el, forwardOptions = {}) {
     router.allowPageChange = true;
     router.pageCallback('beforeIn', $newPage, $newNavbarInner, newPagePosition, 'current', options);
     router.pageCallback('afterIn', $newPage, $newNavbarInner, newPagePosition, 'current', options);
+    if (options.reloadCurrent && options.clearPreviousHistory) router.clearPreviousHistory();
+    return router;
+  }
+  if (options.reloadPrevious) {
+    router.allowPageChange = true;
     return router;
   }
 
@@ -314,6 +347,7 @@ function forward(el, forwardOptions = {}) {
         }
       }
     }
+    if (options.clearPreviousHistory) router.clearPreviousHistory();
     router.emit('routeChanged', router.currentRoute, router.previousRoute, router);
 
     if (router.params.pushState) {
@@ -356,9 +390,9 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
   const params = loadParams;
   const options = loadOptions;
   const { url, content, el, pageName, template, templateUrl, component, componentUrl } = params;
-  const { ignoreCache } = options;
 
-  if (options.route &&
+  if (!options.reloadCurrent &&
+    options.route &&
     options.route.route &&
     options.route.route.parentPath &&
     router.currentRoute.route &&
@@ -395,6 +429,7 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
     !(options.reloadCurrent || options.reloadPrevious) &&
     !router.params.allowDuplicateUrls
   ) {
+    router.allowPageChange = true;
     return false;
   }
 
@@ -447,7 +482,7 @@ function load(loadParams = {}, loadOptions = {}, ignorePageChange) {
       router.xhr.abort();
       router.xhr = false;
     }
-    router.xhrRequest(url, ignoreCache)
+    router.xhrRequest(url, options)
       .then((pageContent) => {
         router.forward(router.getPageEl(pageContent), options);
       })
@@ -508,6 +543,10 @@ function navigate(navigateParams, navigateOptions = {}) {
   } else {
     Utils.extend(options, navigateOptions, { route });
   }
+  if (options && options.context) {
+    route.context = options.context;
+    options.route.context = options.context;
+  }
   ('popup popover sheet loginScreen actions customModal').split(' ').forEach((modalLoadProp) => {
     if (route.route[modalLoadProp]) {
       router.modalLoad(modalLoadProp, route, options);
@@ -522,6 +561,11 @@ function navigate(navigateParams, navigateOptions = {}) {
   function asyncResolve(resolveParams, resolveOptions) {
     router.allowPageChange = false;
     let resolvedAsModal = false;
+    if (resolveOptions && resolveOptions.context) {
+      if (!route.context) route.context = resolveOptions.context;
+      else route.context = Utils.extend({}, route.context, resolveOptions.context);
+      options.route.context = route.context;
+    }
     ('popup popover sheet loginScreen actions customModal').split(' ').forEach((modalLoadProp) => {
       if (resolveParams[modalLoadProp]) {
         resolvedAsModal = true;
@@ -541,7 +585,7 @@ function navigate(navigateParams, navigateOptions = {}) {
 
     route.route.async.call(router, route, router.currentRoute, asyncResolve, asyncReject);
   }
-  // Retur Router
+  // Return Router
   return router;
 }
-export { forward, load, navigate };
+export { refreshPage, forward, load, navigate };

@@ -1,3 +1,4 @@
+import { window, document } from 'ssr-window';
 import Utils from './utils';
 
 const globals = {};
@@ -31,7 +32,7 @@ function Request(requestOptions) {
   function fireCallback(callbackName, ...data) {
     /*
       Callbacks:
-      beforeCreate (xhr, options),
+      beforeCreate (options),
       beforeOpen (xhr, options),
       beforeSend (xhr, options),
       error (xhr, status),
@@ -167,13 +168,14 @@ function Request(requestOptions) {
       }
     } else {
       postData = options.data;
+      xhr.setRequestHeader('Content-Type', options.contentType);
     }
   }
 
   // Additional headers
   if (options.headers) {
     Object.keys(options.headers).forEach((headerName) => {
-      xhr.setRequestHeader(headerName, options[headerName]);
+      xhr.setRequestHeader(headerName, options.headers[headerName]);
     });
   }
 
@@ -260,15 +262,24 @@ function RequestShortcut(method, ...args) {
       else error = undefined;
     }
   });
-  dataType = dataType || (method === 'json' ? 'json' : undefined);
-  return Request({
+  dataType = dataType || (method === 'json' || method === 'postJSON' ? 'json' : undefined);
+  const requestOptions = {
     url,
-    method: method === 'post' ? 'POST' : 'GET',
+    method: method === 'post' || method === 'postJSON' ? 'POST' : 'GET',
     data,
     success,
     error,
     dataType,
-  });
+  };
+  if (method === 'postJSON') {
+    Utils.extend(requestOptions, {
+      contentType: 'application/json',
+      processData: false,
+      crossDomain: true,
+      data: typeof data === 'string' ? data : JSON.stringify(data),
+    });
+  }
+  return Request(requestOptions);
 }
 Request.get = function get(...args) {
   return RequestShortcut('get', ...args);
@@ -278,6 +289,10 @@ Request.post = function post(...args) {
 };
 Request.json = function json(...args) {
   return RequestShortcut('json', ...args);
+};
+Request.getJSON = Request.json;
+Request.postJSON = function postJSON(...args) {
+  return RequestShortcut('postJSON', ...args);
 };
 Request.setup = function setup(options) {
   if (options.type && !options.method) {
