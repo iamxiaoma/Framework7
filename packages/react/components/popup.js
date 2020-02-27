@@ -10,34 +10,38 @@ class F7Popup extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onOpen', 'onOpened', 'onClose', 'onClosed']);
+    })();
   }
 
-  onOpen(event) {
-    this.dispatchEvent('popup:open popupOpen', event);
+  onOpen(instance) {
+    this.dispatchEvent('popup:open popupOpen', instance);
   }
 
-  onOpened(event) {
-    this.dispatchEvent('popup:opened popupOpened', event);
+  onOpened(instance) {
+    this.dispatchEvent('popup:opened popupOpened', instance);
   }
 
-  onClose(event) {
-    this.dispatchEvent('popup:close popupClose', event);
+  onClose(instance) {
+    this.dispatchEvent('popup:close popupClose', instance);
   }
 
-  onClosed(event) {
-    this.dispatchEvent('popup:closed popupClosed', event);
+  onClosed(instance) {
+    this.dispatchEvent('popup:closed popupClosed', instance);
   }
 
   open(animate) {
     const self = this;
-    if (!self.$f7) return undefined;
-    return self.$f7.popup.open(self.refs.el, animate);
+    if (!self.f7Popup) return undefined;
+    return self.f7Popup.open(animate);
   }
 
   close(animate) {
     const self = this;
-    if (!self.$f7) return undefined;
-    return self.$f7.popup.close(self.refs.el, animate);
+    if (!self.f7Popup) return undefined;
+    return self.f7Popup.close(animate);
   }
 
   render() {
@@ -47,10 +51,12 @@ class F7Popup extends React.Component {
       className,
       id,
       style,
-      tabletFullscreen
+      tabletFullscreen,
+      push
     } = props;
     const classes = Utils.classNames(className, 'popup', {
-      'popup-tablet-fullscreen': tabletFullscreen
+      'popup-tablet-fullscreen': tabletFullscreen,
+      'popup-push': push
     }, Mixins.colorClasses(props));
     return React.createElement('div', {
       ref: __reactNode => {
@@ -65,39 +71,39 @@ class F7Popup extends React.Component {
   componentWillUnmount() {
     const self = this;
     if (self.f7Popup) self.f7Popup.destroy();
-    const el = self.refs.el;
-    if (!el) return;
-    el.removeEventListener('popup:open', self.onOpenBound);
-    el.removeEventListener('popup:opened', self.onOpenedBound);
-    el.removeEventListener('popup:close', self.onCloseBound);
-    el.removeEventListener('popup:closed', self.onClosedBound);
   }
 
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
     if (!el) return;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    el.addEventListener('popup:open', self.onOpenBound);
-    el.addEventListener('popup:opened', self.onOpenedBound);
-    el.addEventListener('popup:close', self.onCloseBound);
-    el.addEventListener('popup:closed', self.onClosedBound);
     const props = self.props;
     const {
       closeByBackdropClick,
       backdrop,
-      animate
+      backdropEl,
+      animate,
+      closeOnEscape,
+      swipeToClose,
+      swipeHandler
     } = props;
     const popupParams = {
-      el
+      el,
+      on: {
+        open: self.onOpen,
+        opened: self.onOpened,
+        close: self.onClose,
+        closed: self.onClosed
+      }
     };
     {
       if ('closeByBackdropClick' in props) popupParams.closeByBackdropClick = closeByBackdropClick;
+      if ('closeOnEscape' in props) popupParams.closeOnEscape = closeOnEscape;
       if ('animate' in props) popupParams.animate = animate;
       if ('backdrop' in props) popupParams.backdrop = backdrop;
+      if ('backdropEl' in props) popupParams.backdropEl = backdropEl;
+      if ('swipeToClose' in props) popupParams.swipeToClose = swipeToClose;
+      if ('swipeHandler' in props) popupParams.swipeHandler = swipeHandler;
     }
     self.$f7ready(() => {
       self.f7Popup = self.$f7.popup.create(popupParams);
@@ -143,9 +149,17 @@ __reactComponentSetProps(F7Popup, Object.assign({
   style: Object,
   tabletFullscreen: Boolean,
   opened: Boolean,
-  closeByBackdropClick: Boolean,
+  animate: Boolean,
   backdrop: Boolean,
-  animate: Boolean
+  backdropEl: [String, Object, window.HTMLElement],
+  closeByBackdropClick: Boolean,
+  closeOnEscape: Boolean,
+  swipeToClose: {
+    type: [Boolean, String],
+    default: false
+  },
+  swipeHandler: [String, Object, window.HTMLElement],
+  push: Boolean
 }, Mixins.colorProps));
 
 F7Popup.displayName = 'f7-popup';

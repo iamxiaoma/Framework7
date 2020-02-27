@@ -1,6 +1,7 @@
 import $ from 'dom7';
 import Utils from '../../utils/utils';
 import History from '../../utils/history';
+import asyncComponent from './async-component';
 
 function tabLoad(tabRoute, loadOptions = {}) {
   const router = this;
@@ -175,8 +176,10 @@ function tabLoad(tabRoute, loadOptions = {}) {
     }
   }
 
+  let hasContentLoadProp;
   ('url content component el componentUrl template templateUrl').split(' ').forEach((tabLoadProp) => {
     if (tabRoute[tabLoadProp]) {
+      hasContentLoadProp = true;
       loadTab({ [tabLoadProp]: tabRoute[tabLoadProp] }, options);
     }
   });
@@ -190,6 +193,10 @@ function tabLoad(tabRoute, loadOptions = {}) {
   }
   if (tabRoute.async) {
     tabRoute.async.call(router, currentRoute, previousRoute, asyncResolve, asyncReject);
+  } else if (tabRoute.asyncComponent) {
+    asyncComponent(router, tabRoute.asyncComponent, asyncResolve, asyncReject);
+  } else if (!hasContentLoadProp) {
+    router.allowPageChange = true;
   }
 
   return router;

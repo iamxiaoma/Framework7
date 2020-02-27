@@ -8,6 +8,7 @@ export default {
     className: String, // phenome-react-line
     style: Object, // phenome-react-line
     text: String,
+    confirmTitle: String,
     confirmText: String,
     overswipe: Boolean,
     close: Boolean,
@@ -25,6 +26,7 @@ export default {
       delete: deleteProp,
       close,
       href,
+      confirmTitle,
       confirmText,
       text,
     } = props;
@@ -41,16 +43,26 @@ export default {
 
     return (
       <a
+        ref="el"
         href={href || '#'}
         id={id}
         style={style}
         data-confirm={confirmText || undefined}
+        data-confirm-title={confirmTitle || undefined}
         className={classes}
-        onClick={this.onClick.bind(this)}
       >
         <slot>{text}</slot>
       </a>
     );
+  },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick']);
+  },
+  componentDidMount() {
+    this.refs.el.addEventListener('click', this.onClick);
+  },
+  componentWillUnmount() {
+    this.refs.el.removeEventListener('click', this.onClick);
   },
   methods: {
     onClick(event) {

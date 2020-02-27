@@ -34,13 +34,13 @@ export default class extends React.Component {
             <p>Inline determinate load & hide:</p>
             <p id="demo-determinate-container"></p>
             <p>
-              <Button raised onClick={()=>{this.showDeterminate(true)}}>Start Loading</Button>
+              <Button fill onClick={()=>{this.showDeterminate(true)}}>Start Loading</Button>
             </p>
           </div>
           <div>
             <p>Overlay with determinate progress bar on top of the app:</p>
             <p>
-              <Button raised onClick={()=>{this.showDeterminate(false)}}>Start Loading</Button>
+              <Button fill onClick={()=>{this.showDeterminate(false)}}>Start Loading</Button>
             </p>
           </div>
         </Block>
@@ -59,13 +59,13 @@ export default class extends React.Component {
             <p>Overlay with infinite progress bar on top of the app</p>
             <p id="demo-infinite-container"></p>
             <p>
-              <Button raised onClick={()=>{this.showInfinite(false)}}>Start Loading</Button>
+              <Button fill onClick={()=>{this.showInfinite(false)}}>Start Loading</Button>
             </p>
           </div>
           <div>
             <p>Overlay with infinite multi-color progress bar on top of the app</p>
             <p>
-              <Button raised onClick={()=>{this.showInfinite(true)}}>Start Loading</Button>
+              <Button fill onClick={()=>{this.showInfinite(true)}}>Start Loading</Button>
             </p>
           </div>
         </Block>
@@ -107,7 +107,7 @@ export default class extends React.Component {
     if (inline) {
       progressBarEl = app.progressbar.show('#demo-determinate-container', 0);
     } else {
-      progressBarEl = app.progressbar.show(0, app.theme === 'md' ? 'yellow' : 'blue');
+      progressBarEl = app.progressbar.show(0);
     }
     let progress = 0;
     function simulateLoading() {
@@ -133,7 +133,7 @@ export default class extends React.Component {
     if (multiColor) {
       app.progressbar.show('multi');
     } else {
-      app.progressbar.show(app.theme === 'md' ? 'yellow' : 'blue');
+      app.progressbar.show();
     }
     setTimeout(() => {
       self.infiniteLoading = false;

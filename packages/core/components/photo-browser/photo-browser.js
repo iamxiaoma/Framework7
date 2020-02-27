@@ -14,9 +14,12 @@ export default {
       theme: 'light',
       captionsTheme: undefined,
       iconsColor: undefined,
+      popupPush: false,
       swipeToClose: true,
-      backLinkText: 'Close',
+      pageBackLinkText: 'Back',
+      popupCloseLinkText: 'Close',
       navbarOfText: 'of',
+      navbarShowCount: undefined,
       view: undefined,
       url: 'photos/',
       routableModals: true,
@@ -56,7 +59,7 @@ export default {
   create() {
     const app = this;
     app.photoBrowser = ConstructorMethods({
-      defaultSelector: '.photo-browser',
+      defaultSelector: '.photo-browser-popup, .photo-browser-page',
       constructor: PhotoBrowser,
       app,
       domProp: 'f7PhotoBrowser',

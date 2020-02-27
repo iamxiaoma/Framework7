@@ -36,11 +36,15 @@ export default {
       default: 0,
     },
     maxHeight: Number,
-    resizePage: Boolean,
+    resizePage: {
+      type: Boolean,
+      default: true,
+    },
     sendLink: String,
     value: [String, Number, Array],
     disabled: Boolean,
     readonly: Boolean,
+    textareaId: [Number, String],
     name: String,
     placeholder: {
       type: String,
@@ -53,14 +57,16 @@ export default {
     ...Mixins.colorProps,
   },
   componentDidCreate() {
-    this.onChangeBound = this.onChange.bind(this);
-    this.onInputBound = this.onInput.bind(this);
-    this.onFocusBound = this.onFocus.bind(this);
-    this.onBlurBound = this.onBlur.bind(this);
-    this.onClickBound = this.onClick.bind(this);
-    this.onDeleteAttachmentBound = this.onDeleteAttachment.bind(this);
-    this.onClickAttachmentBound = this.onClickAttachment.bind(this);
-    this.onResizePageBound = this.onResizePage.bind(this);
+    Utils.bindMethods(this, [
+      'onChange',
+      'onInput',
+      'onFocus',
+      'onBlur',
+      'onClick',
+      'onAttachmentDelete',
+      'onAttachmentClick,',
+      'onResizePage',
+    ]);
   },
   render() {
     const self = this;
@@ -110,6 +116,9 @@ export default {
       });
     }
 
+    const valueProps = {};
+    if ('value' in self.props) valueProps.value = value;
+
     return (
       <div ref="el" id={id} style={style} className={self.classes}>
         {slotsBeforeInner}
@@ -127,16 +136,16 @@ export default {
               name={name}
               readonly={readonly}
               resizable={resizable}
-              value={value}
-              onInput={self.onInputBound}
-              onChange={self.onChangeBound}
-              onFocus={self.onFocusBound}
-              onBlur={self.onBlurBound}
+              onInput={self.onInput}
+              onChange={self.onChange}
+              onFocus={self.onFocus}
+              onBlur={self.onBlur}
+              {...valueProps}
             />
             {slotsAfterArea}
           </div>
           {((sendLink && sendLink.length > 0) || slotsSendLink) && (
-            <F7Link onClick={self.onClickBound}>
+            <F7Link onClick={self.onClick}>
               {slotsSendLink || sendLink}
             </F7Link>
           )}
@@ -200,10 +209,6 @@ export default {
     const el = self.refs.el;
     if (!el) return;
 
-    el.addEventListener('messagebar:attachmentdelete', self.onDeleteAttachmentBound);
-    el.addEventListener('messagebar:attachmentclick', self.onClickAttachmentBound);
-    el.addEventListener('messagebar:resizepage', self.onResizePageBound);
-
     const params = Utils.noUndefinedProps({
       el,
       top,
@@ -211,6 +216,11 @@ export default {
       bottomOffset,
       topOffset,
       maxHeight,
+      on: {
+        attachmentDelete: self.onAttachmentDelete,
+        attachmentClick: self.onAttachmentClick,
+        resizePage: self.onResizePage,
+      },
     });
 
     self.$f7ready(() => {
@@ -235,13 +245,6 @@ export default {
   componentWillUnmount() {
     const self = this;
     if (self.f7Messagebar && self.f7Messagebar.destroy) self.f7Messagebar.destroy();
-
-    const el = self.refs.el;
-    if (!el) return;
-
-    el.removeEventListener('messagebar:attachmentdelete', self.onDeleteAttachmentBound);
-    el.removeEventListener('messagebar:attachmentclick', self.onClickAttachmentBound);
-    el.removeEventListener('messagebar:resizepage', self.onResizePageBound);
   },
   methods: {
     clear(...args) {
@@ -325,14 +328,14 @@ export default {
       this.dispatchEvent('send', value, clear);
       this.dispatchEvent('click', event);
     },
-    onDeleteAttachment(event) {
-      this.dispatchEvent('messagebar:attachmentdelete messagebarAttachmentDelete', event);
+    onAttachmentDelete(instance, attachmentEl, attachmentElIndex) {
+      this.dispatchEvent('messagebar:attachmentdelete messagebarAttachmentDelete', instance, attachmentEl, attachmentElIndex);
     },
-    onClickAttachment(event) {
-      this.dispatchEvent('messagebar:attachmentclick messagebarAttachmentClick', event);
+    onAttachmentClick(instance, attachmentEl, attachmentElIndex) {
+      this.dispatchEvent('messagebar:attachmentclick messagebarAttachmentClick', instance, attachmentEl, attachmentElIndex);
     },
-    onResizePage(event) {
-      this.dispatchEvent('messagebar:resizepage messagebarResizePage', event);
+    onResizePage(instance) {
+      this.dispatchEvent('messagebar:resizepage messagebarResizePage', instance);
     },
   },
 };

@@ -5,8 +5,8 @@ export default () => (
   <Page>
     <Navbar title="Subnavbar" backLink="Back">
       <Subnavbar>
-        <Segmented raised>
-          <Button>Link 1</Button>
+        <Segmented strong>
+          <Button active>Link 1</Button>
           <Button>Link 2</Button>
           <Button>Link 3</Button>
         </Segmented>

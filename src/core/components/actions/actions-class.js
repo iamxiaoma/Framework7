@@ -1,5 +1,6 @@
 /* eslint indent: ["off"] */
 import $ from 'dom7';
+import { window, document } from 'ssr-window';
 import Utils from '../../utils/utils';
 import Modal from '../modal/modal-class';
 
@@ -29,9 +30,9 @@ class Actions extends Modal {
     // Find Element
     let $el;
     if (actions.params.el) {
-      $el = $(actions.params.el);
+      $el = $(actions.params.el).eq(0);
     } else if (actions.params.content) {
-      $el = $(actions.params.content);
+      $el = $(actions.params.content).filter((elIndex, node) => node.nodeType === 1).eq(0);
     } else if (actions.params.buttons) {
       if (actions.params.convertToPopover) {
         actions.popoverHtml = actions.renderPopover();
@@ -49,7 +50,9 @@ class Actions extends Modal {
 
     // Backdrop
     let $backdropEl;
-    if (actions.params.backdrop) {
+    if (actions.params.backdrop && actions.params.backdropEl) {
+      $backdropEl = $(actions.params.backdropEl);
+    } else if (actions.params.backdrop) {
       $backdropEl = app.root.children('.actions-backdrop');
       if ($backdropEl.length === 0) {
         $backdropEl = $('<div class="actions-backdrop"></div>');
@@ -62,15 +65,15 @@ class Actions extends Modal {
 
     let popover;
     function buttonOnClick(e) {
-      const buttonEl = this;
+      const $buttonEl = $(this);
       let buttonIndex;
       let groupIndex;
-      if ($(buttonEl).hasClass('item-link')) {
-        buttonIndex = $(buttonEl).parents('li').index();
-        groupIndex = $(buttonEl).parents('.list').index();
+      if ($buttonEl.hasClass('list-button') || $buttonEl.hasClass('item-link')) {
+        buttonIndex = $buttonEl.parents('li').index();
+        groupIndex = $buttonEl.parents('.list').index();
       } else {
-        buttonIndex = $(buttonEl).index();
-        groupIndex = $(buttonEl).parents('.actions-group').index();
+        buttonIndex = $buttonEl.index();
+        groupIndex = $buttonEl.parents('.actions-group').index();
       }
       if (typeof groups !== 'undefined') {
         const button = groups[groupIndex][buttonIndex];
@@ -88,6 +91,7 @@ class Actions extends Modal {
           actions.params.forceToPopover
           || (app.device.ios && app.device.ipad)
           || app.width >= 768
+          || (app.device.desktop && app.theme === 'aurora')
         ) {
           convertToPopover = true;
         }
@@ -104,12 +108,12 @@ class Actions extends Modal {
         });
         popover.open(animate);
         popover.once('popoverOpened', () => {
-          popover.$el.find('.item-link').each((groupIndex, buttonEl) => {
+          popover.$el.find('.list-button, .item-link').each((groupIndex, buttonEl) => {
             $(buttonEl).on('click', buttonOnClick);
           });
         });
         popover.once('popoverClosed', () => {
-          popover.$el.find('.item-link').each((groupIndex, buttonEl) => {
+          popover.$el.find('.list-button, .item-link').each((groupIndex, buttonEl) => {
             $(buttonEl).off('click', buttonOnClick);
           });
           Utils.nextTick(() => {
@@ -157,6 +161,8 @@ class Actions extends Modal {
     function handleClick(e) {
       const target = e.target;
       const $target = $(target);
+      const keyboardOpened = !app.device.desktop && app.device.cordova && ((window.Keyboard && window.Keyboard.isVisible) || (window.cordova.plugins && window.cordova.plugins.Keyboard && window.cordova.plugins.Keyboard.isVisible));
+      if (keyboardOpened) return;
       if ($target.closest(actions.el).length === 0) {
         if (
           actions.params.closeByBackdropClick
@@ -169,6 +175,22 @@ class Actions extends Modal {
           actions.close();
         }
       }
+    }
+
+    function onKeyDown(e) {
+      const keyCode = e.keyCode;
+      if (keyCode === 27 && actions.params.closeOnEscape) {
+        actions.close();
+      }
+    }
+
+    if (actions.params.closeOnEscape) {
+      actions.on('open', () => {
+        $(document).on('keydown', onKeyDown);
+      });
+      actions.on('close', () => {
+        $(document).off('keydown', onKeyDown);
+      });
     }
 
     actions.on('opened', () => {
@@ -238,9 +260,8 @@ class Actions extends Modal {
                     itemClasses.push('popover-from-actions-label');
                     return `<li class="${itemClasses.join(' ')}">${text}</li>`;
                   }
-                  itemClasses.push('item-link');
                   if (icon) {
-                    itemClasses.push('item-content');
+                    itemClasses.push('item-link item-content');
                     return `
                       <li>
                         <a class="${itemClasses.join(' ')}">
@@ -259,7 +280,7 @@ class Actions extends Modal {
                   itemClasses.push('list-button');
                   return `
                     <li>
-                      <a href="#" class="list-button ${itemClasses.join(' ')}">${text}</a>
+                      <a class="${itemClasses.join(' ')}">${text}</a>
                     </li>
                   `;
                 }).join('')}

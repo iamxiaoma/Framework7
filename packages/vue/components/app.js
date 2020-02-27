@@ -11,20 +11,6 @@ export default {
     routes: Array
   }, Mixins.colorProps),
 
-  data() {
-    const props = __vueComponentProps(this);
-
-    const state = (() => {
-      return {
-        modals: []
-      };
-    })();
-
-    return {
-      state
-    };
-  },
-
   render() {
     const _h = this.$createElement;
     const self = this;
@@ -58,6 +44,7 @@ export default {
       parentEl.style.height = '100%';
     }
 
+    if (f7.instance) return;
     f7.init(el, params, routes);
   },
 

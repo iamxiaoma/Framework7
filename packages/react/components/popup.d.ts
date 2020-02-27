@@ -9,9 +9,14 @@ declare namespace F7Popup {
     style? : React.CSSProperties
     tabletFullscreen? : boolean
     opened? : boolean
-    closeByBackdropClick? : boolean
-    backdrop? : boolean
     animate? : boolean
+    backdrop? : boolean
+    backdropEl? : string | Object | any
+    closeByBackdropClick? : boolean
+    closeOnEscape? : boolean
+    swipeToClose? : boolean | string
+    swipeHandler? : string | Object | any
+    push? : boolean
     color? : string
     colorTheme? : string
     textColor? : string
@@ -19,17 +24,17 @@ declare namespace F7Popup {
     borderColor? : string
     rippleColor? : string
     themeDark? : boolean
-    onPopupOpen? : (event?: any) => void
-    onPopupOpened? : (event?: any) => void
-    onPopupClose? : (event?: any) => void
-    onPopupClosed? : (event?: any) => void
+    onPopupOpen? : (instance?: any) => void
+    onPopupOpened? : (instance?: any) => void
+    onPopupClose? : (instance?: any) => void
+    onPopupClosed? : (instance?: any) => void
   }
 }
 declare class F7Popup extends React.Component<F7Popup.Props, {}> {
-  onOpen(event? : any) : unknown
-  onOpened(event? : any) : unknown
-  onClose(event? : any) : unknown
-  onClosed(event? : any) : unknown
+  onOpen(instance? : any) : unknown
+  onOpened(instance? : any) : unknown
+  onClose(instance? : any) : unknown
+  onClosed(instance? : any) : unknown
   open(animate? : any) : unknown
   close(animate? : any) : unknown
   f7Popup: PopupNamespace.Popup

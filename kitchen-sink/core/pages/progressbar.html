@@ -1,11 +1,12 @@
 <template>
   <div class="page">
     <div class="navbar">
+      <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
         <div class="left">
           <a href="#" class="link back">
             <i class="icon icon-back"></i>
-            <span class="ios-only">Back</span>
+            <span class="if-not-md">Back</span>
           </a>
         </div>
         <div class="title">Progress Bar</div>
@@ -32,13 +33,13 @@
           <p>Inline determinate load & hide:</p>
           <p id="demo-determinate-container"></p>
           <p>
-            <a href="" class="button button-raised" @click="showDeterminate(true)">Start Loading</a>
+            <a href="" class="button button-fill" @click="showDeterminate(true)">Start Loading</a>
           </p>
         </div>
         <div>
           <p>Overlay with determinate progress bar on top of the app:</p>
           <p>
-            <a href="" class="button button-raised" @click="showDeterminate(false)">Start Loading</a>
+            <a href="" class="button button-fill" @click="showDeterminate(false)">Start Loading</a>
           </p>
         </div>
       </div>
@@ -57,13 +58,13 @@
           <p>Overlay with infinite progress bar on top of the app</p>
           <p id="demo-infinite-container"></p>
           <p>
-            <a href="" class="button button-raised" @click="showInfinite(false)">Start Loading</a>
+            <a href="" class="button button-fill" @click="showInfinite(false)">Start Loading</a>
           </p>
         </div>
         <div>
           <p>Overlay with infinite multi-color progress bar on top of the app</p>
           <p>
-            <a href="" class="button button-raised" @click="showInfinite(true)">Start Loading</a>
+            <a href="" class="button button-fill" @click="showInfinite(true)">Start Loading</a>
           </p>
         </div>
       </div>
@@ -110,7 +111,7 @@
         if (inline) {
           progressBarEl = app.progressbar.show('#demo-determinate-container', 0);
         } else {
-          progressBarEl = app.progressbar.show(0, app.theme === 'md' ? 'yellow' : 'blue');
+          progressBarEl = app.progressbar.show(0);
         }
         var progress = 0;
         function simulateLoading() {
@@ -137,7 +138,7 @@
         if (multiColor) {
           app.progressbar.show('multi');
         } else {
-          app.progressbar.show(app.theme === 'md' ? 'yellow' : 'blue');
+          app.progressbar.show();
         }
         setTimeout(function () {
           self.infiniteLoading = false;

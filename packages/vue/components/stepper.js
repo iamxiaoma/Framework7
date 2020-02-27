@@ -27,6 +27,8 @@ export default {
       default: 1
     },
     formatValue: Function,
+    name: String,
+    inputId: String,
     input: {
       type: Boolean,
       default: true
@@ -68,16 +70,23 @@ export default {
     round: Boolean,
     roundMd: Boolean,
     roundIos: Boolean,
+    roundAurora: Boolean,
     fill: Boolean,
     fillMd: Boolean,
     fillIos: Boolean,
-    big: Boolean,
-    bigMd: Boolean,
-    bigIos: Boolean,
+    fillAurora: Boolean,
+    large: Boolean,
+    largeMd: Boolean,
+    largeIos: Boolean,
+    largeAurora: Boolean,
     small: Boolean,
     smallMd: Boolean,
     smallIos: Boolean,
-    raised: Boolean
+    smallAurora: Boolean,
+    raised: Boolean,
+    raisedMd: Boolean,
+    raisedIos: Boolean,
+    raisedAurora: Boolean
   }, Mixins.colorProps),
 
   render() {
@@ -94,7 +103,9 @@ export default {
       max,
       step,
       id,
-      style
+      style,
+      name,
+      inputId
     } = props;
     let inputWrapEl;
     let valueEl;
@@ -103,14 +114,18 @@ export default {
       let inputEl;
       {
         inputEl = _h('input', {
+          ref: 'inputEl',
           domProps: {
             readOnly: inputReadonly,
             value
           },
           on: {
-            input: self.onInput.bind(self)
+            input: self.onInput,
+            change: self.onChange
           },
           attrs: {
+            name: name,
+            id: inputId,
             type: inputType,
             min: inputType === 'number' ? min : undefined,
             max: inputType === 'number' ? max : undefined,
@@ -137,15 +152,11 @@ export default {
         id: id
       }
     }, [_h('div', {
-      class: 'stepper-button-minus',
-      on: {
-        click: self.onMinusClickBound
-      }
+      ref: 'minusEl',
+      class: 'stepper-button-minus'
     }), inputWrapEl, valueEl, _h('div', {
-      class: 'stepper-button-plus',
-      on: {
-        click: self.onPlusClickBound
-      }
+      ref: 'plusEl',
+      class: 'stepper-button-plus'
     })]);
   },
 
@@ -157,16 +168,23 @@ export default {
         round,
         roundIos,
         roundMd,
+        roundAurora,
         fill,
         fillIos,
         fillMd,
-        big,
-        bigIos,
-        bigMd,
+        fillAurora,
+        large,
+        largeIos,
+        largeMd,
+        largeAurora,
         small,
         smallIos,
         smallMd,
+        smallAurora,
         raised,
+        raisedMd,
+        raisedIos,
+        raisedAurora,
         disabled
       } = props;
       return Utils.classNames(self.props.className, 'stepper', {
@@ -174,16 +192,23 @@ export default {
         'stepper-round': round,
         'stepper-round-ios': roundIos,
         'stepper-round-md': roundMd,
+        'stepper-round-aurora': roundAurora,
         'stepper-fill': fill,
         'stepper-fill-ios': fillIos,
         'stepper-fill-md': fillMd,
-        'stepper-big': big,
-        'stepper-big-ios': bigIos,
-        'stepper-big-md': bigMd,
+        'stepper-fill-aurora': fillAurora,
+        'stepper-large': large,
+        'stepper-large-ios': largeIos,
+        'stepper-large-md': largeMd,
+        'stepper-large-aurora': largeAurora,
         'stepper-small': small,
         'stepper-small-ios': smallIos,
         'stepper-small-md': smallMd,
-        'stepper-raised': raised
+        'stepper-small-aurora': smallAurora,
+        'stepper-raised': raised,
+        'stepper-raised-ios': raisedIos,
+        'stepper-raised-md': raisedMd,
+        'stepper-raised-aurora': raisedAurora
       }, Mixins.colorClasses(props));
     },
 
@@ -194,13 +219,24 @@ export default {
   },
 
   created() {
-    this.onInputBound = this.onInput.bind(this);
-    this.onMinusClickBound = this.onMinusClick.bind(this);
-    this.onPlusClickBound = this.onPlusClick.bind(this);
+    Utils.bindMethods(this, ['onInput', 'onMinusClick', 'onPlusClick']);
   },
 
   mounted() {
     const self = this;
+    const {
+      minusEl,
+      plusEl
+    } = self.$refs;
+
+    if (minusEl) {
+      minusEl.addEventListener('click', self.onMinusClick);
+    }
+
+    if (plusEl) {
+      plusEl.addEventListener('click', self.onPlusClick);
+    }
+
     if (!self.props.init) return;
     self.$f7ready(f7 => {
       const {
@@ -242,10 +278,24 @@ export default {
   },
 
   beforeDestroy() {
-    if (!this.props.init) return;
+    const self = this;
+    const {
+      minusEl,
+      plusEl
+    } = self.$refs;
 
-    if (this.f7Stepper && this.f7Stepper.destroy) {
-      this.f7Stepper.destroy();
+    if (minusEl) {
+      minusEl.removeEventListener('click', self.onMinusClick);
+    }
+
+    if (plusEl) {
+      plusEl.removeEventListener('click', self.onPlusClick);
+    }
+
+    if (!self.props.init) return;
+
+    if (self.f7Stepper && self.f7Stepper.destroy) {
+      self.f7Stepper.destroy();
     }
   },
 
@@ -278,6 +328,11 @@ export default {
     onInput(event) {
       const stepper = this.f7Stepper;
       this.dispatchEvent('input', event, stepper);
+    },
+
+    onChange(event) {
+      const stepper = this.f7Stepper;
+      this.dispatchEvent('change', event, stepper);
     },
 
     onMinusClick(event) {

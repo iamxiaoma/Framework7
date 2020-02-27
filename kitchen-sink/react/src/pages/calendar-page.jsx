@@ -55,7 +55,7 @@ export default class extends React.Component {
   render() {
     return (
       <Page onPageInit={this.onPageInit.bind(this)} onPageBeforeRemove={this.onPageBeforeRemove.bind(this)}>
-        <Navbar backLink="Back">
+        <Navbar backLink="Back" noShadow>
           <NavTitle className="navbar-calendar-title"></NavTitle>
         </Navbar>
         <Block
@@ -66,7 +66,7 @@ export default class extends React.Component {
         <List
           id="calendar-events"
           noHairlines
-          className="no-margin no-ios-left-edge"
+          className="no-margin no-safe-area-left"
         >
           {this.state.eventItems.map((item, index) => (
             <ListItem
@@ -74,7 +74,7 @@ export default class extends React.Component {
               title={item.title}
               after={item.time}
             >
-              <div class="event-color" style={{'background-color': item.color}} slot="root-start"></div>
+              <div className="event-color" style={{'background-color': item.color}} slot="root-start"></div>
             </ListItem>
           ))}
           {this.state.eventItems.length === 0 && (
@@ -98,8 +98,8 @@ export default class extends React.Component {
     const eventItems = [];
     if (currentEvents.length) {
       currentEvents.forEach((event) => {
-        const hours = event.date.getHours();
-        let minutes = event.date.getMinutes();
+        const hours = event.hours;
+        let minutes = event.minutes;
         if (minutes < 10) minutes = `0${minutes}`;
         eventItems.push({
           title: event.title,
@@ -112,7 +112,7 @@ export default class extends React.Component {
       eventItems,
     });
   }
-  onPageInit(e, page) {
+  onPageInit(page) {
     const self = this;
     const app = self.$f7;
     const $ = self.$$;
@@ -125,13 +125,13 @@ export default class extends React.Component {
       on: {
         init(calendar) {
           $('.navbar-calendar-title').text(`${monthNames[calendar.currentMonth]}, ${calendar.currentYear}`);
-          app.navbar.size(page.navbarEl);
-          calendar.$el.addClass('no-ios-right-edge');
+          app.navbar.size(app.navbar.getElByPage(page.el));
+          calendar.$el.addClass('no-safe-area-right');
           self.renderEvents(calendar);
         },
         monthYearChangeStart(calendar) {
           $('.navbar-calendar-title').text(`${monthNames[calendar.currentMonth]}, ${calendar.currentYear}`);
-          app.navbar.size(page.navbarEl);
+          app.navbar.size(app.navbar.getElByPage(page.el));
         },
         change(calendar) {
           self.renderEvents(calendar);

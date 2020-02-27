@@ -4,14 +4,17 @@ import PanelRight from './pages/panel-right.jsx';
 import About from './pages/about.jsx';
 import Accordion from './pages/accordion.jsx';
 import ActionSheet from './pages/action-sheet.jsx';
+import Appbar from './pages/appbar.jsx';
 import Autocomplete from './pages/autocomplete.jsx';
 import Badge from './pages/badge.jsx';
 import Buttons from './pages/buttons.jsx';
 import Calendar from './pages/calendar.jsx';
 import CalendarPage from './pages/calendar-page.jsx';
 import Cards from './pages/cards.jsx';
+import CardsExpandable from './pages/cards-expandable.jsx';
 import Checkbox from './pages/checkbox.jsx';
 import Chips from './pages/chips.jsx';
+import ColorPicker from './pages/color-picker.jsx';
 import ContactsList from './pages/contacts-list.jsx';
 import ContentBlock from './pages/content-block.jsx';
 import DataTable from './pages/data-table.jsx';
@@ -30,6 +33,7 @@ import List from './pages/list.jsx';
 import ListIndex from './pages/list-index.jsx';
 import LoginScreen from './pages/login-screen.jsx';
 import LoginScreenPage from './pages/login-screen-page.jsx';
+import Menu from './pages/menu.jsx';
 import Messages from './pages/messages.jsx';
 import Navbar from './pages/navbar.jsx';
 import NavbarHideScroll from './pages/navbar-hide-scroll.jsx';
@@ -47,9 +51,9 @@ import Range from './pages/range.jsx';
 import Searchbar from './pages/searchbar.jsx';
 import SearchbarExpandable from './pages/searchbar-expandable.jsx';
 import SheetModal from './pages/sheet-modal.jsx';
+import Skeleton from './pages/skeleton.jsx';
 import SmartSelect from './pages/smart-select.jsx';
 import Sortable from './pages/sortable.jsx';
-import Statusbar from './pages/statusbar.jsx';
 import Stepper from './pages/stepper.jsx';
 import Subnavbar from './pages/subnavbar.jsx';
 import SubnavbarTitle from './pages/subnavbar-title.jsx';
@@ -78,6 +82,7 @@ import TabsStatic from './pages/tabs-static.jsx';
 import TabsAnimated from './pages/tabs-animated.jsx';
 import TabsSwipeable from './pages/tabs-swipeable.jsx';
 import TabsRoutable from './pages/tabs-routable.jsx';
+import TextEditor from './pages/text-editor.jsx';
 import Toast from './pages/toast.jsx';
 import Toggle from './pages/toggle.jsx';
 import ToolbarTabbar from './pages/toolbar-tabbar.jsx';
@@ -90,12 +95,20 @@ import Timeline from './pages/timeline.jsx';
 import TimelineVertical from './pages/timeline-vertical.jsx';
 import TimelineHorizontal from './pages/timeline-horizontal.jsx';
 import TimelineHorizontalCalendar from './pages/timeline-horizontal-calendar.jsx';
+import Treeview from './pages/treeview.jsx';
 import VirtualList from './pages/virtual-list.jsx';
 import ColorThemes from './pages/color-themes.jsx';
+
+import PageTransitions from './pages/page-transitions.jsx';
+import PageTransitionsEffect from './pages/page-transitions-effect.jsx';
 
 import RoutableModals from './pages/routable-modals.jsx';
 import RoutablePopup from './pages/routable-popup.jsx';
 import RoutableActions from './pages/routable-actions.jsx';
+
+import MasterDetailMaster from './pages/master-detail-master.jsx';
+import MasterDetailDetail from './pages/master-detail-detail.jsx';
+
 
 import NotFound from './pages/404.jsx';
 
@@ -127,11 +140,12 @@ export default [
     content: `
       <div class="page">
         <div class="navbar">
+          <div class="navbar-bg"></div>
           <div class="navbar-inner sliding">
             <div class="left">
               <a href="#" class="link back">
                 <i class="icon icon-back"></i>
-                <span class="ios-only">Back</span>
+                <span class="if-not-md">Back</span>
               </a>
             </div>
             <div class="title">Panel Page 1</div>
@@ -151,11 +165,12 @@ export default [
     content: `
       <div class="page">
         <div class="navbar">
+          <div class="navbar-bg"></div>
           <div class="navbar-inner sliding">
             <div class="left">
               <a href="#" class="link back">
                 <i class="icon icon-back"></i>
-                <span class="ios-only">Back</span>
+                <span class="if-not-md">Back</span>
               </a>
             </div>
             <div class="title">Panel Page 2</div>
@@ -178,6 +193,10 @@ export default [
   {
     path: '/action-sheet/',
     component: ActionSheet,
+  },
+  {
+    path: '/appbar/',
+    component: Appbar,
   },
   {
     path: '/autocomplete/',
@@ -204,12 +223,20 @@ export default [
     component: Cards,
   },
   {
+    path: '/cards-expandable/',
+    component: CardsExpandable,
+  },
+  {
     path: '/checkbox/',
     component: Checkbox,
   },
   {
     path: '/chips/',
     component: Chips,
+  },
+  {
+    path: '/color-picker/',
+    component: ColorPicker,
   },
   {
     path: '/contacts-list/',
@@ -284,6 +311,10 @@ export default [
     component: LoginScreenPage,
   },
   {
+    path: '/menu/',
+    component: Menu,
+  },
+  {
     path: '/messages/',
     component: Messages,
   },
@@ -352,16 +383,16 @@ export default [
     component: SheetModal,
   },
   {
+    path: '/skeleton/',
+    component: Skeleton,
+  },
+  {
     path: '/smart-select/',
     component: SmartSelect,
   },
   {
     path: '/sortable/',
     component: Sortable,
-  },
-  {
-    path: '/statusbar/',
-    component: Statusbar,
   },
   {
     path: '/stepper/',
@@ -516,6 +547,10 @@ export default [
     ],
   },
   {
+    path: '/text-editor/',
+    component: TextEditor,
+  },
+  {
     path: '/toast/',
     component: Toast,
   },
@@ -566,6 +601,10 @@ export default [
     component: TimelineHorizontalCalendar,
   },
   {
+    path: '/treeview/',
+    component: Treeview,
+  },
+  {
     path: '/virtual-list/',
     component: VirtualList,
   },
@@ -574,6 +613,16 @@ export default [
   {
     path: '/color-themes/',
     component: ColorThemes,
+  },
+
+  // Page Transitions
+  {
+    path: '/page-transitions/',
+    component: PageTransitions,
+  },
+  {
+    path: '/page-transitions/:effect/',
+    component: PageTransitionsEffect,
   },
 
   // Routable Modals
@@ -594,6 +643,15 @@ export default [
         },
       },
     ],
+  },
+  {
+    path: '/master-detail/',
+    component: MasterDetailMaster,
+    master: true,
+  },
+  {
+    path: '/master-detail/:id/',
+    component: MasterDetailDetail,
   },
   // Default route (404 page). MUST BE THE LAST
   {

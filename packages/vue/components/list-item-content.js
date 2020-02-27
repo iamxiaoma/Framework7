@@ -1,7 +1,6 @@
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 import F7Badge from './badge';
-import __vueComponentSetState from '../runtime-helpers/vue-component-set-state.js';
 import __vueComponentDispatchEvent from '../runtime-helpers/vue-component-dispatch-event.js';
 import __vueComponentProps from '../runtime-helpers/vue-component-props.js';
 export default {
@@ -19,12 +18,10 @@ export default {
     badgeColor: String,
     mediaList: Boolean,
     mediaItem: Boolean,
-    itemInput: Boolean,
-    itemInputWithInfo: Boolean,
-    inlineLabel: Boolean,
     checkbox: Boolean,
     checked: Boolean,
     defaultChecked: Boolean,
+    indeterminate: Boolean,
     radio: Boolean,
     name: String,
     value: [String, Number, Array],
@@ -32,23 +29,6 @@ export default {
     required: Boolean,
     disabled: Boolean
   }, Mixins.colorProps),
-
-  data() {
-    const props = __vueComponentProps(this);
-
-    const state = (() => {
-      return {
-        hasInput: false,
-        hasInlineLabel: false,
-        hasInputInfo: false,
-        hasInputErrorMessage: false
-      };
-    })();
-
-    return {
-      state
-    };
-  },
 
   render() {
     const _h = this.$createElement;
@@ -77,15 +57,8 @@ export default {
       badge,
       mediaList,
       mediaItem,
-      badgeColor,
-      itemInput,
-      inlineLabel,
-      itemInputWithInfo
+      badgeColor
     } = props;
-    let hasInput = itemInput || self.state.hasInput;
-    let hasInlineLabel = inlineLabel || self.state.hasInlineLabel;
-    let hasInputInfo = itemInputWithInfo || self.state.hasInputInfo;
-    let hasInputErrorMessage = self.state.hasInputErrorMessage;
     const slotsContentStart = [];
     const slotsContent = [];
     const slotsContentEnd = [];
@@ -116,30 +89,23 @@ export default {
     let inputIconEl;
     let headerEl;
     let footerEl;
-    const slots = self.$slots.default;
+    const slotsDefault = self.$slots.default;
     const flattenSlots = [];
 
-    if (slots && slots.length) {
-      slots.forEach(slot => {
+    if (slotsDefault && slotsDefault.length) {
+      slotsDefault.forEach(slot => {
         if (Array.isArray(slot)) flattenSlots.push(...slot);else flattenSlots.push(slot);
       });
     }
 
+    const passedSlotsContentStart = self.$slots['content-start'];
+
+    if (passedSlotsContentStart && passedSlotsContentStart.length) {
+      slotsContentStart.push(...passedSlotsContentStart);
+    }
+
     flattenSlots.forEach(child => {
       if (typeof child === 'undefined') return;
-      {
-        const tag = child.tag;
-
-        if (tag && tag.indexOf('f7-input') >= 0) {
-          hasInput = true;
-          if (child.data && child.data.info) hasInputInfo = true;
-          if (child.data && child.data.errorMessage && child.data.errorMessageForce) hasInputErrorMessage = true;
-        }
-
-        if (tag && tag.indexOf('f7-label') >= 0) {
-          if (child.data && child.data.inline) hasInlineLabel = true;
-        }
-      }
       let slotName;
       slotName = child.data ? child.data.slot : undefined;
       if (!slotName || slotName === 'inner') slotsInner.push(child);
@@ -171,6 +137,9 @@ export default {
             disabled,
             required,
             value
+          },
+          on: {
+            change: this.onChange
           },
           attrs: {
             name: name,
@@ -267,20 +236,12 @@ export default {
     const ItemContentTag = checkbox || radio ? 'label' : 'div';
     const classes = Utils.classNames(className, 'item-content', {
       'item-checkbox': checkbox,
-      'item-radio': radio,
-      'item-input': hasInput,
-      'inline-label': hasInlineLabel,
-      'item-input-with-info': hasInputInfo,
-      'item-input-with-error-message': hasInputErrorMessage,
-      'item-input-invalid': hasInputErrorMessage
+      'item-radio': radio
     }, Mixins.colorClasses(props));
     return _h(ItemContentTag, {
       ref: 'el',
       style: style,
       class: classes,
-      on: {
-        click: self.onClickBound
-      },
       attrs: {
         id: id
       }
@@ -288,163 +249,49 @@ export default {
   },
 
   created() {
-    const self = this;
-    self.onClickBound = self.onClick.bind(self);
-    self.onChangeBound = self.onChange.bind(self);
-  },
-
-  beforeMount() {
-    this.checkHasInputState();
-  },
-
-  beforeUpdate() {
-    this.checkHasInputState();
+    Utils.bindMethods(this, 'onClick onChange'.split(' '));
   },
 
   mounted() {
     const self = this;
     const {
-      innerEl,
+      el,
       inputEl
     } = self.$refs;
+    const {
+      indeterminate
+    } = self.props;
 
-    if (inputEl) {
-      inputEl.addEventListener('change', self.onChangeBound);
+    if (indeterminate && inputEl) {
+      inputEl.indeterminate = true;
     }
 
-    if (!innerEl) return;
-    const $innerEl = self.$$(innerEl);
-    const $labelEl = $innerEl.children('.item-title.item-label');
-    const $inputWrapEl = $innerEl.children('.item-input-wrap');
-    const hasInlineLabel = $labelEl.hasClass('item-label-inline');
-    const hasInput = $inputWrapEl.length > 0;
-    const hasInputInfo = $inputWrapEl.children('.item-input-info').length > 0;
-    const hasInputErrorMessage = $inputWrapEl.children('.item-input-error-message').length > 0;
-
-    if (!self.hasInlineLabelSet && hasInlineLabel !== self.state.hasInlineLabel) {
-      self.setState({
-        hasInlineLabel
-      });
-    }
-
-    if (!self.hasInputSet && hasInput !== self.state.hasInput) {
-      self.setState({
-        hasInput
-      });
-    }
-
-    if (!self.hasInputInfoSet && hasInputInfo !== self.state.hasInputInfo) {
-      self.setState({
-        hasInputInfo
-      });
-    }
-
-    if (!self.hasInputErrorMessageSet && hasInputErrorMessage !== self.state.hasInputErrorMessage) {
-      self.setState({
-        hasInputErrorMessage
-      });
-    }
+    el.addEventListener('click', self.onClick);
   },
 
   updated() {
     const self = this;
-    const innerEl = self.$refs.innerEl;
-    if (!innerEl) return;
-    const $innerEl = self.$$(innerEl);
-    const $labelEl = $innerEl.children('.item-title.item-label');
-    const $inputWrapEl = $innerEl.children('.item-input-wrap');
-    const hasInlineLabel = $labelEl.hasClass('item-label-inline');
-    const hasInput = $inputWrapEl.length > 0;
-    const hasInputInfo = $inputWrapEl.children('.item-input-info').length > 0;
-    const hasInputErrorMessage = $inputWrapEl.children('.item-input-error-message').length > 0;
+    const {
+      inputEl
+    } = self.$refs;
+    const {
+      indeterminate
+    } = self.props;
 
-    if (hasInlineLabel !== self.state.hasInlineLabel) {
-      self.setState({
-        hasInlineLabel
-      });
-    }
-
-    if (hasInput !== self.state.hasInput) {
-      self.setState({
-        hasInput
-      });
-    }
-
-    if (hasInputInfo !== self.state.hasInputInfo) {
-      self.setState({
-        hasInputInfo
-      });
-    }
-
-    if (!self.hasInputErrorMessageSet && hasInputErrorMessage !== self.state.hasInputErrorMessage) {
-      self.setState({
-        hasInputErrorMessage
-      });
+    if (inputEl) {
+      inputEl.indeterminate = indeterminate;
     }
   },
 
   beforeDestroy() {
     const self = this;
     const {
-      inputEl
+      el
     } = self.$refs;
-
-    if (inputEl) {
-      inputEl.removeEventListener('change', self.onChangeBound);
-    }
+    el.removeEventListener('click', self.onClick);
   },
 
   methods: {
-    checkHasInputState() {
-      const self = this;
-      const props = self.props;
-      const {
-        itemInput,
-        inlineLabel,
-        itemInputWithInfo
-      } = props;
-      const hasInput = itemInput || self.state.hasInput;
-      const hasInlineLabel = inlineLabel || self.state.hasInlineLabel;
-      const hasInputInfo = itemInputWithInfo || self.state.hasInputInfo;
-      const hasInputErrorMessage = self.state.hasInputErrorMessage;
-
-      if (hasInput && !self.state.hasInput) {
-        self.hasInputSet = true;
-        self.setState({
-          hasInput
-        });
-      } else if (!hasInput) {
-        self.hasInputSet = false;
-      }
-
-      if (hasInputInfo && !self.state.hasInputInfo) {
-        self.hasInputInfoSet = true;
-        self.setState({
-          hasInputInfo
-        });
-      } else if (!hasInputInfo) {
-        self.hasInputInfoSet = false;
-      }
-
-      if (hasInputErrorMessage && !self.state.hasInputErrorMessage) {
-        self.hasInputErrorMessageSet = true;
-        self.setState({
-          hasInputErrorMessage
-        });
-      } else if (!hasInputInfo) {
-        self.hasInputErrorMessageSet = false;
-      }
-
-      if (hasInlineLabel && !self.state.hasInlineLabel) {
-        self.hasInlineLabelSet = true;
-        self.setState({
-          hasInlineLabel
-        });
-      } else if (!hasInlineLabel) {
-        self.hasInlineLabelSet = false;
-      }
-    },
-
     onClick(event) {
       this.dispatchEvent('click', event);
     },
@@ -455,10 +302,6 @@ export default {
 
     dispatchEvent(events, ...args) {
       __vueComponentDispatchEvent(this, events, ...args);
-    },
-
-    setState(updater, callback) {
-      __vueComponentSetState(this, updater, callback);
     }
 
   },

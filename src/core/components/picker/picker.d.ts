@@ -34,7 +34,7 @@ export namespace Picker {
     params : Parameters
 
     /** Set new picker value. values is array where each item represents value for each column. duration - transition duration in ms */
-    setValue(values : unknown[], duration : number) : void
+    setValue(values : unknown[], duration? : number) : void
     /** Returns current picker value */
     getValue() : unknown
     /** Adds value to the values array. Useful in case if multiple selection is enabled (with multiple: true parameter) */
@@ -62,7 +62,7 @@ export namespace Picker {
     activeIndex: number
 
     /** Set new value for current column. value is a new value, duration - transition duration in ms */
-    setValue(value : unknown, duration: number) : void
+    setValue(value : unknown, duration?: number) : void
     /** Replace column values and displayValues with new ones */
     replaceValues(values : unknown[], displayValues : unknown[]) : void
   }
@@ -95,6 +95,10 @@ export namespace Picker {
     updateValuesOnMomentum?: boolean
     /** Updates picker and input values during touch move. (default true) */
     updateValuesOnTouchmove?: boolean
+    /** Updates picker and input values during mousewheel scrolling. (default true) */
+    updateValuesOnMousewheel?: boolean
+    /** Allow to scroll through picker with mousewheel (default true) */
+    mousewheel?: boolean
     /** Disables snapping on values. (default false) */
     freeMode?: boolean
     /** Array with initial values. Each array item represents value of related column. */
@@ -113,10 +117,18 @@ export namespace Picker {
     containerEl?: HTMLElement | CSSSelector
     /** Can be auto, popover (to open picker in popover), sheet (to open in sheet modal). In case of auto will open in sheet modal on small screens and in popover on large screens.. (default auto) */
     openIn?: string
+    /** Enables Picker sheet to push view/s behind on open (default false) */
+    sheetPush?: boolean
+    /** Enables ability to close Picker sheet with swipe (default false) */
+    sheetSwipeToClose?: boolean | undefined
+    /** Enables backdrop (dark semi transparent layer behind). (default undefined - based on Popover or Sheet defaults) */
+    backdrop?: boolean
     /** String with CSS selector or HTMLElement with related input element. */
     inputEl?: HTMLElement | CSSSelector
     /** Scroll viewport (page-content) to input when picker opened. (default true) */
     scrollToInput?: boolean
+    /** Scroll to a different element than the inputEl when picker opened. */
+    scrollToEl?: HTMLElement | CSSSelector
     /** Sets "readonly" attribute on specified input. (default true) */
     inputReadOnly?: boolean
     /** Additional CSS class name to be set on picker element. */

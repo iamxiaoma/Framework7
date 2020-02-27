@@ -8,6 +8,7 @@ export default {
     className: String, // phenome-react-line
     style: Object, // phenome-react-line
     checked: Boolean,
+    indeterminate: Boolean,
     name: [Number, String],
     value: [Number, String, Boolean],
     disabled: Boolean,
@@ -24,6 +25,7 @@ export default {
     if (process.env.COMPILER === 'react') {
       inputEl = (
         <input
+          ref="inputEl"
           type="checkbox"
           name={name}
           value={value}
@@ -31,16 +33,17 @@ export default {
           readOnly={readonly}
           checked={checked}
           defaultChecked={defaultChecked}
-          onChange={self.onChange.bind(self)}
+          onChange={self.onChange}
         />
       );
     }
     if (process.env.COMPILER === 'vue') {
       inputEl = (
         <input
+          ref="inputEl"
           type="checkbox"
           name={name}
-          onChange={self.onChange.bind(self)}
+          onChange={self.onChange}
           domProps={{
             value,
             disabled,
@@ -74,6 +77,25 @@ export default {
         Mixins.colorClasses(props),
       );
     },
+  },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onChange']);
+  },
+  componentDidMount() {
+    const self = this;
+    const { inputEl } = self.refs;
+    const { indeterminate } = self.props;
+    if (indeterminate && inputEl) {
+      inputEl.indeterminate = true;
+    }
+  },
+  componentDidUpdate() {
+    const self = this;
+    const { inputEl } = self.refs;
+    const { indeterminate } = self.props;
+    if (inputEl) {
+      inputEl.indeterminate = indeterminate;
+    }
   },
   methods: {
     onChange(event) {

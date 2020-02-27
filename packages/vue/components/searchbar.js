@@ -28,7 +28,13 @@ export default {
       type: Boolean,
       default: true
     },
+    value: [String, Number, Array],
+    inputEvents: {
+      type: String,
+      default: 'change input compositionend'
+    },
     expandable: Boolean,
+    inline: Boolean,
     searchContainer: [String, Object],
     searchIn: {
       type: String,
@@ -37,6 +43,14 @@ export default {
     searchItem: {
       type: String,
       default: 'li'
+    },
+    searchGroup: {
+      type: String,
+      default: '.list-group'
+    },
+    searchGroupTitle: {
+      type: String,
+      default: '.item-divider, .list-group-title'
     },
     foundEl: {
       type: [String, Object],
@@ -48,7 +62,7 @@ export default {
     },
     backdrop: {
       type: Boolean,
-      default: true
+      default: undefined
     },
     backdropEl: [String, Object],
     hideOnEnableEl: {
@@ -102,33 +116,51 @@ export default {
       expandable,
       className,
       style,
-      id
+      id,
+      value,
+      inline
     } = props;
 
     if (clearButton) {
       clearEl = _h('span', {
-        class: 'input-clear-button',
-        on: {
-          click: self.onClearButtonClick.bind(self)
-        }
+        ref: 'clearEl',
+        class: 'input-clear-button'
       });
     }
 
     if (disableButton) {
       disableEl = _h('span', {
-        class: 'searchbar-disable-button',
-        on: {
-          click: self.onDisableButtonClick.bind(self)
-        }
+        ref: 'disableEl',
+        class: 'searchbar-disable-button'
       }, [disableButtonText]);
     }
 
     const SearchbarTag = form ? 'form' : 'div';
     const classes = Utils.classNames(className, 'searchbar', {
+      'searchbar-inline': inline,
       'no-shadow': noShadow,
       'no-hairline': noHairline,
       'searchbar-expandable': expandable
     }, Mixins.colorClasses(props));
+    let inputEl;
+    {
+      inputEl = _h('input', {
+        ref: 'inputEl',
+        domProps: {
+          value
+        },
+        on: {
+          input: self.onInput,
+          change: self.onChange,
+          focus: self.onFocus,
+          blur: self.onBlur
+        },
+        attrs: {
+          placeholder: placeholder,
+          type: 'search'
+        }
+      });
+    }
     return _h(SearchbarTag, {
       ref: 'el',
       style: style,
@@ -140,39 +172,25 @@ export default {
       class: 'searchbar-inner'
     }, [this.$slots['inner-start'], _h('div', {
       class: 'searchbar-input-wrap'
-    }, [this.$slots['input-wrap-start'], _h('input', {
-      on: {
-        input: self.onInput.bind(self),
-        change: self.onChange.bind(self),
-        focus: self.onFocus.bind(self),
-        blur: self.onBlur.bind(self)
-      },
-      attrs: {
-        placeholder: placeholder,
-        type: 'search'
-      }
-    }), _h('i', {
+    }, [this.$slots['input-wrap-start'], inputEl, _h('i', {
       class: 'searchbar-icon'
     }), clearEl, this.$slots['input-wrap-end']]), disableEl, this.$slots['inner-end'], this.$slots['default']]), this.$slots['after-inner']]);
   },
 
-  beforeDestroy() {
-    const self = this;
-
-    if (self.props.form && self.$refs.el) {
-      self.$refs.el.removeEventListener('submit', self.onSubmitBound, false);
-    }
-
-    if (self.f7Searchbar && self.f7Searchbar.destroy) self.f7Searchbar.destroy();
+  created() {
+    Utils.bindMethods(this, ['onSubmit', 'onClearButtonClick', 'onDisableButtonClick', 'onInput', 'onChange', 'onFocus', 'onBlur']);
   },
 
   mounted() {
     const self = this;
     const {
       init,
+      inputEvents,
       searchContainer,
       searchIn,
       searchItem,
+      searchGroup,
+      searchGroupTitle,
       hideOnEnableEl,
       hideOnSearchEl,
       foundEl,
@@ -185,22 +203,38 @@ export default {
       removeDiacritics,
       hideDividers,
       hideGroups,
-      form
+      form,
+      expandable,
+      inline
     } = self.props;
-    if (!init) return;
-    const el = self.$refs.el;
+    const {
+      el,
+      clearEl,
+      disableEl
+    } = self.$refs;
 
     if (form && el) {
-      self.onSubmitBound = self.onSubmit.bind(self);
-      el.addEventListener('submit', self.onSubmitBound, false);
+      el.addEventListener('submit', self.onSubmit, false);
     }
 
+    if (clearEl) {
+      clearEl.addEventListener('click', self.onClearButtonClick);
+    }
+
+    if (disableEl) {
+      disableEl.addEventListener('click', self.onDisableButtonClick);
+    }
+
+    if (!init) return;
     self.$f7ready(() => {
       const params = Utils.noUndefinedProps({
         el: self.$refs.el,
+        inputEvents,
         searchContainer,
         searchIn,
         searchItem,
+        searchGroup,
+        searchGroupTitle,
         hideOnEnableEl,
         hideOnSearchEl,
         foundEl,
@@ -213,6 +247,8 @@ export default {
         removeDiacritics,
         hideDividers,
         hideGroups,
+        expandable,
+        inline,
         on: {
           search(searchbar, query, previousQuery) {
             self.dispatchEvent('searchbar:search searchbarSearch', searchbar, query, previousQuery);
@@ -241,6 +277,29 @@ export default {
     });
   },
 
+  beforeDestroy() {
+    const self = this;
+    const {
+      el,
+      clearEl,
+      disableEl
+    } = self.$refs;
+
+    if (self.props.form && el) {
+      el.removeEventListener('submit', self.onSubmit, false);
+    }
+
+    if (clearEl) {
+      clearEl.removeEventListener('click', self.onClearButtonClick);
+    }
+
+    if (disableEl) {
+      disableEl.removeEventListener('click', self.onDisableButtonClick);
+    }
+
+    if (self.f7Searchbar && self.f7Searchbar.destroy) self.f7Searchbar.destroy();
+  },
+
   methods: {
     search(query) {
       if (!this.f7Searchbar) return undefined;
@@ -259,7 +318,7 @@ export default {
 
     toggle() {
       if (!this.f7Searchbar) return undefined;
-      return this.toggle.disable();
+      return this.f7Searchbar.toggle();
     },
 
     clear() {

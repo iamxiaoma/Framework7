@@ -6,7 +6,7 @@ import Framework7Class from '../../utils/class';
 class Gauge extends Framework7Class {
   constructor(app, params = {}) {
     // Extends with open/close Modal methods;
-    super(app, params);
+    super(params, [app]);
 
     const gauge = this;
 
@@ -207,7 +207,7 @@ class Gauge extends Framework7Class {
         stroke: borderColor,
         'stroke-width': borderWidth,
         'stroke-dasharray': length / 2,
-        'stroke-dashoffset': (length / 2) * (progress - 1),
+        'stroke-dashoffset': (length / 2) * (1 + progress),
         fill: borderBgColor ? 'none' : (bgColor || 'none'),
       };
       Object.keys(backAttrs).forEach((attr) => {
@@ -303,7 +303,7 @@ class Gauge extends Framework7Class {
   destroy() {
     const gauge = this;
     if (!gauge.$el || gauge.destroyed) return;
-    gauge.$el.trigger('gauge:beforedestroy', gauge);
+    gauge.$el.trigger('gauge:beforedestroy');
     gauge.emit('local::beforeDestroy gaugeBeforeDestroy', gauge);
     gauge.$gaugeSvgEl.remove();
     delete gauge.$el[0].f7Gauge;

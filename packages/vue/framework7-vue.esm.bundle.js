@@ -1,13 +1,13 @@
 /**
- * Framework7 Vue 3.4.0
+ * Framework7 Vue 5.4.5
  * Build full featured iOS & Android apps using Framework7 & Vue
- * http://framework7.io/vue/
+ * https://framework7.io/vue/
  *
- * Copyright 2014-2018 Vladimir Kharlampidi
+ * Copyright 2014-2020 Vladimir Kharlampidi
  *
  * Released under the MIT License
  *
- * Released on: September 28, 2018
+ * Released on: February 21, 2020
  */
 import Vue from 'vue';
 import f7AccordionContent from './components/accordion-content';
@@ -19,6 +19,7 @@ import f7ActionsGroup from './components/actions-group';
 import f7ActionsLabel from './components/actions-label';
 import f7Actions from './components/actions';
 import f7App from './components/app';
+import f7Appbar from './components/appbar';
 import f7Badge from './components/badge';
 import f7BlockFooter from './components/block-footer';
 import f7BlockHeader from './components/block-header';
@@ -32,17 +33,18 @@ import f7Card from './components/card';
 import f7Checkbox from './components/checkbox';
 import f7Chip from './components/chip';
 import f7Col from './components/col';
+import f7FabBackdrop from './components/fab-backdrop';
 import f7FabButton from './components/fab-button';
 import f7FabButtons from './components/fab-buttons';
 import f7Fab from './components/fab';
 import f7Gauge from './components/gauge';
 import f7Icon from './components/icon';
 import f7Input from './components/input';
-import f7Label from './components/label';
 import f7Link from './components/link';
 import f7ListButton from './components/list-button';
 import f7ListGroup from './components/list-group';
 import f7ListIndex from './components/list-index';
+import f7ListInput from './components/list-input';
 import f7ListItemCell from './components/list-item-cell';
 import f7ListItemContent from './components/list-item-content';
 import f7ListItemRow from './components/list-item-row';
@@ -50,6 +52,10 @@ import f7ListItem from './components/list-item';
 import f7List from './components/list';
 import f7LoginScreenTitle from './components/login-screen-title';
 import f7LoginScreen from './components/login-screen';
+import f7MenuDropdownItem from './components/menu-dropdown-item';
+import f7MenuDropdown from './components/menu-dropdown';
+import f7MenuItem from './components/menu-item';
+import f7Menu from './components/menu';
 import f7Message from './components/message';
 import f7MessagebarAttachment from './components/messagebar-attachment';
 import f7MessagebarAttachments from './components/messagebar-attachments';
@@ -61,6 +67,7 @@ import f7MessagesTitle from './components/messages-title';
 import f7Messages from './components/messages';
 import f7NavLeft from './components/nav-left';
 import f7NavRight from './components/nav-right';
+import f7NavTitleLarge from './components/nav-title-large';
 import f7NavTitle from './components/nav-title';
 import f7Navbar from './components/navbar';
 import f7PageContent from './components/page-content';
@@ -78,7 +85,8 @@ import f7Row from './components/row';
 import f7Searchbar from './components/searchbar';
 import f7Segmented from './components/segmented';
 import f7Sheet from './components/sheet';
-import f7Statusbar from './components/statusbar';
+import f7SkeletonBlock from './components/skeleton-block';
+import f7SkeletonText from './components/skeleton-text';
 import f7Stepper from './components/stepper';
 import f7Subnavbar from './components/subnavbar';
 import f7SwipeoutActions from './components/swipeout-actions';
@@ -87,22 +95,37 @@ import f7SwiperSlide from './components/swiper-slide';
 import f7Swiper from './components/swiper';
 import f7Tab from './components/tab';
 import f7Tabs from './components/tabs';
+import f7TextEditor from './components/text-editor';
 import f7Toggle from './components/toggle';
 import f7Toolbar from './components/toolbar';
+import f7TreeviewItem from './components/treeview-item';
+import f7Treeview from './components/treeview';
 import f7View from './components/view';
 import f7Views from './components/views';
 
 /* eslint no-underscore-dangle: "off" */
 import componentsRouter from './utils/components-router';
-import f7 from './utils/f7';
+import f7, { f7Instance } from './utils/f7';
+
+function f7ready(callback) {
+  f7.ready(callback);
+}
+
+const f7Theme = {};
 
 const Plugin = {
   name: 'phenomePlugin',
+  installed: false,
   install(params = {}) {
+    if (Plugin.installed) return;
+    Plugin.installed = true;
+
     const Framework7 = this;
     f7.Framework7 = Framework7;
+    f7.events = new Framework7.Events();
 
-    const Extend = params.Vue || Vue; // eslint-disable-line
+    // eslint-disable-next-line
+    const Extend = params.Vue || Vue;
 
     Vue.component('f7-accordion-content', f7AccordionContent);
     Vue.component('f7-accordion-item', f7AccordionItem);
@@ -113,6 +136,7 @@ const Plugin = {
     Vue.component('f7-actions-label', f7ActionsLabel);
     Vue.component('f7-actions', f7Actions);
     Vue.component('f7-app', f7App);
+    Vue.component('f7-appbar', f7Appbar);
     Vue.component('f7-badge', f7Badge);
     Vue.component('f7-block-footer', f7BlockFooter);
     Vue.component('f7-block-header', f7BlockHeader);
@@ -126,17 +150,18 @@ const Plugin = {
     Vue.component('f7-checkbox', f7Checkbox);
     Vue.component('f7-chip', f7Chip);
     Vue.component('f7-col', f7Col);
+    Vue.component('f7-fab-backdrop', f7FabBackdrop);
     Vue.component('f7-fab-button', f7FabButton);
     Vue.component('f7-fab-buttons', f7FabButtons);
     Vue.component('f7-fab', f7Fab);
     Vue.component('f7-gauge', f7Gauge);
     Vue.component('f7-icon', f7Icon);
     Vue.component('f7-input', f7Input);
-    Vue.component('f7-label', f7Label);
     Vue.component('f7-link', f7Link);
     Vue.component('f7-list-button', f7ListButton);
     Vue.component('f7-list-group', f7ListGroup);
     Vue.component('f7-list-index', f7ListIndex);
+    Vue.component('f7-list-input', f7ListInput);
     Vue.component('f7-list-item-cell', f7ListItemCell);
     Vue.component('f7-list-item-content', f7ListItemContent);
     Vue.component('f7-list-item-row', f7ListItemRow);
@@ -144,6 +169,10 @@ const Plugin = {
     Vue.component('f7-list', f7List);
     Vue.component('f7-login-screen-title', f7LoginScreenTitle);
     Vue.component('f7-login-screen', f7LoginScreen);
+    Vue.component('f7-menu-dropdown-item', f7MenuDropdownItem);
+    Vue.component('f7-menu-dropdown', f7MenuDropdown);
+    Vue.component('f7-menu-item', f7MenuItem);
+    Vue.component('f7-menu', f7Menu);
     Vue.component('f7-message', f7Message);
     Vue.component('f7-messagebar-attachment', f7MessagebarAttachment);
     Vue.component('f7-messagebar-attachments', f7MessagebarAttachments);
@@ -155,6 +184,7 @@ const Plugin = {
     Vue.component('f7-messages', f7Messages);
     Vue.component('f7-nav-left', f7NavLeft);
     Vue.component('f7-nav-right', f7NavRight);
+    Vue.component('f7-nav-title-large', f7NavTitleLarge);
     Vue.component('f7-nav-title', f7NavTitle);
     Vue.component('f7-navbar', f7Navbar);
     Vue.component('f7-page-content', f7PageContent);
@@ -172,7 +202,8 @@ const Plugin = {
     Vue.component('f7-searchbar', f7Searchbar);
     Vue.component('f7-segmented', f7Segmented);
     Vue.component('f7-sheet', f7Sheet);
-    Vue.component('f7-statusbar', f7Statusbar);
+    Vue.component('f7-skeleton-block', f7SkeletonBlock);
+    Vue.component('f7-skeleton-text', f7SkeletonText);
     Vue.component('f7-stepper', f7Stepper);
     Vue.component('f7-subnavbar', f7Subnavbar);
     Vue.component('f7-swipeout-actions', f7SwipeoutActions);
@@ -181,45 +212,54 @@ const Plugin = {
     Vue.component('f7-swiper', f7Swiper);
     Vue.component('f7-tab', f7Tab);
     Vue.component('f7-tabs', f7Tabs);
+    Vue.component('f7-text-editor', f7TextEditor);
     Vue.component('f7-toggle', f7Toggle);
     Vue.component('f7-toolbar', f7Toolbar);
+    Vue.component('f7-treeview-item', f7TreeviewItem);
+    Vue.component('f7-treeview', f7Treeview);
     Vue.component('f7-view', f7View);
     Vue.component('f7-views', f7Views);
 
-    // Define protos
+    // DEFINE_INSTANCE_PROTOS_START
     Object.defineProperty(Extend.prototype, '$f7', {
       get() {
         return f7.instance;
       },
     });
+    // DEFINE_INSTANCE_PROTOS_END
 
-    const $theme = {};
     const { theme } = params;
-    if (theme === 'md') $theme.md = true;
-    if (theme === 'ios') $theme.ios = true;
+    if (theme === 'md') f7Theme.md = true;
+    if (theme === 'ios') f7Theme.ios = true;
+    if (theme === 'aurora') f7Theme.aurora = true;
     if (!theme || theme === 'auto') {
-      $theme.ios = !!(Framework7.Device || Framework7.device).ios;
-      $theme.md = !(Framework7.Device || Framework7.device).ios;
+      f7Theme.ios = !!Framework7.device.ios;
+      f7Theme.aurora = Framework7.device.desktop && Framework7.device.electron;
+      f7Theme.md = !f7Theme.ios && !f7Theme.aurora;
     }
+    f7.ready(() => {
+      f7Theme.ios = f7.instance.theme === 'ios';
+      f7Theme.md = f7.instance.theme === 'md';
+      f7Theme.aurora = f7.instance.theme === 'aurora';
+    });
+
+    // DEFINE_PROTOS_START
     Object.defineProperty(Extend.prototype, '$theme', {
       get() {
         return {
-          ios: f7.instance ? f7.instance.theme === 'ios' : $theme.ios,
-          md: f7.instance ? f7.instance.theme === 'md' : $theme.md,
+          ios: f7.instance ? f7.instance.theme === 'ios' : f7Theme.ios,
+          md: f7.instance ? f7.instance.theme === 'md' : f7Theme.md,
+          aurora: f7.instance ? f7.instance.theme === 'aurora' : f7Theme.aurora,
         };
       },
     });
 
-    function f7ready(callback) {
-      f7.ready(callback);
-    }
     Extend.prototype.Dom7 = Framework7.$;
     Extend.prototype.$$ = Framework7.$;
     Extend.prototype.$device = Framework7.device;
     Extend.prototype.$request = Framework7.request;
     Extend.prototype.$utils = Framework7.utils;
     Extend.prototype.$f7ready = f7ready;
-    Extend.prototype.$f7Ready = f7ready;
 
     Object.defineProperty(Extend.prototype, '$f7route', {
       get() {
@@ -231,6 +271,9 @@ const Plugin = {
         let route;
         // eslint-disable-next-line
         if ('vue' === 'vue') {
+          if (self.$vnode && self.$vnode.data && self.$vnode.data.props && self.$vnode.data.props.f7route) {
+            route = self.$vnode.data.props.f7route;
+          }
           let parent = self;
           while (parent && !route) {
             if (parent._f7route) route = parent._f7route;
@@ -254,6 +297,9 @@ const Plugin = {
         let router;
         // eslint-disable-next-line
         if ('vue' === 'vue') {
+          if (self.$vnode && self.$vnode.data && self.$vnode.data.props && self.$vnode.data.props.f7route) {
+            router = self.$vnode.data.props.f7router;
+          }
           let parent = self;
           while (parent && !router) {
             if (parent._f7router) router = parent._f7router;
@@ -272,10 +318,12 @@ const Plugin = {
         self._f7router = value;
       },
     });
+    // DEFINE_PROTOS_END
 
     // Extend F7 Router
     Framework7.Router.use(componentsRouter);
   },
 };
 
+export { f7ready, f7Instance as f7, f7Theme as theme };
 export default Plugin;

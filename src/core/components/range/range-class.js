@@ -8,6 +8,7 @@ class Range extends Framework7Class {
     super(params, [app]);
 
     const range = this;
+
     const defaults = {
       el: null,
       inputEl: null,
@@ -18,6 +19,14 @@ class Range extends Framework7Class {
       max: 100,
       value: 0,
       draggableBar: true,
+      vertical: false,
+      verticalReversed: false,
+      formatLabel: null,
+      scale: false,
+      scaleSteps: 5,
+      scaleSubSteps: 0,
+      formatScaleLabel: null,
+      limitKnobPosition: app.theme === 'ios',
     };
 
     // Extend defaults with modules params
@@ -35,12 +44,12 @@ class Range extends Framework7Class {
 
     const dataset = $el.dataset();
 
-    ('step min max value').split(' ').forEach((paramName) => {
+    ('step min max value scaleSteps scaleSubSteps').split(' ').forEach((paramName) => {
       if (typeof params[paramName] === 'undefined' && typeof dataset[paramName] !== 'undefined') {
         range.params[paramName] = parseFloat(dataset[paramName]);
       }
     });
-    ('dual label').split(' ').forEach((paramName) => {
+    ('dual label vertical verticalReversed scale').split(' ').forEach((paramName) => {
       if (typeof params[paramName] === 'undefined' && typeof dataset[paramName] !== 'undefined') {
         range.params[paramName] = dataset[paramName];
       }
@@ -62,8 +71,12 @@ class Range extends Framework7Class {
       }
     }
 
-    const { dual, step, label, min, max, value } = range.params;
+    const {
+      dual, step, label, min, max, value, vertical, verticalReversed, scale, scaleSteps, scaleSubSteps, limitKnobPosition,
+    } = range.params;
+
     Utils.extend(range, {
+      app,
       $el,
       el: $el[0],
       $inputEl,
@@ -75,6 +88,12 @@ class Range extends Framework7Class {
       max,
       value,
       previousValue: value,
+      vertical,
+      verticalReversed,
+      scale,
+      scaleSteps,
+      scaleSubSteps,
+      limitKnobPosition,
     });
 
     if ($inputEl) {
@@ -98,6 +117,16 @@ class Range extends Framework7Class {
       $el.addClass('range-slider-label');
     }
 
+    // Vertical
+    if (range.vertical) {
+      $el.addClass('range-slider-vertical');
+      if (range.verticalReversed) {
+        $el.addClass('range-slider-vertical-reversed');
+      }
+    } else {
+      $el.addClass('range-slider-horizontal');
+    }
+
     // Check for layout
     const $barEl = $('<div class="range-bar"></div>');
     const $barActiveEl = $('<div class="range-bar-active"></div>');
@@ -111,7 +140,6 @@ class Range extends Framework7Class {
       </div>
     `;
     const knobs = [$(knobHTML)];
-    const labels = [];
 
     if (range.dual) {
       knobs.push($(knobHTML));
@@ -123,6 +151,7 @@ class Range extends Framework7Class {
     });
 
     // Labels
+    const labels = [];
     if (range.label) {
       labels.push(knobs[0].find('.range-knob-label'));
       if (range.dual) {
@@ -130,12 +159,23 @@ class Range extends Framework7Class {
       }
     }
 
+    // Scale
+    let $scaleEl;
+    if (range.scale && range.scaleSteps > 1) {
+      $scaleEl = $(`
+        <div class="range-scale">
+          ${range.renderScale()}
+        </div>
+      `);
+      $el.append($scaleEl);
+    }
+
     Utils.extend(range, {
-      app,
       knobs,
       labels,
       $barEl,
       $barActiveEl,
+      $scaleEl,
     });
 
     $el[0].f7Range = range;
@@ -144,10 +184,13 @@ class Range extends Framework7Class {
     let isTouched;
     const touchesStart = {};
     let isScrolling;
+    let rangeOffset;
     let rangeOffsetLeft;
+    let rangeOffsetTop;
     let $touchedKnobEl;
     let dualValueIndex;
     let valueChangedByTouch;
+    let targetTouchIdentifier;
     function onTouchChange() {
       valueChangedByTouch = true;
     }
@@ -161,13 +204,21 @@ class Range extends Framework7Class {
       valueChangedByTouch = false;
       touchesStart.x = e.type === 'touchstart' ? e.targetTouches[0].pageX : e.pageX;
       touchesStart.y = e.type === 'touchstart' ? e.targetTouches[0].pageY : e.pageY;
+      if (e.type === 'touchstart') {
+        targetTouchIdentifier = e.targetTouches[0].identifier;
+      }
 
       isTouched = true;
       isScrolling = undefined;
-      rangeOffsetLeft = $el.offset().left;
+      rangeOffset = $el.offset();
+      rangeOffsetLeft = rangeOffset.left;
+      rangeOffsetTop = rangeOffset.top;
 
       let progress;
-      if (range.app.rtl) {
+      if (range.vertical) {
+        progress = (touchesStart.y - rangeOffsetTop) / range.rangeHeight;
+        if (!range.verticalReversed) progress = 1 - progress;
+      } else if (range.app.rtl) {
         progress = ((rangeOffsetLeft + range.rangeWidth) - touchesStart.x) / range.rangeWidth;
       } else {
         progress = (touchesStart.x - rangeOffsetLeft) / range.rangeWidth;
@@ -196,10 +247,22 @@ class Range extends Framework7Class {
     }
     function handleTouchMove(e) {
       if (!isTouched) return;
-      const pageX = e.type === 'touchmove' ? e.targetTouches[0].pageX : e.pageX;
-      const pageY = e.type === 'touchmove' ? e.targetTouches[0].pageY : e.pageY;
+      let pageX;
+      let pageY;
+      if (e.type === 'touchmove') {
+        for (let i = 0; i < e.targetTouches.length; i += 1) {
+          if (e.targetTouches[i].identifier === targetTouchIdentifier) {
+            pageX = e.targetTouches[i].pageX;
+            pageY = e.targetTouches[i].pageY;
+          }
+        }
+      } else {
+        pageX = e.pageX;
+        pageY = e.pageY;
+      }
+      if (typeof pageX === 'undefined' && typeof pageY === 'undefined') return;
 
-      if (typeof isScrolling === 'undefined') {
+      if (typeof isScrolling === 'undefined' && !range.vertical) {
         isScrolling = !!(isScrolling || Math.abs(pageY - touchesStart.y) > Math.abs(pageX - touchesStart.x));
       }
       if (isScrolling) {
@@ -209,7 +272,10 @@ class Range extends Framework7Class {
       e.preventDefault();
 
       let progress;
-      if (range.app.rtl) {
+      if (range.vertical) {
+        progress = (pageY - rangeOffsetTop) / range.rangeHeight;
+        if (!range.verticalReversed) progress = 1 - progress;
+      } else if (range.app.rtl) {
         progress = ((rangeOffsetLeft + range.rangeWidth) - pageX) / range.rangeWidth;
       } else {
         progress = (pageX - rangeOffsetLeft) / range.rangeWidth;
@@ -236,7 +302,14 @@ class Range extends Framework7Class {
       }
       range.setValue(newValue, true);
     }
-    function handleTouchEnd() {
+    function handleTouchEnd(e) {
+      if (e.type === 'touchend') {
+        let touchEnded;
+        for (let i = 0; i < e.changedTouches.length; i += 1) {
+          if (e.changedTouches[i].identifier === targetTouchIdentifier) touchEnded = true;
+        }
+        if (!touchEnded) return;
+      }
       if (!isTouched) {
         if (isScrolling) $touchedKnobEl.removeClass('range-knob-active-state');
         isTouched = false;
@@ -263,7 +336,7 @@ class Range extends Framework7Class {
             && range.previousValue !== range.value
           )
         ) {
-          range.$el.trigger('range:changed', range, range.value);
+          range.$el.trigger('range:changed', range.value);
           range.emit('local::changed rangeChanged', range, range.value);
         }
       }
@@ -273,6 +346,9 @@ class Range extends Framework7Class {
       range.calcSize();
       range.layout();
     }
+    let parentModals;
+    let parentPanel;
+    let parentPage;
     range.attachEvents = function attachEvents() {
       const passive = Support.passiveListener ? { passive: true } : false;
       range.$el.on(app.touchEvents.start, handleTouchStart, passive);
@@ -280,12 +356,12 @@ class Range extends Framework7Class {
       app.on('touchend:passive', handleTouchEnd);
       app.on('tabShow', handleResize);
       app.on('resize', handleResize);
-      range.$el
-        .parents('.sheet-modal, .actions-modal, .popup, .popover, .login-screen, .dialog, .toast')
-        .on('modal:open', handleResize);
-      range.$el
-        .parents('.panel')
-        .on('panel:open', handleResize);
+      parentModals = range.$el.parents('.sheet-modal, .actions-modal, .popup, .popover, .login-screen, .dialog, .toast');
+      parentModals.on('modal:open', handleResize);
+      parentPanel = range.$el.parents('.panel');
+      parentPanel.on('panel:open', handleResize);
+      parentPage = range.$el.parents('.page').eq(0);
+      parentPage.on('page:reinit', handleResize);
     };
     range.detachEvents = function detachEvents() {
       const passive = Support.passiveListener ? { passive: true } : false;
@@ -294,12 +370,18 @@ class Range extends Framework7Class {
       app.off('touchend:passive', handleTouchEnd);
       app.off('tabShow', handleResize);
       app.off('resize', handleResize);
-      range.$el
-        .parents('.sheet-modal, .actions-modal, .popup, .popover, .login-screen, .dialog, .toast')
-        .off('modal:open', handleResize);
-      range.$el
-        .parents('.panel')
-        .off('panel:open', handleResize);
+      if (parentModals) {
+        parentModals.off('modal:open', handleResize);
+      }
+      if (parentPanel) {
+        parentPanel.off('panel:open', handleResize);
+      }
+      if (parentPage) {
+        parentPage.off('page:reinit', handleResize);
+      }
+      parentModals = null;
+      parentPanel = null;
+      parentPage = null;
     };
 
     // Install Modules
@@ -313,10 +395,17 @@ class Range extends Framework7Class {
 
   calcSize() {
     const range = this;
-    const width = range.$el.outerWidth();
-    if (width === 0) return;
-    range.rangeWidth = width;
-    range.knobWidth = range.knobs[0].outerWidth();
+    if (range.vertical) {
+      const height = range.$el.outerHeight();
+      if (height === 0) return;
+      range.rangeHeight = height;
+      range.knobHeight = range.knobs[0].outerHeight();
+    } else {
+      const width = range.$el.outerWidth();
+      if (width === 0) return;
+      range.rangeWidth = width;
+      range.knobWidth = range.knobs[0].outerWidth();
+    }
   }
 
   layout() {
@@ -324,7 +413,9 @@ class Range extends Framework7Class {
     const {
       app,
       knobWidth,
+      knobHeight,
       rangeWidth,
+      rangeHeight,
       min,
       max,
       knobs,
@@ -332,32 +423,44 @@ class Range extends Framework7Class {
       value,
       label,
       labels,
+      vertical,
+      verticalReversed,
+      limitKnobPosition,
     } = range;
-    const positionProperty = app.rtl ? 'right' : 'left';
+    const knobSize = vertical ? knobHeight : knobWidth;
+    const rangeSize = vertical ? rangeHeight : rangeWidth;
+    // eslint-disable-next-line
+    const positionProperty = vertical
+      ? (verticalReversed ? 'top' : 'bottom')
+      : (app.rtl ? 'right' : 'left');
     if (range.dual) {
       const progress = [((value[0] - min) / (max - min)), ((value[1] - min) / (max - min))];
       $barActiveEl.css({
         [positionProperty]: `${progress[0] * 100}%`,
-        width: `${(progress[1] - progress[0]) * 100}%`,
+        [vertical ? 'height' : 'width']: `${(progress[1] - progress[0]) * 100}%`,
       });
       knobs.forEach(($knobEl, knobIndex) => {
-        let leftPos = rangeWidth * progress[knobIndex];
-        const realLeft = (rangeWidth * progress[knobIndex]) - (knobWidth / 2);
-        if (realLeft < 0) leftPos = knobWidth / 2;
-        if ((realLeft + knobWidth) > rangeWidth) leftPos = rangeWidth - (knobWidth / 2);
-        $knobEl.css(positionProperty, `${leftPos}px`);
-        if (label) labels[knobIndex].text(value[knobIndex]);
+        let startPos = rangeSize * progress[knobIndex];
+        if (limitKnobPosition) {
+          const realStartPos = (rangeSize * progress[knobIndex]) - (knobSize / 2);
+          if (realStartPos < 0) startPos = knobSize / 2;
+          if ((realStartPos + knobSize) > rangeSize) startPos = rangeSize - (knobSize / 2);
+        }
+        $knobEl.css(positionProperty, `${startPos}px`);
+        if (label) labels[knobIndex].text(range.formatLabel(value[knobIndex], labels[knobIndex][0]));
       });
     } else {
       const progress = ((value - min) / (max - min));
-      $barActiveEl.css('width', `${progress * 100}%`);
+      $barActiveEl.css(vertical ? 'height' : 'width', `${progress * 100}%`);
 
-      let leftPos = rangeWidth * progress;
-      const realLeft = (rangeWidth * progress) - (knobWidth / 2);
-      if (realLeft < 0) leftPos = knobWidth / 2;
-      if ((realLeft + knobWidth) > rangeWidth) leftPos = rangeWidth - (knobWidth / 2);
-      knobs[0].css(positionProperty, `${leftPos}px`);
-      if (label) labels[0].text(value);
+      let startPos = rangeSize * progress;
+      if (limitKnobPosition) {
+        const realStartPos = (rangeSize * progress) - (knobSize / 2);
+        if (realStartPos < 0) startPos = knobSize / 2;
+        if ((realStartPos + knobSize) > rangeSize) startPos = rangeSize - (knobSize / 2);
+      }
+      knobs[0].css(positionProperty, `${startPos}px`);
+      if (label) labels[0].text(range.formatLabel(value, labels[0][0]));
     }
     if ((range.dual && value.indexOf(min) >= 0) || (!range.dual && value === min)) {
       range.$el.addClass('range-slider-min');
@@ -405,7 +508,7 @@ class Range extends Framework7Class {
     }
     // Events
     if (!valueChanged) return range;
-    range.$el.trigger('range:change', range, range.value);
+    range.$el.trigger('range:change', range.value);
     if (range.$inputEl && !range.dual) {
       range.$inputEl.val(range.value);
       if (!byTouchMove) {
@@ -415,7 +518,7 @@ class Range extends Framework7Class {
       }
     }
     if (!byTouchMove) {
-      range.$el.trigger('range:changed', range, range.value);
+      range.$el.trigger('range:changed', range.value);
       range.emit('local::changed rangeChanged', range, range.value);
     }
     range.emit('local::change rangeChange', range, range.value);
@@ -424,6 +527,67 @@ class Range extends Framework7Class {
 
   getValue() {
     return this.value;
+  }
+
+  formatLabel(value, labelEl) {
+    const range = this;
+    if (range.params.formatLabel) return range.params.formatLabel.call(range, value, labelEl);
+    return value;
+  }
+
+  formatScaleLabel(value) {
+    const range = this;
+    if (range.params.formatScaleLabel) return range.params.formatScaleLabel.call(range, value);
+    return value;
+  }
+
+  renderScale() {
+    const range = this;
+    const { app, verticalReversed, vertical } = range;
+
+    // eslint-disable-next-line
+    const positionProperty = vertical
+      ? (verticalReversed ? 'top' : 'bottom')
+      : (app.rtl ? 'right' : 'left');
+
+    let html = '';
+
+    Array
+      .from({ length: range.scaleSteps + 1 })
+      .forEach((scaleEl, index) => {
+        const scaleStepValue = (range.max - range.min) / range.scaleSteps;
+        const scaleValue = range.min + scaleStepValue * index;
+        const progress = ((scaleValue - range.min) / (range.max - range.min));
+        html += `<div class="range-scale-step" style="${positionProperty}: ${progress * 100}%">${range.formatScaleLabel(scaleValue)}</div>`;
+
+        if (range.scaleSubSteps && range.scaleSubSteps > 1 && index < range.scaleSteps) {
+          Array
+            .from({ length: range.scaleSubSteps - 1 })
+            .forEach((subStepEl, subIndex) => {
+              const subStep = scaleStepValue / range.scaleSubSteps;
+              const scaleSubValue = scaleValue + subStep * (subIndex + 1);
+              const subProgress = ((scaleSubValue - range.min) / (range.max - range.min));
+              html += `<div class="range-scale-step range-scale-substep" style="${positionProperty}: ${subProgress * 100}%"></div>`;
+            });
+        }
+      });
+
+    return html;
+  }
+
+  updateScale() {
+    const range = this;
+    if (!range.scale || range.scaleSteps < 2) {
+      if (range.$scaleEl) range.$scaleEl.remove();
+      delete range.$scaleEl;
+      return;
+    }
+    if (!range.$scaleEl) {
+      range.$scaleEl = $('<div class="range-scale"></div>');
+      range.$el.append(range.$scaleEl);
+    }
+
+    range.$scaleEl.html(range.renderScale());
   }
 
   init() {
@@ -436,7 +600,7 @@ class Range extends Framework7Class {
 
   destroy() {
     let range = this;
-    range.$el.trigger('range:beforedestroy', range);
+    range.$el.trigger('range:beforedestroy');
     range.emit('local::beforeDestroy rangeBeforeDestroy', range);
     delete range.$el[0].f7Range;
     range.detachEvents();

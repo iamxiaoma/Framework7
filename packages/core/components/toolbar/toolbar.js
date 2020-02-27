@@ -20,6 +20,8 @@ const Toolbar = {
     if ($highlightEl.length === 0) {
       $tabbarEl.children('.toolbar-inner').append('<span class="tab-link-highlight"></span>');
       $highlightEl = $tabbarEl.find('.tab-link-highlight');
+    } else if ($highlightEl.next().length) {
+      $tabbarEl.children('.toolbar-inner').append($highlightEl);
     }
 
     const $activeLink = $tabbarEl.find('.tab-link-active');
@@ -35,15 +37,18 @@ const Toolbar = {
       highlightTranslate = `${(app.rtl ? -activeIndex : activeIndex) * 100}%`;
     }
 
-    $highlightEl
-      .css('width', highlightWidth)
-      .transform(`translate3d(${highlightTranslate},0,0)`);
+    Utils.nextFrame(() => {
+      $highlightEl
+        .css('width', highlightWidth)
+        .transform(`translate3d(${highlightTranslate},0,0)`);
+    });
   },
   init(tabbarEl) {
     const app = this;
     app.toolbar.setHighlight(tabbarEl);
   },
   hide(el, animate = true) {
+    const app = this;
     const $el = $(el);
     if ($el.hasClass('toolbar-hidden')) return;
     const className = `toolbar-hidden${animate ? ' toolbar-transitioning' : ''}`;
@@ -51,8 +56,11 @@ const Toolbar = {
       $el.removeClass('toolbar-transitioning');
     });
     $el.addClass(className);
+    $el.trigger('toolbar:hide');
+    app.emit('toolbarHide', $el[0]);
   },
   show(el, animate = true) {
+    const app = this;
     const $el = $(el);
     if (!$el.hasClass('toolbar-hidden')) return;
     if (animate) {
@@ -62,6 +70,8 @@ const Toolbar = {
       });
     }
     $el.removeClass('toolbar-hidden');
+    $el.trigger('toolbar:show');
+    app.emit('toolbarShow', $el[0]);
   },
   initHideToolbarOnScroll(pageEl) {
     const app = this;
@@ -85,8 +95,11 @@ const Toolbar = {
     let reachEnd;
     let action;
     let toolbarHidden;
-    function handleScroll() {
+    function handleScroll(e) {
       const scrollContent = this;
+      if (e && e.target && e.target !== scrollContent) {
+        return;
+      }
       if ($pageEl.hasClass('page-previous')) return;
       currentScrollTop = scrollContent.scrollTop;
       scrollHeight = scrollContent.scrollHeight;
@@ -197,6 +210,14 @@ export default {
       app.root.find('.tabbar, .tabbar-labels').each((index, tabbarEl) => {
         app.toolbar.init(tabbarEl);
       });
+    },
+  },
+  vnode: {
+    tabbar: {
+      insert(vnode) {
+        const app = this;
+        app.toolbar.init(vnode.elm);
+      },
     },
   },
 };

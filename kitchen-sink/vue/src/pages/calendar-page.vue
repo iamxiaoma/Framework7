@@ -1,23 +1,21 @@
 <template>
-  <f7-page :page-content="false" @page:beforeremove="onPageBeforeRemove" @page:init="onPageInit">
-    <f7-navbar back-link="Back">
+  <f7-page @page:beforeremove="onPageBeforeRemove" @page:init="onPageInit">
+    <f7-navbar back-link="Back" no-shadow>
       <f7-nav-title class="navbar-calendar-title"></f7-nav-title>
     </f7-navbar>
-    <div class="page-content">
-      <div id="calendar" class="block block-strong no-padding no-margin no-hairline-top"></div>
-      <f7-list id="calendar-events" class="no-margin no-hairlines no-ios-left-edge">
-        <f7-list-item v-for="(item, index) in eventItems"
-          :key="index"
-          :title="item.title"
-          :after="item.time"
-        >
-          <div class="event-color" :style="{'background-color': item.color}" slot="root-start"></div>
-        </f7-list-item>
-        <f7-list-item v-if="eventItems.length === 0">
-          <span class="text-color-gray" slot="title">No events for this day</span>
-        </f7-list-item>
-      </f7-list>
-    </div>
+    <div id="calendar" class="block block-strong no-padding no-margin no-hairline-top"></div>
+    <f7-list id="calendar-events" class="no-margin no-hairlines no-safe-area-left">
+      <f7-list-item v-for="(item, index) in eventItems"
+        :key="index"
+        :title="item.title"
+        :after="item.time"
+      >
+        <div class="event-color" :style="{'background-color': item.color}" slot="root-start"></div>
+      </f7-list-item>
+      <f7-list-item v-if="eventItems.length === 0">
+        <span class="text-color-gray" slot="title">No events for this day</span>
+      </f7-list-item>
+    </f7-list>
   </f7-page>
 </template>
 <script>
@@ -91,8 +89,8 @@
         const eventItems = [];
         if (currentEvents.length) {
           currentEvents.forEach((event) => {
-            const hours = event.date.getHours();
-            let minutes = event.date.getMinutes();
+            const hours = event.hours;
+            let minutes = event.minutes;
             if (minutes < 10) minutes = `0${minutes}`;
             eventItems.push({
               title: event.title,
@@ -103,7 +101,7 @@
         }
         self.eventItems = eventItems;
       },
-      onPageInit(e, page) {
+      onPageInit(page) {
         const self = this;
         const app = self.$f7;
         const $ = self.$$;
@@ -116,13 +114,13 @@
           on: {
             init(calendar) {
               $('.navbar-calendar-title').text(`${monthNames[calendar.currentMonth]}, ${calendar.currentYear}`);
-              app.navbar.size(page.navbarEl);
-              calendar.$el.addClass('no-ios-right-edge');
+              app.navbar.size(app.navbar.getElByPage(page.el));
+              calendar.$el.addClass('no-safe-area-right');
               self.renderEvents(calendar);
             },
             monthYearChangeStart(calendar) {
               $('.navbar-calendar-title').text(`${monthNames[calendar.currentMonth]}, ${calendar.currentYear}`);
-              app.navbar.size(page.navbarEl);
+              app.navbar.size(app.navbar.getElByPage(page.el));
             },
             change(calendar) {
               self.renderEvents(calendar);

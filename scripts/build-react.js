@@ -3,31 +3,30 @@
 /* eslint global-require: "off" */
 /* eslint no-param-reassign: ["error", { "props": false }] */
 
-const gulp = require('gulp');
-const fs = require('fs');
 
 const rollup = require('rollup');
 const buble = require('rollup-plugin-buble');
-const replace = require('rollup-plugin-replace');
-const commonjs = require('rollup-plugin-commonjs');
-const resolve = require('rollup-plugin-node-resolve');
+const replace = require('@rollup/plugin-replace');
+const commonjs = require('@rollup/plugin-commonjs');
+const resolve = require('@rollup/plugin-node-resolve');
 
-const header = require('gulp-header');
-const uglify = require('gulp-uglify');
-const sourcemaps = require('gulp-sourcemaps');
-const rename = require('gulp-rename');
-const bannerReact = require('./banner-react');
+const Terser = require('terser');
+const bannerReact = require('./banners/react');
+const getOutput = require('./get-output.js');
+const fs = require('./utils/fs-extra');
 
 function esm({ banner, componentImports, componentAliases, componentExports }) {
   return `
 ${banner}
 
 ${componentImports.join('\n')}
-import Framework7React from './utils/plugin';
+import Framework7React, { f7, f7ready, theme } from './utils/plugin';
 
 ${componentAliases.join('\n')}
 
 export {\n${componentExports.join(',\n')}\n};
+
+export { f7, f7ready, theme };
 
 export default Framework7React;
   `.trim();
@@ -36,8 +35,8 @@ export default Framework7React;
 // Build React
 function buildReact(cb) {
   const env = process.env.NODE_ENV || 'development';
-  const buildPath = env === 'development' ? './build' : './packages';
-  const pluginContent = fs.readFileSync(`./${buildPath}/react/utils/plugin.js`, 'utf-8');
+  const buildPath = getOutput();
+  const pluginContent = fs.readFileSync(`${buildPath}/react/utils/plugin.js`);
 
   /* Replace plugin vars: utils/plugin.js */
   const newPluginContent = pluginContent
@@ -101,10 +100,11 @@ function buildReact(cb) {
     external: ['react'],
     plugins: [
       replace({
+        'export { f7ready, f7Instance as f7, f7Theme as theme };': '',
         delimiters: ['', ''],
         'process.env.NODE_ENV': JSON.stringify(env), // or 'production'
       }),
-      resolve({ jsnext: true }),
+      resolve({ mainFields: ['module', 'main', 'jsnext'] }),
       commonjs(),
       buble({
         objectAssign: 'Object.assign',
@@ -115,13 +115,13 @@ function buildReact(cb) {
       react: 'React',
     },
     strict: true,
-    file: `${buildPath}/react/framework7-react.js`,
+    file: `${buildPath}/react/framework7-react.bundle.js`,
     format: 'umd',
     name: 'Framework7React',
     sourcemap: env === 'development',
-    sourcemapFile: `${buildPath}/react/framework7-react.js.map`,
+    sourcemapFile: `${buildPath}/react/framework7-react.bundle.js.map`,
     banner: bannerReact,
-  })).then(() => {
+  })).then((bundle) => {
     // Remove esm.bundle
     fs.unlinkSync(`${buildPath}/react/framework7-react.esm.bundle.js`);
 
@@ -129,19 +129,19 @@ function buildReact(cb) {
       if (cb) cb();
       return;
     }
-    // Minified version
-    gulp.src(`${buildPath}/react/framework7-react.js`)
-      .pipe(sourcemaps.init())
-      .pipe(uglify())
-      .pipe(header(bannerReact))
-      .pipe(rename((filePath) => {
-        filePath.basename += '.min';
-      }))
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest(`${buildPath}/react/`))
-      .on('end', () => {
-        if (cb) cb();
-      });
+    const result = bundle.output[0];
+    const minified = Terser.minify(result.code, {
+      sourceMap: {
+        filename: 'framework7-react.bundle.min.js',
+        url: 'framework7-react.bundle.min.js.map',
+      },
+      output: {
+        preamble: bannerReact,
+      },
+    });
+    fs.writeFileSync(`${buildPath}/react/framework7-react.bundle.min.js`, minified.code);
+    fs.writeFileSync(`${buildPath}/react/framework7-react.bundle.min.js.map`, minified.map);
+    if (cb) cb();
   }).catch((err) => {
     if (cb) cb();
     console.log(err);

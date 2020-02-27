@@ -1,6 +1,7 @@
 import React from 'react';
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
+import F7Icon from './icon';
 import __reactComponentDispatchEvent from '../runtime-helpers/react-component-dispatch-event.js';
 import __reactComponentSlots from '../runtime-helpers/react-component-slots.js';
 import __reactComponentSetProps from '../runtime-helpers/react-component-set-props.js';
@@ -8,6 +9,11 @@ import __reactComponentSetProps from '../runtime-helpers/react-component-set-pro
 class F7Chip extends React.Component {
   constructor(props, context) {
     super(props, context);
+    this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onClick', 'onDeleteClick']);
+    })();
   }
 
   onClick(event) {
@@ -30,17 +36,39 @@ class F7Chip extends React.Component {
       style,
       mediaTextColor,
       mediaBgColor,
-      outline
+      outline,
+      icon,
+      iconMaterial,
+      iconF7,
+      iconMd,
+      iconIos,
+      iconAurora,
+      iconColor,
+      iconSize
     } = props;
+    let iconEl;
     let mediaEl;
     let labelEl;
     let deleteEl;
 
-    if (media || self.slots && self.slots.media) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
+      iconEl = React.createElement(F7Icon, {
+        material: iconMaterial,
+        f7: iconF7,
+        icon: icon,
+        md: iconMd,
+        ios: iconIos,
+        aurora: iconAurora,
+        color: iconColor,
+        size: iconSize
+      });
+    }
+
+    if (media || iconEl || self.slots && self.slots.media) {
       const mediaClasses = Utils.classNames('chip-media', mediaTextColor && `text-color-${mediaTextColor}`, mediaBgColor && `bg-color-${mediaBgColor}`);
       mediaEl = React.createElement('div', {
         className: mediaClasses
-      }, media || this.slots['media']);
+      }, iconEl, media, this.slots['media']);
     }
 
     if (text || self.slots && self.slots.text) {
@@ -51,9 +79,10 @@ class F7Chip extends React.Component {
 
     if (deleteable) {
       deleteEl = React.createElement('a', {
-        href: '#',
-        className: 'chip-delete',
-        onClick: self.onDeleteClick.bind(self)
+        ref: __reactNode => {
+          this.__reactRefs['deleteEl'] = __reactNode;
+        },
+        className: 'chip-delete'
       });
     }
 
@@ -61,11 +90,29 @@ class F7Chip extends React.Component {
       'chip-outline': outline
     }, Mixins.colorClasses(props));
     return React.createElement('div', {
+      ref: __reactNode => {
+        this.__reactRefs['el'] = __reactNode;
+      },
       id: id,
       style: style,
-      className: classes,
-      onClick: self.onClick.bind(self)
+      className: classes
     }, mediaEl, labelEl, deleteEl);
+  }
+
+  componentWillUnmount() {
+    this.refs.el.removeEventListener('click', this.onClick);
+
+    if (this.refs.deleteEl) {
+      this.refs.deleteEl.removeEventListener('click', this.onDeleteClick);
+    }
+  }
+
+  componentDidMount() {
+    this.refs.el.addEventListener('click', this.onClick);
+
+    if (this.refs.deleteEl) {
+      this.refs.deleteEl.addEventListener('click', this.onDeleteClick);
+    }
   }
 
   get slots() {
@@ -75,6 +122,12 @@ class F7Chip extends React.Component {
   dispatchEvent(events, ...args) {
     return __reactComponentDispatchEvent(this, events, ...args);
   }
+
+  get refs() {
+    return this.__reactRefs;
+  }
+
+  set refs(refs) {}
 
 }
 
@@ -88,7 +141,7 @@ __reactComponentSetProps(F7Chip, Object.assign({
   mediaBgColor: String,
   mediaTextColor: String,
   outline: Boolean
-}, Mixins.colorProps));
+}, Mixins.colorProps, {}, Mixins.linkIconProps));
 
 F7Chip.displayName = 'f7-chip';
 export default F7Chip;

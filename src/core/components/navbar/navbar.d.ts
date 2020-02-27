@@ -4,15 +4,21 @@ export namespace Navbar {
   interface AppMethods {
     navbar: {
       /** Hide navbar */
-      hide(navbarEl : HTMLElement | CSSSelector, animate?: boolean) : void
+      hide(navbarEl : HTMLElement | CSSSelector, animate?: boolean, hideStatusbar?: boolean) : void
       /** Show navbar */
-      show(navbarEl : HTMLElement | CSSSelector, isAnimated?: boolean) : void
+      show(navbarEl : HTMLElement | CSSSelector, animate?: boolean) : void
       /** Recalculate positional styles for Navbar elements. It could be useful after you change some of Navbar elements dynamically. This will have effect only in iOS theme */
       size(navbarEl : HTMLElement | CSSSelector) : void
       /** Get navbar HTML element by specified page element. Useful only when dynamic navbar is enabled. In this case it is out of the page container. This will have effect only in iOS theme */
       getElByPage(pageEl : HTMLElement | CSSSelector) : HTMLElement
       /** Get page HTML element by specified Navbar element. Useful only when dynamic navbar is enabled. In this case it is out of the page container. This will have effect only in iOS theme */
       getPageByEl(navbarEl : HTMLElement | CSSSelector) : HTMLElement
+      /** Collapse large navbar title */
+      collapseLargeTitle(navbarEl: HTMLElement | CSSSelector) : void
+      /** Expand large navbar title */
+      expandLargeTitle(navbarEl: HTMLElement | CSSSelector) : void
+      /** Toggle large navbar title */
+      toggleLargeTitle(navbarEl: HTMLElement | CSSSelector) : void
     }
   }
   interface AppParams {
@@ -25,8 +31,16 @@ export namespace Navbar {
       showOnPageScrollTop?: boolean
       /** When enabled then every click on navbar's title element will scroll related page to the top. (default true) */
       scrollTopOnTitleClick?: boolean
-      /** When enabled then it will try to position title at the center in iOS theme. Sometime (with some custom design) it may not needed. This will have effect only in iOS theme. (default true) */
+      /** When enabled then it will position title at the center in iOS theme. This will have effect only in iOS theme. (default true) */
       iosCenterTitle?: boolean
+      /** When enabled then it will position title at the center in MD theme. This will have effect only in MD theme. (default false) */
+      mdCenterTitle?: boolean
+      /** When enabled then it will position title at the center in Aurora theme. This will have effect only in Aurora theme. (default true) */
+      auroraCenterTitle?: boolean
+      /** When enabled it will collapse large title on page scroll (default true) */
+      collapseLargeTitleOnScroll?: boolean
+      /** When enabled it will snap page scroll to large title (default true) */
+      snapPageScrollToLargeTitle?: boolean
     } | undefined
   }
   interface AppEvents {

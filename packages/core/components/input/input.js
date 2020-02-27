@@ -48,10 +48,12 @@ const Input = {
     if (currentHeight !== scrollHeight) {
       if (scrollHeight > initialHeight) {
         $textareaEl.css('height', `${scrollHeight}px`);
-        $textareaEl.trigger('textarea:resize', { initialHeight, currentHeight, scrollHeight });
       } else if (scrollHeight < currentHeight) {
         $textareaEl.css('height', '');
+      }
+      if (scrollHeight > initialHeight || scrollHeight < currentHeight) {
         $textareaEl.trigger('textarea:resize', { initialHeight, currentHeight, scrollHeight });
+        app.emit('textareaResize', { initialHeight, currentHeight, scrollHeight });
       }
     }
   },
@@ -74,7 +76,7 @@ const Input = {
       }
       if ($errorEl.length > 0) {
         $itemInputEl.addClass('item-input-with-error-message');
-        $inputWrapEl.addClass('input-with-eror-message');
+        $inputWrapEl.addClass('input-with-error-message');
       }
       $itemInputEl.addClass('item-input-invalid');
       $inputWrapEl.addClass('input-invalid');
@@ -106,8 +108,20 @@ const Input = {
     $inputEl.removeClass('input-focused');
   },
   checkEmptyState(inputEl) {
-    const $inputEl = $(inputEl);
-    const value = $inputEl.val();
+    const app = this;
+    let $inputEl = $(inputEl);
+    if (!$inputEl.is('input, select, textarea, .item-input [contenteditable]')) {
+      $inputEl = $inputEl.find('input, select, textarea, .item-input [contenteditable]').eq(0);
+    }
+    if (!$inputEl.length) return;
+    const isContentEditable = $inputEl[0].hasAttribute('contenteditable');
+    let value;
+    if (isContentEditable) {
+      if ($inputEl.find('.text-editor-placeholder').length) value = '';
+      else value = $inputEl.html();
+    } else {
+      value = $inputEl.val();
+    }
     const $itemInputEl = $inputEl.parents('.item-input');
     const $inputWrapEl = $inputEl.parents('.input');
     if ((value && (typeof value === 'string' && value.trim() !== '')) || (Array.isArray(value) && value.length > 0)) {
@@ -115,16 +129,18 @@ const Input = {
       $inputWrapEl.addClass('input-with-value');
       $inputEl.addClass('input-with-value');
       $inputEl.trigger('input:notempty');
+      app.emit('inputNotEmpty', $inputEl[0]);
     } else {
       $itemInputEl.removeClass('item-input-with-value');
       $inputWrapEl.removeClass('input-with-value');
       $inputEl.removeClass('input-with-value');
       $inputEl.trigger('input:empty');
+      app.emit('inputEmpty', $inputEl[0]);
     }
   },
   scrollIntoView(inputEl, duration = 0, centered, force) {
     const $inputEl = $(inputEl);
-    const $scrollableEl = $inputEl.parents('.page-content, .panel').eq(0);
+    const $scrollableEl = $inputEl.parents('.page-content, .panel, .card-expandable .card-content').eq(0);
     if (!$scrollableEl.length) {
       return false;
     }
@@ -176,7 +192,7 @@ const Input = {
       const $inputEl = $(this);
       const tag = $inputEl[0].nodeName.toLowerCase();
       app.input.blur($inputEl);
-      if ($inputEl.dataset().validate || $inputEl.attr('validate') !== null) {
+      if ($inputEl.dataset().validate || $inputEl.attr('validate') !== null || $inputEl.attr('data-validate-on-blur') !== null) {
         app.input.validate($inputEl);
       }
       // Resize textarea
@@ -188,13 +204,15 @@ const Input = {
       const $inputEl = $(this);
       const type = $inputEl.attr('type');
       const tag = $inputEl[0].nodeName.toLowerCase();
+      const isContentEditable = $inputEl[0].hasAttribute('contenteditable');
       if (Input.ignoreTypes.indexOf(type) >= 0) return;
 
       // Check Empty State
       app.input.checkEmptyState($inputEl);
+      if (isContentEditable) return;
 
       // Check validation
-      if ($inputEl.dataset().validate || $inputEl.attr('validate') !== null) {
+      if ($inputEl.attr('data-validate-on-blur') === null && ($inputEl.dataset().validate || $inputEl.attr('validate') !== null)) {
         app.input.validate($inputEl);
       }
 
@@ -205,7 +223,7 @@ const Input = {
     }
     function onInvalid(e) {
       const $inputEl = $(this);
-      if ($inputEl.dataset().validate || $inputEl.attr('validate') !== null) {
+      if ($inputEl.attr('data-validate-on-blur') === null && ($inputEl.dataset().validate || $inputEl.attr('validate') !== null)) {
         e.preventDefault();
         app.input.validate($inputEl);
       }
@@ -216,14 +234,15 @@ const Input = {
       const previousValue = $inputEl.val();
       $inputEl
         .val('')
-        .trigger('change input')
+        .trigger('input change')
         .focus()
         .trigger('input:clear', previousValue);
+      app.emit('inputClear', previousValue);
     }
     $(document).on('click', '.input-clear-button', clearInput);
-    $(document).on('change input', 'input, textarea, select', onChange, true);
-    $(document).on('focus', 'input, textarea, select', onFocus, true);
-    $(document).on('blur', 'input, textarea, select', onBlur, true);
+    $(document).on('change input', 'input, textarea, select, .item-input [contenteditable]', onChange, true);
+    $(document).on('focus', 'input, textarea, select, .item-input [contenteditable]', onFocus, true);
+    $(document).on('blur', 'input, textarea, select, .item-input [contenteditable]', onBlur, true);
     $(document).on('invalid', 'input, textarea, select', onInvalid, true);
   },
 };
@@ -263,7 +282,7 @@ export default {
       const $tabEl = $(tabEl);
       $tabEl.find('.item-input, .input').each((itemInputIndex, itemInputEl) => {
         const $itemInputEl = $(itemInputEl);
-        $itemInputEl.find('input, select, textarea').each((inputIndex, inputEl) => {
+        $itemInputEl.find('input, select, textarea, [contenteditable]').each((inputIndex, inputEl) => {
           const $inputEl = $(inputEl);
           if (Input.ignoreTypes.indexOf($inputEl.attr('type')) >= 0) return;
           app.input.checkEmptyState($inputEl);
@@ -278,7 +297,7 @@ export default {
       const $pageEl = page.$el;
       $pageEl.find('.item-input, .input').each((itemInputIndex, itemInputEl) => {
         const $itemInputEl = $(itemInputEl);
-        $itemInputEl.find('input, select, textarea').each((inputIndex, inputEl) => {
+        $itemInputEl.find('input, select, textarea, [contenteditable]').each((inputIndex, inputEl) => {
           const $inputEl = $(inputEl);
           if (Input.ignoreTypes.indexOf($inputEl.attr('type')) >= 0) return;
           app.input.checkEmptyState($inputEl);
@@ -287,6 +306,18 @@ export default {
       $pageEl.find('textarea.resizable').each((textareaIndex, textareaEl) => {
         app.input.resizeTextarea(textareaEl);
       });
+    },
+    'panelBreakpoint panelCollapsedBreakpoint panelResize panelOpen panelSwipeOpen resize viewMasterDetailBreakpoint': function onPanelOpen(instance) {
+      const app = this;
+      if (instance && instance.$el) {
+        instance.$el.find('textarea.resizable').each((textareaIndex, textareaEl) => {
+          app.input.resizeTextarea(textareaEl);
+        });
+      } else {
+        $('textarea.resizable').each((textareaIndex, textareaEl) => {
+          app.input.resizeTextarea(textareaEl);
+        });
+      }
     },
   },
 };

@@ -5,10 +5,12 @@ import F7ListItemContent from './list-item-content';
 import Mixins from '../utils/mixins';
 
 /* phenome-dts-imports
+import { Tooltip as TooltipNamespace } from 'framework7/components/tooltip/tooltip';
 import { SmartSelect as SmartSelectNamespace } from 'framework7/components/smart-select/smart-select';
 */
 
 /* phenome-dts-instance
+f7Tooltip: TooltipNamespace.Tooltip
 f7SmartSelect: SmartSelectNamespace.SmartSelect
 */
 
@@ -26,11 +28,13 @@ export default {
     header: [String, Number],
     footer: [String, Number],
 
+    // Tooltip
+    tooltip: String,
+    tooltipTrigger: String,
+
     // Link Props
     link: [Boolean, String],
     target: String,
-    noFastclick: Boolean,
-    noFastClick: Boolean,
 
     after: [String, Number],
     badge: [String, Number],
@@ -42,7 +46,14 @@ export default {
     groupTitle: Boolean,
     swipeout: Boolean,
     swipeoutOpened: Boolean,
-    sortable: Boolean,
+    sortable: {
+      type: Boolean,
+      default: undefined,
+    },
+    sortableOpposite: {
+      type: Boolean,
+      default: undefined,
+    },
     accordionItem: Boolean,
     accordionItemOpened: Boolean,
 
@@ -59,14 +70,13 @@ export default {
     radio: Boolean,
     checked: Boolean,
     defaultChecked: Boolean,
+    indeterminate: Boolean,
     name: String,
     value: [String, Number, Array],
     readonly: Boolean,
     required: Boolean,
     disabled: Boolean,
-    itemInput: Boolean,
-    itemInputWithInfo: Boolean,
-    inlineLabel: Boolean,
+    virtualListIndex: Number,
     ...Mixins.colorProps,
     ...Mixins.linkRouterProps,
     ...Mixins.linkActionsProps,
@@ -75,6 +85,7 @@ export default {
     return {
       isMedia: props.mediaItem || props.mediaList,
       isSortable: props.sortable,
+      isSortableOpposite: props.sortableOpposite,
       isSimple: false,
     };
   },
@@ -98,8 +109,6 @@ export default {
       link,
       href,
       target,
-      noFastclick,
-      noFastClick,
       after,
       badge,
       badgeColor,
@@ -115,21 +124,23 @@ export default {
       radio,
       checked,
       defaultChecked,
+      indeterminate,
       name,
       value,
       readonly,
       required,
       disabled,
-      itemInput,
-      itemInputWithInfo,
-      inlineLabel,
       sortable,
+      sortableOpposite,
       noChevron,
       chevronCenter,
+      virtualListIndex,
     } = props;
 
     const isMedia = mediaItem || mediaList || self.state.isMedia;
     const isSortable = sortable || self.state.isSortable;
+    const isSortableOpposite = isSortable && (sortableOpposite || self.state.isSortableOpposite);
+
     const isSimple = self.state.isSimple;
 
     if (!isSimple) {
@@ -151,19 +162,17 @@ export default {
           checkbox={checkbox}
           checked={checked}
           defaultChecked={defaultChecked}
+          indeterminate={indeterminate}
           radio={radio}
           name={name}
           value={value}
           readonly={readonly}
           required={required}
           disabled={disabled}
-          itemInput={itemInput}
-          itemInputWithInfo={itemInputWithInfo}
-          inlineLabel={inlineLabel}
-          onClick={needsEvents ? self.onClickBound : null} // phenome-react-line
-          onChange={needsEvents ? self.onChangeBound : null} // phenome-react-line
+          onClick={needsEvents ? self.onClick : null} // phenome-react-line
+          onChange={needsEvents ? self.onChange : null} // phenome-react-line
           // phenome-vue-next-line
-          on={needsEvents ? { click: self.onClickBound, change: self.onChangeBound } : undefined}
+          on={needsEvents ? { click: self.onClick, change: self.onChange } : undefined}
         >
           <slot name="content-start" />
           <slot name="content" />
@@ -183,23 +192,21 @@ export default {
           <slot name="subtitle" />
           <slot name="text" />
           {swipeout || accordionItem ? null : self.slots.default}
+          {isSortable && sortable !== false && isSortableOpposite && (<div className="sortable-handler" slot="content-start" />)}
         </F7ListItemContent>
       );
 
       // Link
       if (link || href || accordionItem || smartSelect) {
-        const linkAttrs = Utils.extend(
-          {
-            href: link === true || accordionItem || smartSelect ? '#' : link || href,
-            target,
-          },
-          Mixins.linkRouterAttrs(props),
-          Mixins.linkActionsAttrs(props),
-        );
+        const linkAttrs = {
+          href: link === true ? '' : link || href,
+          target,
+          ...Mixins.linkRouterAttrs(props),
+          ...Mixins.linkActionsAttrs(props),
+        };
         const linkClasses = Utils.classNames(
           {
             'item-link': true,
-            'no-fastclick': noFastclick || noFastClick,
             'smart-select': smartSelect,
           },
           Mixins.linkRouterClasses(props),
@@ -207,8 +214,8 @@ export default {
         );
         linkEl = (
           <a
+            ref="linkEl"
             className={linkClasses}
-            onClick={self.onClick.bind(self)}
             {...linkAttrs}
           >
             {itemContentEl}
@@ -229,19 +236,21 @@ export default {
         disabled: disabled && !(radio || checkbox),
         'no-chevron': noChevron,
         'chevron-center': chevronCenter,
+        'disallow-sorting': sortable === false,
       },
       Mixins.colorClasses(props),
     );
+
     if (divider || groupTitle) {
       return (
-        <li ref="el" id={id} style={style} className={liClasses}>
+        <li ref="el" id={id} style={style} className={liClasses} data-virtual-list-index={virtualListIndex}>
           <span><slot>{title}</slot></span>
         </li>
       );
     }
     if (isSimple) {
       return (
-        <li ref="el" id={id} style={style} className={liClasses}>
+        <li ref="el" id={id} style={style} className={liClasses} data-virtual-list-index={virtualListIndex}>
           {title}
           <slot name="default" />
         </li>
@@ -249,8 +258,9 @@ export default {
     }
 
     const linkItemEl = (link || href || smartSelect || accordionItem) ? linkEl : itemContentEl;
+
     return (
-      <li ref="el" id={id} style={style} className={liClasses}>
+      <li ref="el" id={id} style={style} className={liClasses} data-virtual-list-index={virtualListIndex}>
         <slot name="root-start" />
         {swipeout
           ? (
@@ -258,7 +268,7 @@ export default {
           )
           : linkItemEl
         }
-        {isSortable && (<div className="sortable-handler" />)}
+        {isSortable && sortable !== false && !isSortableOpposite && (<div className="sortable-handler" />)}
         {(swipeout || accordionItem) && self.slots.default}
         <slot name="root" />
         <slot name="root-end" />
@@ -266,6 +276,25 @@ export default {
     );
   },
   watch: {
+    'props.tooltip': function watchTooltip(newText) {
+      const self = this;
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger,
+        });
+        return;
+      }
+      if (!newText || !self.f7Tooltip) return;
+      self.f7Tooltip.setText(newText);
+    },
     'props.swipeoutOpened': function watchSwipeoutOpened(opened) {
       const self = this;
       if (!self.props.swipeout) return;
@@ -278,25 +307,40 @@ export default {
     },
   },
   componentDidCreate() {
-    const self = this;
-    self.onClickBound = self.onClick.bind(self);
-    self.onChangeBound = self.onChange.bind(self);
-    self.onSwipeoutOpenBound = self.onSwipeoutOpen.bind(self);
-    self.onSwipeoutOpenedBound = self.onSwipeoutOpened.bind(self);
-    self.onSwipeoutCloseBound = self.onSwipeoutClose.bind(self);
-    self.onSwipeoutClosedBound = self.onSwipeoutClosed.bind(self);
-    self.onSwipeoutDeleteBound = self.onSwipeoutDelete.bind(self);
-    self.onSwipeoutDeletedBound = self.onSwipeoutDeleted.bind(self);
-    self.onSwipeoutBound = self.onSwipeout.bind(self);
-    self.onAccOpenBound = self.onAccOpen.bind(self);
-    self.onAccOpenedBound = self.onAccOpened.bind(self);
-    self.onAccCloseBound = self.onAccClose.bind(self);
-    self.onAccClosedBound = self.onAccClosed.bind(self);
+    Utils.bindMethods(this, [
+      'onClick',
+      'onChange',
+      'onSwipeoutOpen',
+      'onSwipeoutOpened',
+      'onSwipeoutClose',
+      'onSwipeoutClosed',
+      'onSwipeoutDelete',
+      'onSwipeoutDeleted',
+      'onSwipeoutOverswipeEnter',
+      'onSwipeoutOverswipeExit',
+      'onSwipeout',
+      'onAccBeforeOpen',
+      'onAccOpen',
+      'onAccOpened',
+      'onAccBeforeClose',
+      'onAccClose',
+      'onAccClosed',
+    ]);
   },
   componentDidMount() {
     const self = this;
-    const el = self.refs.el;
+    const { el, linkEl } = self.refs;
     if (!el) return;
+    const {
+      link, href, smartSelect, swipeout, swipeoutOpened, accordionItem, smartSelectParams, routeProps, tooltip, tooltipTrigger,
+    } = self.props;
+    const needsEvents = !(link || href || accordionItem || smartSelect);
+    if (!needsEvents && linkEl) {
+      linkEl.addEventListener('click', self.onClick);
+    }
+    if (linkEl && routeProps) {
+      linkEl.f7RouteProps = routeProps;
+    }
 
     self.$listEl = self.$$(el).parents('.list, .list-group').eq(0);
     if (self.$listEl.length) {
@@ -304,26 +348,31 @@ export default {
         isMedia: self.$listEl.hasClass('media-list'),
         isSimple: self.$listEl.hasClass('simple-list'),
         isSortable: self.$listEl.hasClass('sortable'),
+        isSortableOpposite: self.$listEl.hasClass('sortable-opposite'),
       });
-    }
-    const { swipeout, swipeoutOpened, accordionItem, smartSelect, smartSelectParams } = self.props;
-    if (swipeout) {
-      el.addEventListener('swipeout:open', self.onSwipeoutOpenBound);
-      el.addEventListener('swipeout:opened', self.onSwipeoutOpenedBound);
-      el.addEventListener('swipeout:close', self.onSwipeoutCloseBound);
-      el.addEventListener('swipeout:closed', self.onSwipeoutClosedBound);
-      el.addEventListener('swipeout:delete', self.onSwipeoutDeleteBound);
-      el.addEventListener('swipeout:deleted', self.onSwipeoutDeletedBound);
-      el.addEventListener('swipeout', self.onSwipeoutBound);
-    }
-    if (accordionItem) {
-      el.addEventListener('accordion:open', self.onAccOpenBound);
-      el.addEventListener('accordion:opened', self.onAccOpenedBound);
-      el.addEventListener('accordion:close', self.onAccCloseBound);
-      el.addEventListener('accordion:closed', self.onAccClosedBound);
     }
 
     self.$f7ready((f7) => {
+      self.eventTargetEl = el;
+      if (swipeout) {
+        f7.on('swipeoutOpen', self.onSwipeoutOpen);
+        f7.on('swipeoutOpened', self.onSwipeoutOpened);
+        f7.on('swipeoutClose', self.onSwipeoutClose);
+        f7.on('swipeoutClosed', self.onSwipeoutClosed);
+        f7.on('swipeoutDelete', self.onSwipeoutDelete);
+        f7.on('swipeoutDeleted', self.onSwipeoutDeleted);
+        f7.on('swipeoutOverswipeEnter', self.onSwipeoutOverswipeEnter);
+        f7.on('swipeoutOverswipeExit', self.onSwipeoutOverswipeExit);
+        f7.on('swipeout', self.onSwipeout);
+      }
+      if (accordionItem) {
+        f7.on('accordionBeforeOpen', self.onAccBeforeOpen);
+        f7.on('accordionOpen', self.onAccOpen);
+        f7.on('accordionOpened', self.onAccOpened);
+        f7.on('accordionBeforeClose', self.onAccBeforeClose);
+        f7.on('accordionClose', self.onAccClose);
+        f7.on('accordionClosed', self.onAccClosed);
+      }
       if (smartSelect) {
         const ssParams = Utils.extend(
           { el: el.querySelector('a.smart-select') },
@@ -334,15 +383,28 @@ export default {
       if (swipeoutOpened) {
         f7.swipeout.open(el);
       }
+      if (tooltip) {
+        self.f7Tooltip = f7.tooltip.create({
+          targetEl: el,
+          text: tooltip,
+          trigger: tooltipTrigger,
+        });
+      }
     });
   },
   componentDidUpdate() {
     const self = this;
     const { $listEl } = self;
+    const { linkEl } = self.refs;
+    const { routeProps } = self.props;
+    if (linkEl && routeProps) {
+      linkEl.f7RouteProps = routeProps;
+    }
     if (!$listEl || ($listEl && $listEl.length === 0)) return;
     const isMedia = $listEl.hasClass('media-list');
     const isSimple = $listEl.hasClass('simple-list');
     const isSortable = $listEl.hasClass('sortable');
+    const isSortableOpposite = $listEl.hasClass('sortable-opposite');
     if (isMedia !== self.state.isMedia) {
       self.setState({ isMedia });
     }
@@ -351,32 +413,54 @@ export default {
     }
     if (isSortable !== self.state.isSortable) {
       self.setState({ isSortable });
+      if (isSortableOpposite !== self.state.isSortableOpposite) {
+        self.setState({ isSortableOpposite });
+      }
     }
   },
   componentWillUnmount() {
     const self = this;
-    const el = self.refs.el;
-    const { swipeout, accordionItem, smartSelect } = self.props;
-    if (el) {
+    const { linkEl } = self.refs;
+    const { link, href, smartSelect, swipeout, accordionItem } = self.props;
+    const needsEvents = !(link || href || accordionItem || smartSelect);
+    if (linkEl) {
+      if (!needsEvents) {
+        linkEl.removeEventListener('click', self.onClick);
+      }
+      delete linkEl.f7RouteProps;
+    }
+    if (self.$f7) {
+      const f7 = self.$f7;
       if (swipeout) {
-        el.removeEventListener('swipeout:open', self.onSwipeoutOpenBound);
-        el.removeEventListener('swipeout:opened', self.onSwipeoutOpenedBound);
-        el.removeEventListener('swipeout:close', self.onSwipeoutCloseBound);
-        el.removeEventListener('swipeout:closed', self.onSwipeoutClosedBound);
-        el.removeEventListener('swipeout:delete', self.onSwipeoutDeleteBound);
-        el.removeEventListener('swipeout:deleted', self.onSwipeoutDeletedBound);
-        el.removeEventListener('swipeout', self.onSwipeoutBound);
+        f7.off('swipeoutOpen', self.onSwipeoutOpen);
+        f7.off('swipeoutOpened', self.onSwipeoutOpened);
+        f7.off('swipeoutClose', self.onSwipeoutClose);
+        f7.off('swipeoutClosed', self.onSwipeoutClosed);
+        f7.off('swipeoutDelete', self.onSwipeoutDelete);
+        f7.off('swipeoutDeleted', self.onSwipeoutDeleted);
+        f7.off('swipeoutOverswipeEnter', self.onSwipeoutOverswipeEnter);
+        f7.off('swipeoutOverswipeExit', self.onSwipeoutOverswipeExit);
+        f7.off('swipeout', self.onSwipeout);
       }
       if (accordionItem) {
-        el.removeEventListener('accordion:open', self.onAccOpenBound);
-        el.removeEventListener('accordion:opened', self.onAccOpenedBound);
-        el.removeEventListener('accordion:close', self.onAccCloseBound);
-        el.removeEventListener('accordion:closed', self.onAccClosedBound);
+        f7.off('accordionBeforeOpen', self.onAccBeforeOpen);
+        f7.off('accordionOpen', self.onAccOpen);
+        f7.off('accordionOpened', self.onAccOpened);
+        f7.off('accordionBeforeClose', self.onAccBeforeClose);
+        f7.off('accordionClose', self.onAccClose);
+        f7.off('accordionClosed', self.onAccClosed);
       }
     }
     if (smartSelect && self.f7SmartSelect) {
       self.f7SmartSelect.destroy();
     }
+    if (self.f7Tooltip && self.f7Tooltip.destroy) {
+      self.f7Tooltip.destroy();
+      self.f7Tooltip = null;
+      delete self.f7Tooltip;
+    }
+    self.eventTargetEl = null;
+    delete self.eventTargetEl;
   },
   methods: {
     onClick(event) {
@@ -385,38 +469,65 @@ export default {
         self.dispatchEvent('click', event);
       }
     },
-    onSwipeoutDeleted(event) {
-      this.dispatchEvent('swipeout:deleted swipeoutDeleted', event);
+    onSwipeoutOverswipeEnter(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:overswipeenter swipeoutOverswipeEnter');
     },
-    onSwipeoutDelete(event) {
-      this.dispatchEvent('swipeout:delete swipeoutDelete', event);
+    onSwipeoutOverswipeExit(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:overswipeexit swipeoutOverswipeExit');
     },
-    onSwipeoutClose(event) {
-      this.dispatchEvent('swipeout:close swipeoutClose', event);
+    onSwipeoutDeleted(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:deleted swipeoutDeleted');
     },
-    onSwipeoutClosed(event) {
-      this.dispatchEvent('swipeout:closed swipeoutClosed', event);
+    onSwipeoutDelete(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:delete swipeoutDelete');
     },
-    onSwipeoutOpen(event) {
-      this.dispatchEvent('swipeout:open swipeoutOpen', event);
+    onSwipeoutClose(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:close swipeoutClose');
     },
-    onSwipeoutOpened(event) {
-      this.dispatchEvent('swipeout:opened swipeoutOpened', event);
+    onSwipeoutClosed(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:closed swipeoutClosed');
     },
-    onSwipeout(event) {
-      this.dispatchEvent('swipeout', event);
+    onSwipeoutOpen(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:open swipeoutOpen');
     },
-    onAccClose(event) {
-      this.dispatchEvent('accordion:close accordionClose', event);
+    onSwipeoutOpened(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout:opened swipeoutOpened');
     },
-    onAccClosed(event) {
-      this.dispatchEvent('accordion:closed accordionClosed', event);
+    onSwipeout(el, progress) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('swipeout', progress);
     },
-    onAccOpen(event) {
-      this.dispatchEvent('accordion:open accordionOpen', event);
+    onAccBeforeClose(el, prevent) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:beforeclose accordionBeforeClose', prevent);
     },
-    onAccOpened(event) {
-      this.dispatchEvent('accordion:opened accordionOpened', event);
+    onAccClose(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:close accordionClose');
+    },
+    onAccClosed(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:closed accordionClosed');
+    },
+    onAccBeforeOpen(el, prevent) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:beforeopen accordionBeforeOpen', prevent);
+    },
+    onAccOpen(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:open accordionOpen');
+    },
+    onAccOpened(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordion:opened accordionOpened');
     },
     onChange(event) {
       this.dispatchEvent('change', event);

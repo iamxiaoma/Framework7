@@ -196,7 +196,7 @@
     </div>
     <f7-block-title>Tablet-only columns</f7-block-title>
     <div class="block-header">
-      <p>"Comments" column will be visible only on large screen devices (tablets)</p>
+      <p>"Comments" column will be visible only on devices with screen width >= 768px (tablets)</p>
     </div>
     <div class="data-table data-table-init card">
       <table>
@@ -213,7 +213,7 @@
             <th class="numeric-cell">Fat (g)</th>
             <th class="numeric-cell">Carbs</th>
             <th class="numeric-cell">Protein (g)</th>
-            <th class="tablet-only"><f7-icon ios="f7:chat_fill" md="material:message"></f7-icon> Comments</th>
+            <th class="medium-only"><f7-icon ios="f7:chat_bubble_text_fill" aurora="f7:chat_bubble_text_fill" md="material:message"></f7-icon> Comments</th>
           </tr>
         </thead>
         <tbody>
@@ -229,7 +229,7 @@
             <td class="numeric-cell">6.0</td>
             <td class="numeric-cell">24</td>
             <td class="numeric-cell">4.0</td>
-            <td class="tablet-only">I like frozen yogurt</td>
+            <td class="medium-only">I like frozen yogurt</td>
           </tr>
           <tr>
             <td class="checkbox-cell">
@@ -243,7 +243,7 @@
             <td class="numeric-cell">9.0</td>
             <td class="numeric-cell">37</td>
             <td class="numeric-cell">4.4</td>
-            <td class="tablet-only">But like ice cream more</td>
+            <td class="medium-only">But like ice cream more</td>
           </tr>
           <tr>
             <td class="checkbox-cell">
@@ -257,7 +257,7 @@
             <td class="numeric-cell">16.0</td>
             <td class="numeric-cell">24</td>
             <td class="numeric-cell">6.0</td>
-            <td class="tablet-only">Super tasty</td>
+            <td class="medium-only">Super tasty</td>
           </tr>
           <tr>
             <td class="checkbox-cell">
@@ -271,7 +271,7 @@
             <td class="numeric-cell">3.7</td>
             <td class="numeric-cell">67</td>
             <td class="numeric-cell">4.3</td>
-            <td class="tablet-only">Don't like it</td>
+            <td class="medium-only">Don't like it</td>
           </tr>
         </tbody>
       </table>
@@ -345,8 +345,8 @@
       <div class="card-header">
         <div class="data-table-title">Nutrition</div>
         <div class="data-table-actions">
-          <f7-link icon-ios="f7:sort" icon-md="material:sort"></f7-link>
-          <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+          <f7-link icon-ios="f7:line_horizontal_3_decrease" icon-aurora="f7:line_horizontal_3_decrease" icon-md="material:sort"></f7-link>
+          <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
         </div>
       </div>
       <div class="card-content">
@@ -364,7 +364,7 @@
               <th class="numeric-cell">Fat (g)</th>
               <th class="numeric-cell">Carbs</th>
               <th class="numeric-cell">Protein (g)</th>
-              <th class="tablet-only"><f7-icon ios="f7:chat_fill" md="material:message"></f7-icon> Comments</th>
+              <th class="medium-only"><f7-icon ios="f7:chat_bubble_text_fill" aurora="f7:chat_bubble_text_fill" md="material:message"></f7-icon> Comments</th>
             </tr>
           </thead>
           <tbody>
@@ -380,7 +380,7 @@
               <td class="numeric-cell">6.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">4.0</td>
-              <td class="tablet-only">I like frozen yogurt</td>
+              <td class="medium-only">I like frozen yogurt</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -394,7 +394,7 @@
               <td class="numeric-cell">9.0</td>
               <td class="numeric-cell">37</td>
               <td class="numeric-cell">4.4</td>
-              <td class="tablet-only">But like ice cream more</td>
+              <td class="medium-only">But like ice cream more</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -408,7 +408,7 @@
               <td class="numeric-cell">16.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">6.0</td>
-              <td class="tablet-only">Super tasty</td>
+              <td class="medium-only">Super tasty</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -422,7 +422,7 @@
               <td class="numeric-cell">3.7</td>
               <td class="numeric-cell">67</td>
               <td class="numeric-cell">4.3</td>
-              <td class="tablet-only">Don't like it</td>
+              <td class="medium-only">Don't like it</td>
             </tr>
           </tbody>
         </table>
@@ -433,8 +433,8 @@
       <div class="card-header">
         <div class="data-table-title">Nutrition</div>
         <div class="data-table-actions">
-          <f7-link icon-ios="f7:sort" icon-md="material:sort"></f7-link>
-          <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+          <f7-link icon-ios="f7:line_horizontal_3_decrease" icon-aurora="f7:line_horizontal_3_decrease" icon-md="material:sort"></f7-link>
+          <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
         </div>
       </div>
       <div class="card-content">
@@ -452,7 +452,7 @@
               <th class="numeric-cell sortable-cell">Fat (g)</th>
               <th class="numeric-cell sortable-cell">Carbs</th>
               <th class="numeric-cell sortable-cell">Protein (g)</th>
-              <th class="tablet-only"><f7-icon ios="f7:chat_fill" md="material:message"></f7-icon> Comments</th>
+              <th class="medium-only"><f7-icon ios="f7:chat_bubble_text_fill" aurora="f7:chat_bubble_text_fill" md="material:message"></f7-icon> Comments</th>
             </tr>
           </thead>
           <tbody>
@@ -468,7 +468,7 @@
               <td class="numeric-cell">6.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">4.0</td>
-              <td class="tablet-only">I like frozen yogurt</td>
+              <td class="medium-only">I like frozen yogurt</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -482,7 +482,7 @@
               <td class="numeric-cell">9.0</td>
               <td class="numeric-cell">37</td>
               <td class="numeric-cell">4.4</td>
-              <td class="tablet-only">But like ice cream more</td>
+              <td class="medium-only">But like ice cream more</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -496,7 +496,7 @@
               <td class="numeric-cell">16.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">6.0</td>
-              <td class="tablet-only">Super tasty</td>
+              <td class="medium-only">Super tasty</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -510,7 +510,7 @@
               <td class="numeric-cell">3.7</td>
               <td class="numeric-cell">67</td>
               <td class="numeric-cell">4.3</td>
-              <td class="tablet-only">Don't like it</td>
+              <td class="medium-only">Don't like it</td>
             </tr>
           </tbody>
         </table>
@@ -522,15 +522,15 @@
         <div class="data-table-header">
           <div class="data-table-title">Nutrition</div>
           <div class="data-table-actions">
-            <f7-link icon-ios="f7:sort" icon-md="material:sort"></f7-link>
-            <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+            <f7-link icon-ios="f7:line_horizontal_3_decrease" icon-aurora="f7:line_horizontal_3_decrease" icon-md="material:sort"></f7-link>
+            <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
           </div>
         </div>
         <div class="data-table-header-selected">
           <div class="data-table-title-selected"><span class="data-table-selected-count"></span> items selected</div>
           <div class="data-table-actions">
-            <f7-link icon-ios="f7:trash" icon-md="material:delete"></f7-link>
-            <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+            <f7-link icon-ios="f7:trash" icon-aurora="f7:trash" icon-md="material:delete"></f7-link>
+            <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
           </div>
         </div>
       </div>
@@ -549,7 +549,7 @@
               <th class="numeric-cell">Fat (g)</th>
               <th class="numeric-cell">Carbs</th>
               <th class="numeric-cell">Protein (g)</th>
-              <th class="tablet-only"><f7-icon ios="f7:chat_fill" md="material:message"></f7-icon> Comments</th>
+              <th class="medium-only"><f7-icon ios="f7:chat_bubble_text_fill" aurora="f7:chat_bubble_text_fill" md="material:message"></f7-icon> Comments</th>
             </tr>
           </thead>
           <tbody>
@@ -565,7 +565,7 @@
               <td class="numeric-cell">6.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">4.0</td>
-              <td class="tablet-only">I like frozen yogurt</td>
+              <td class="medium-only">I like frozen yogurt</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -579,7 +579,7 @@
               <td class="numeric-cell">9.0</td>
               <td class="numeric-cell">37</td>
               <td class="numeric-cell">4.4</td>
-              <td class="tablet-only">But like ice cream more</td>
+              <td class="medium-only">But like ice cream more</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -593,7 +593,7 @@
               <td class="numeric-cell">16.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">6.0</td>
-              <td class="tablet-only">Super tasty</td>
+              <td class="medium-only">Super tasty</td>
             </tr>
             <tr>
               <td class="checkbox-cell">
@@ -607,7 +607,7 @@
               <td class="numeric-cell">3.7</td>
               <td class="numeric-cell">67</td>
               <td class="numeric-cell">4.3</td>
-              <td class="tablet-only">Don't like it</td>
+              <td class="medium-only">Don't like it</td>
             </tr>
           </tbody>
         </table>
@@ -616,10 +616,10 @@
     <f7-block-title>Alternate header with actions</f7-block-title>
     <div class="data-table data-table-init card">
       <div class="card-header">
-        <div class="data-table-links"><a class="link">Add</a><a class="link">Remove</a></div>
+        <div class="data-table-links"><a class="button">Add</a><a class="button">Remove</a></div>
         <div class="data-table-actions">
-          <f7-link icon-ios="f7:sort" icon-md="material:sort"></f7-link>
-          <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+          <f7-link icon-ios="f7:line_horizontal_3_decrease" icon-aurora="f7:line_horizontal_3_decrease" icon-md="material:sort"></f7-link>
+          <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
         </div>
       </div>
       <div class="card-content">
@@ -637,7 +637,7 @@
               <th class="numeric-cell">Fat (g)</th>
               <th class="numeric-cell">Carbs</th>
               <th class="numeric-cell">Protein (g)</th>
-              <th class="tablet-only"><f7-icon ios="f7:chat_fill" md="material:message"></f7-icon> Comments</th>
+              <th class="medium-only"><f7-icon ios="f7:chat_bubble_text_fill" aurora="f7:chat_bubble_text_fill" md="material:message"></f7-icon> Comments</th>
               <th></th>
             </tr>
           </thead>
@@ -654,10 +654,10 @@
               <td class="numeric-cell">6.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">4.0</td>
-              <td class="tablet-only">I like frozen yogurt</td>
+              <td class="medium-only">I like frozen yogurt</td>
               <td class="actions-cell">
-                <f7-link icon-ios="f7:compose" icon-md="material:edit"></f7-link>
-                <f7-link icon-ios="f7:trash" icon-md="material:delete"></f7-link>
+                <f7-link icon-ios="f7:square_pencil" icon-aurora="f7:square_pencil" icon-md="material:edit"></f7-link>
+                <f7-link icon-ios="f7:trash" icon-aurora="f7:trash" icon-md="material:delete"></f7-link>
               </td>
             </tr>
             <tr>
@@ -672,10 +672,10 @@
               <td class="numeric-cell">9.0</td>
               <td class="numeric-cell">37</td>
               <td class="numeric-cell">4.4</td>
-              <td class="tablet-only">But like ice cream more</td>
+              <td class="medium-only">But like ice cream more</td>
               <td class="actions-cell">
-                <f7-link icon-ios="f7:compose" icon-md="material:edit"></f7-link>
-                <f7-link icon-ios="f7:trash" icon-md="material:delete"></f7-link>
+                <f7-link icon-ios="f7:square_pencil" icon-aurora="f7:square_pencil" icon-md="material:edit"></f7-link>
+                <f7-link icon-ios="f7:trash" icon-aurora="f7:trash" icon-md="material:delete"></f7-link>
               </td>
             </tr>
             <tr>
@@ -690,10 +690,10 @@
               <td class="numeric-cell">16.0</td>
               <td class="numeric-cell">24</td>
               <td class="numeric-cell">6.0</td>
-              <td class="tablet-only">Super tasty</td>
+              <td class="medium-only">Super tasty</td>
               <td class="actions-cell">
-                <f7-link icon-ios="f7:compose" icon-md="material:edit"></f7-link>
-                <f7-link icon-ios="f7:trash" icon-md="material:delete"></f7-link>
+                <f7-link icon-ios="f7:square_pencil" icon-aurora="f7:square_pencil" icon-md="material:edit"></f7-link>
+                <f7-link icon-ios="f7:trash" icon-aurora="f7:trash" icon-md="material:delete"></f7-link>
               </td>
             </tr>
             <tr>
@@ -708,10 +708,10 @@
               <td class="numeric-cell">3.7</td>
               <td class="numeric-cell">67</td>
               <td class="numeric-cell">4.3</td>
-              <td class="tablet-only">Don't like it</td>
+              <td class="medium-only">Don't like it</td>
               <td class="actions-cell">
-                <f7-link icon-ios="f7:compose" icon-md="material:edit"></f7-link>
-                <f7-link icon-ios="f7:trash" icon-md="material:delete"></f7-link>
+                <f7-link icon-ios="f7:square_pencil" icon-aurora="f7:square_pencil" icon-md="material:edit"></f7-link>
+                <f7-link icon-ios="f7:trash" icon-aurora="f7:trash" icon-md="material:delete"></f7-link>
               </td>
             </tr>
           </tbody>
@@ -726,8 +726,8 @@
       <div class="card-header">
         <div class="data-table-title">Nutrition</div>
         <div class="data-table-actions">
-          <f7-link icon-ios="f7:sort" icon-md="material:sort"></f7-link>
-          <f7-link icon-ios="f7:more_vertical_round" icon-md="material:more_vert"></f7-link>
+          <f7-link icon-ios="f7:line_horizontal_3_decrease" icon-aurora="f7:line_horizontal_3_decrease" icon-md="material:sort"></f7-link>
+          <f7-link icon-ios="f7:ellipsis_vertical_circle" icon-aurora="f7:ellipsis_vertical_circle" icon-md="material:more_vert"></f7-link>
         </div>
       </div>
       <div class="card-content">

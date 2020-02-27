@@ -11,8 +11,6 @@ export default {
   props: Object.assign({
     id: [String, Number],
     noLinkClass: Boolean,
-    noFastClick: Boolean,
-    noFastclick: Boolean,
     text: String,
     tabLink: [Boolean, String],
     tabLinkActive: Boolean,
@@ -27,9 +25,10 @@ export default {
     },
     target: String,
     tooltip: String,
+    tooltipTrigger: String,
     smartSelect: Boolean,
     smartSelectParams: Object
-  }, Mixins.colorProps, Mixins.linkIconProps, Mixins.linkRouterProps, Mixins.linkActionsProps),
+  }, Mixins.colorProps, {}, Mixins.linkIconProps, {}, Mixins.linkRouterProps, {}, Mixins.linkActionsProps),
 
   data() {
     const props = __vueComponentProps(this);
@@ -59,13 +58,10 @@ export default {
       iconColor,
       iconSize,
       iconMaterial,
-      iconIon,
-      iconFa,
       iconF7,
-      iconIfMd,
-      iconIfIos,
       iconMd,
       iconIos,
+      iconAurora,
       id,
       style
     } = props;
@@ -86,10 +82,7 @@ export default {
       }, [text, badgeEl]);
     }
 
-    const mdThemeIcon = iconIfMd || iconMd;
-    const iosThemeIcon = iconIfIos || iconIos;
-
-    if (icon || iconMaterial || iconIon || iconFa || iconF7 || mdThemeIcon || iosThemeIcon) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
       if (iconBadge) {
         iconBadgeEl = _h(F7Badge, {
           attrs: {
@@ -102,11 +95,10 @@ export default {
         attrs: {
           material: iconMaterial,
           f7: iconF7,
-          fa: iconFa,
-          ion: iconIon,
           icon: icon,
-          md: mdThemeIcon,
-          ios: iosThemeIcon,
+          md: iconMd,
+          ios: iconIos,
+          aurora: iconAurora,
           color: iconColor,
           size: iconSize
         }
@@ -124,9 +116,6 @@ export default {
       style: style,
       class: self.classes
     }, self.attrs, {
-      on: {
-        click: self.onClick.bind(self)
-      },
       attrs: {
         id: id
       }
@@ -136,20 +125,44 @@ export default {
   watch: {
     'props.tooltip': function watchTooltip(newText) {
       const self = this;
+
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.$refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger
+        });
+        return;
+      }
+
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     }
   },
 
+  created() {
+    Utils.bindMethods(this, ['onClick']);
+  },
+
   mounted() {
     const self = this;
     const el = self.$refs.el;
+    el.addEventListener('click', self.onClick);
     const {
       tabbarLabel,
       tabLink,
       tooltip,
+      tooltipTrigger,
       smartSelect,
-      smartSelectParams
+      smartSelectParams,
+      routeProps
     } = self.props;
     let isTabbarLabel = false;
 
@@ -160,6 +173,7 @@ export default {
     self.setState({
       isTabbarLabel
     });
+    if (routeProps) el.f7RouteProps = routeProps;
     self.$f7ready(f7 => {
       if (smartSelect) {
         const ssParams = Utils.extend({
@@ -171,14 +185,30 @@ export default {
       if (tooltip) {
         self.f7Tooltip = f7.tooltip.create({
           targetEl: el,
-          text: tooltip
+          text: tooltip,
+          trigger: tooltipTrigger
         });
       }
     });
   },
 
+  updated() {
+    const self = this;
+    const el = self.$refs.el;
+    const {
+      routeProps
+    } = self.props;
+
+    if (routeProps) {
+      el.f7RouteProps = routeProps;
+    }
+  },
+
   beforeDestroy() {
     const self = this;
+    const el = self.$refs.el;
+    el.removeEventListener('click', self.onClick);
+    delete el.f7RouteProps;
 
     if (self.f7SmartSelect && self.f7SmartSelect.destroy) {
       self.f7SmartSelect.destroy();
@@ -214,8 +244,6 @@ export default {
       const self = this;
       const props = self.props;
       const {
-        noFastclick,
-        noFastClick,
         tabLink,
         tabLinkActive,
         noLinkClass,
@@ -227,7 +255,6 @@ export default {
         'icon-only': self.iconOnlyComputed,
         'tab-link': tabLink || tabLink === '',
         'tab-link-active': tabLinkActive,
-        'no-fastclick': noFastclick || noFastClick,
         'smart-select': smartSelect
       }, Mixins.colorClasses(props), Mixins.linkRouterClasses(props), Mixins.linkActionsClasses(props));
     },
@@ -239,12 +266,6 @@ export default {
   },
   methods: {
     onClick(event) {
-      const self = this;
-
-      if (self.props.smartSelect && self.f7SmartSelect) {
-        self.f7SmartSelect.open();
-      }
-
       this.dispatchEvent('click', event);
     },
 

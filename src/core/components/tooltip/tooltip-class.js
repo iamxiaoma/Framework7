@@ -5,7 +5,7 @@ import Framework7Class from '../../utils/class';
 
 class Tooltip extends Framework7Class {
   constructor(app, params = {}) {
-    super(app, params);
+    super(params, [app]);
 
     const tooltip = this;
 
@@ -41,6 +41,17 @@ class Tooltip extends Framework7Class {
 
     const touchesStart = {};
     let isTouched;
+    function handleClick() {
+      if (tooltip.opened) tooltip.hide();
+      else tooltip.show(this);
+    }
+    function handleClickOut(e) {
+      if (tooltip.opened && (
+        $(e.target).closest($targetEl).length
+        || $(e.target).closest(tooltip.$el).length
+      )) return;
+      tooltip.hide();
+    }
     function handleTouchStart(e) {
       if (isTouched) return;
       isTouched = true;
@@ -79,27 +90,37 @@ class Tooltip extends Framework7Class {
     }
 
     tooltip.attachEvents = function attachEvents() {
-      $el.on('transitionend webkitTransitionEnd', handleTransitionEnd);
+      $el.on('transitionend', handleTransitionEnd);
+      if (tooltip.params.trigger === 'click') {
+        $targetEl.on('click', handleClick);
+        $('html').on('click', handleClickOut);
+        return;
+      }
       if (Support.touch) {
         const passive = Support.passiveListener ? { passive: true } : false;
         $targetEl.on(app.touchEvents.start, handleTouchStart, passive);
         app.on('touchmove', handleTouchMove);
         app.on('touchend:passive', handleTouchEnd);
       } else {
-        $targetEl.on('mouseenter', handleMouseEnter);
-        $targetEl.on('mouseleave', handleMouseLeave);
+        $targetEl.on((Support.pointerEvents ? 'pointerenter' : 'mouseenter'), handleMouseEnter);
+        $targetEl.on((Support.pointerEvents ? 'pointerleave' : 'mouseleave'), handleMouseLeave);
       }
     };
     tooltip.detachEvents = function detachEvents() {
-      $el.off('transitionend webkitTransitionEnd', handleTransitionEnd);
+      $el.off('transitionend', handleTransitionEnd);
+      if (tooltip.params.trigger === 'click') {
+        $targetEl.off('click', handleClick);
+        $('html').off('click', handleClickOut);
+        return;
+      }
       if (Support.touch) {
         const passive = Support.passiveListener ? { passive: true } : false;
         $targetEl.off(app.touchEvents.start, handleTouchStart, passive);
         app.off('touchmove', handleTouchMove);
         app.off('touchend:passive', handleTouchEnd);
       } else {
-        $targetEl.off('mouseenter', handleMouseEnter);
-        $targetEl.off('mouseleave', handleMouseLeave);
+        $targetEl.off((Support.pointerEvents ? 'pointerenter' : 'mouseenter'), handleMouseEnter);
+        $targetEl.off((Support.pointerEvents ? 'pointerleave' : 'mouseleave'), handleMouseLeave);
       }
     };
 
@@ -114,6 +135,7 @@ class Tooltip extends Framework7Class {
   position(targetEl) {
     const tooltip = this;
     const { $el, app } = tooltip;
+    const tooltipOffset = tooltip.params.offset || 0;
     $el.css({ left: '', top: '' });
     const $targetEl = $(targetEl || tooltip.targetEl);
     const [width, height] = [$el.width(), $el.height()];
@@ -142,13 +164,13 @@ class Tooltip extends Framework7Class {
     // Top Position
     let position = 'top';
 
-    if (height < targetOffsetTop) {
+    if (height + tooltipOffset < targetOffsetTop) {
       // On top
-      top = targetOffsetTop - height;
+      top = targetOffsetTop - height - tooltipOffset;
     } else if (height < app.height - targetOffsetTop - targetHeight) {
       // On bottom
       position = 'bottom';
-      top = targetOffsetTop + targetHeight;
+      top = targetOffsetTop + targetHeight + tooltipOffset;
     } else {
       // On middle
       position = 'middle';
@@ -186,10 +208,10 @@ class Tooltip extends Framework7Class {
     const $aroundEl = $(aroundEl);
     tooltip.visible = true;
     tooltip.opened = true;
-    $targetEl.trigger('tooltip:show', tooltip);
-    $el.trigger('tooltip:show', tooltip);
+    $targetEl.trigger('tooltip:show');
+    $el.trigger('tooltip:show');
     if ($aroundEl.length && $aroundEl[0] !== $targetEl[0]) {
-      $aroundEl.trigger('tooltip:show', tooltip);
+      $aroundEl.trigger('tooltip:show');
     }
     tooltip.emit('local::show tooltipShow', tooltip);
     $el.removeClass('tooltip-out').addClass('tooltip-in');
@@ -201,8 +223,8 @@ class Tooltip extends Framework7Class {
     const { $el, $targetEl } = tooltip;
     tooltip.visible = false;
     tooltip.opened = false;
-    $targetEl.trigger('tooltip:hide', tooltip);
-    $el.trigger('tooltip:hide', tooltip);
+    $targetEl.trigger('tooltip:hide');
+    $el.trigger('tooltip:hide');
     tooltip.emit('local::hide tooltipHide', tooltip);
     $el.addClass('tooltip-out').removeClass('tooltip-in');
     return tooltip;
@@ -243,7 +265,7 @@ class Tooltip extends Framework7Class {
   destroy() {
     const tooltip = this;
     if (!tooltip.$targetEl || tooltip.destroyed) return;
-    tooltip.$targetEl.trigger('tooltip:beforedestroy', tooltip);
+    tooltip.$targetEl.trigger('tooltip:beforedestroy');
     tooltip.emit('local::beforeDestroy tooltipBeforeDestroy', tooltip);
     tooltip.$el.remove();
     delete tooltip.$targetEl[0].f7Tooltip;

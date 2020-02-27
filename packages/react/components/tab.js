@@ -1,5 +1,4 @@
 import React from 'react';
-import events from '../utils/events';
 import f7 from '../utils/f7';
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
@@ -19,8 +18,7 @@ class F7Tab extends React.Component {
     })();
 
     (() => {
-      this.onTabShowBound = this.onTabShow.bind(this);
-      this.onTabHideBound = this.onTabHide.bind(this);
+      Utils.bindMethods(this, ['onTabShow', 'onTabHide']);
     })();
   }
 
@@ -29,12 +27,14 @@ class F7Tab extends React.Component {
     this.$f7.tab.show(this.refs.el, animate);
   }
 
-  onTabShow(event) {
-    this.dispatchEvent('tab:show tabShow', event);
+  onTabShow(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('tab:show tabShow', el);
   }
 
-  onTabHide(event) {
-    this.dispatchEvent('tab:hide tabHide', event);
+  onTabHide(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('tab:hide tabHide', el);
   }
 
   render() {
@@ -69,19 +69,23 @@ class F7Tab extends React.Component {
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
-
-    if (el) {
-      el.addEventListener('tab:show', self.onTabShowBound);
-      el.addEventListener('tab:hide', self.onTabHideBound);
-    }
-
     self.setState({
       tabContent: null
     });
     self.$f7ready(() => {
+      self.$f7.on('tabShow', self.onTabShow);
+      self.$f7.on('tabHide', self.onTabHide);
+      self.eventTargetEl = el;
       self.routerData = {
         el,
-        component: self
+        component: self,
+
+        setTabContent(tabContent) {
+          self.setState({
+            tabContent
+          });
+        }
+
       };
       f7.routers.tabs.push(self.routerData);
     });
@@ -89,23 +93,24 @@ class F7Tab extends React.Component {
 
   componentWillUnmount() {
     const self = this;
-    const el = self.refs.el;
 
-    if (el) {
-      el.removeEventListener('tab:show', self.onTabShowBound);
-      el.removeEventListener('tab:hide', self.onTabHideBound);
+    if (self.$f7) {
+      self.$f7.off('tabShow', self.onTabShow);
+      self.$f7.off('tabHide', self.onTabHide);
     }
 
     if (!self.routerData) return;
     f7.routers.tabs.splice(f7.routers.tabs.indexOf(self.routerData), 1);
     self.routerData = null;
+    self.eventTargetEl = null;
     delete self.routerData;
+    delete self.eventTargetEl;
   }
 
   componentDidUpdate() {
     const self = this;
     if (!self.routerData) return;
-    events.emit('tabRouterDidUpdate', self.routerData);
+    f7.events.emit('tabRouterDidUpdate', self.routerData);
   }
 
   get slots() {

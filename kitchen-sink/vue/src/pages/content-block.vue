@@ -27,7 +27,7 @@
     </f7-block>
 
     <f7-block-title>Tablet Inset</f7-block-title>
-    <f7-block strong tablet-inset>
+    <f7-block strong medium-inset>
       <p>Donec et nulla auctor massa pharetra adipiscing ut sit amet sem. Suspendisse molestie velit vitae mattis tincidunt. Ut sit amet quam mollis, vulputate turpis vel, sagittis felis. </p>
     </f7-block>
 
@@ -55,6 +55,16 @@
       <p>Here comes paragraph within content block. Donec et nulla auctor massa pharetra adipiscing ut sit amet sem. Suspendisse molestie velit vitae mattis tincidunt. Ut sit amet quam mollis, vulputate turpis vel, sagittis felis. </p>
     </f7-block>
     <f7-block-footer>Block Footer</f7-block-footer>
+
+    <f7-block-title large>Block Title Large</f7-block-title>
+    <f7-block strong>
+      <p>Donec et nulla auctor massa pharetra adipiscing ut sit amet sem. Suspendisse molestie velit vitae mattis tincidunt. Ut sit amet quam mollis, vulputate turpis vel, sagittis felis. </p>
+    </f7-block>
+
+    <f7-block-title medium>Block Title Medium</f7-block-title>
+    <f7-block strong>
+      <p>Donec et nulla auctor massa pharetra adipiscing ut sit amet sem. Suspendisse molestie velit vitae mattis tincidunt. Ut sit amet quam mollis, vulputate turpis vel, sagittis felis. </p>
+    </f7-block>
   </f7-page>
 </template>
 <script>

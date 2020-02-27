@@ -48,6 +48,7 @@ const Toolbar = {
     app.toolbar.setHighlight(tabbarEl);
   },
   hide(el, animate = true) {
+    const app = this;
     const $el = $(el);
     if ($el.hasClass('toolbar-hidden')) return;
     const className = `toolbar-hidden${animate ? ' toolbar-transitioning' : ''}`;
@@ -55,8 +56,11 @@ const Toolbar = {
       $el.removeClass('toolbar-transitioning');
     });
     $el.addClass(className);
+    $el.trigger('toolbar:hide');
+    app.emit('toolbarHide', $el[0]);
   },
   show(el, animate = true) {
+    const app = this;
     const $el = $(el);
     if (!$el.hasClass('toolbar-hidden')) return;
     if (animate) {
@@ -66,6 +70,8 @@ const Toolbar = {
       });
     }
     $el.removeClass('toolbar-hidden');
+    $el.trigger('toolbar:show');
+    app.emit('toolbarShow', $el[0]);
   },
   initHideToolbarOnScroll(pageEl) {
     const app = this;
@@ -89,8 +95,11 @@ const Toolbar = {
     let reachEnd;
     let action;
     let toolbarHidden;
-    function handleScroll() {
+    function handleScroll(e) {
       const scrollContent = this;
+      if (e && e.target && e.target !== scrollContent) {
+        return;
+      }
       if ($pageEl.hasClass('page-previous')) return;
       currentScrollTop = scrollContent.scrollTop;
       scrollHeight = scrollContent.scrollHeight;
@@ -201,6 +210,14 @@ export default {
       app.root.find('.tabbar, .tabbar-labels').each((index, tabbarEl) => {
         app.toolbar.init(tabbarEl);
       });
+    },
+  },
+  vnode: {
+    tabbar: {
+      insert(vnode) {
+        const app = this;
+        app.toolbar.init(vnode.elm);
+      },
     },
   },
 };

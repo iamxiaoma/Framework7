@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Tooltip as TooltipNamespace } from 'framework7/components/tooltip/tooltip';
 import { SmartSelect as SmartSelectNamespace } from 'framework7/components/smart-select/smart-select';
 
 declare namespace F7ListItem {
@@ -13,10 +14,10 @@ declare namespace F7ListItem {
     subtitle? : string | number
     header? : string | number
     footer? : string | number
+    tooltip? : string
+    tooltipTrigger? : string
     link? : boolean | string
     target? : string
-    noFastclick? : boolean
-    noFastClick? : boolean
     after? : string | number
     badge? : string | number
     badgeColor? : string
@@ -27,6 +28,7 @@ declare namespace F7ListItem {
     swipeout? : boolean
     swipeoutOpened? : boolean
     sortable? : boolean
+    sortableOpposite? : boolean
     accordionItem? : boolean
     accordionItemOpened? : boolean
     smartSelect? : boolean
@@ -37,14 +39,13 @@ declare namespace F7ListItem {
     radio? : boolean
     checked? : boolean
     defaultChecked? : boolean
+    indeterminate? : boolean
     name? : string
     value? : string | number | Array<any>
     readonly? : boolean
     required? : boolean
     disabled? : boolean
-    itemInput? : boolean
-    itemInputWithInfo? : boolean
-    inlineLabel? : boolean
+    virtualListIndex? : number
     color? : string
     colorTheme? : string
     textColor? : string
@@ -57,18 +58,22 @@ declare namespace F7ListItem {
     force? : boolean
     animate? : boolean
     ignoreCache? : boolean
-    pageName? : string
     reloadCurrent? : boolean
     reloadAll? : boolean
     reloadPrevious? : boolean
+    reloadDetail? : boolean
     routeTabId? : string
     view? : string
+    routeProps? : Object
+    preventRouter? : boolean
+    transition? : string
     searchbarEnable? : boolean | string
     searchbarDisable? : boolean | string
     searchbarClear? : boolean | string
     searchbarToggle? : boolean | string
     panelOpen? : boolean | string
     panelClose? : boolean | string
+    panelToggle? : boolean | string
     popupOpen? : boolean | string
     popupClose? : boolean | string
     actionsOpen? : boolean | string
@@ -82,37 +87,50 @@ declare namespace F7ListItem {
     sortableEnable? : boolean | string
     sortableDisable? : boolean | string
     sortableToggle? : boolean | string
+    cardOpen? : boolean | string
+    cardPreventOpen? : boolean | string
+    cardClose? : boolean | string
+    menuClose? : boolean | string
     onClick? : (event?: any) => void
-    onSwipeoutDeleted? : (event?: any) => void
-    onSwipeoutDelete? : (event?: any) => void
-    onSwipeoutClose? : (event?: any) => void
-    onSwipeoutClosed? : (event?: any) => void
-    onSwipeoutOpen? : (event?: any) => void
-    onSwipeoutOpened? : (event?: any) => void
-    onSwipeout? : (event?: any) => void
-    onAccordionClose? : (event?: any) => void
-    onAccordionClosed? : (event?: any) => void
-    onAccordionOpen? : (event?: any) => void
-    onAccordionOpened? : (event?: any) => void
+    onSwipeoutOverswipeEnter? : (...args: any[]) => void
+    onSwipeoutOverswipeExit? : (...args: any[]) => void
+    onSwipeoutDeleted? : (...args: any[]) => void
+    onSwipeoutDelete? : (...args: any[]) => void
+    onSwipeoutClose? : (...args: any[]) => void
+    onSwipeoutClosed? : (...args: any[]) => void
+    onSwipeoutOpen? : (...args: any[]) => void
+    onSwipeoutOpened? : (...args: any[]) => void
+    onSwipeout? : (progress?: any) => void
+    onAccordionBeforeClose? : (prevent?: any) => void
+    onAccordionClose? : (...args: any[]) => void
+    onAccordionClosed? : (...args: any[]) => void
+    onAccordionBeforeOpen? : (prevent?: any) => void
+    onAccordionOpen? : (...args: any[]) => void
+    onAccordionOpened? : (...args: any[]) => void
     onChange? : (event?: any) => void
     onInput? : (event?: any) => void
   }
 }
 declare class F7ListItem extends React.Component<F7ListItem.Props, {}> {
   onClick(event? : any) : unknown
-  onSwipeoutDeleted(event? : any) : unknown
-  onSwipeoutDelete(event? : any) : unknown
-  onSwipeoutClose(event? : any) : unknown
-  onSwipeoutClosed(event? : any) : unknown
-  onSwipeoutOpen(event? : any) : unknown
-  onSwipeoutOpened(event? : any) : unknown
-  onSwipeout(event? : any) : unknown
-  onAccClose(event? : any) : unknown
-  onAccClosed(event? : any) : unknown
-  onAccOpen(event? : any) : unknown
-  onAccOpened(event? : any) : unknown
+  onSwipeoutOverswipeEnter(el? : any) : unknown
+  onSwipeoutOverswipeExit(el? : any) : unknown
+  onSwipeoutDeleted(el? : any) : unknown
+  onSwipeoutDelete(el? : any) : unknown
+  onSwipeoutClose(el? : any) : unknown
+  onSwipeoutClosed(el? : any) : unknown
+  onSwipeoutOpen(el? : any) : unknown
+  onSwipeoutOpened(el? : any) : unknown
+  onSwipeout(el? : any, progress? : any) : unknown
+  onAccBeforeClose(el? : any, prevent? : any) : unknown
+  onAccClose(el? : any) : unknown
+  onAccClosed(el? : any) : unknown
+  onAccBeforeOpen(el? : any, prevent? : any) : unknown
+  onAccOpen(el? : any) : unknown
+  onAccOpened(el? : any) : unknown
   onChange(event? : any) : unknown
   onInput(event? : any) : unknown
+  f7Tooltip: TooltipNamespace.Tooltip
   f7SmartSelect: SmartSelectNamespace.SmartSelect
 }
 export default F7ListItem;

@@ -16,6 +16,7 @@ import F7ActionsGroup from './components/actions-group';
 import F7ActionsLabel from './components/actions-label';
 import F7Actions from './components/actions';
 import F7App from './components/app';
+import F7Appbar from './components/appbar';
 import F7Badge from './components/badge';
 import F7BlockFooter from './components/block-footer';
 import F7BlockHeader from './components/block-header';
@@ -29,17 +30,18 @@ import F7Card from './components/card';
 import F7Checkbox from './components/checkbox';
 import F7Chip from './components/chip';
 import F7Col from './components/col';
+import F7FabBackdrop from './components/fab-backdrop';
 import F7FabButton from './components/fab-button';
 import F7FabButtons from './components/fab-buttons';
 import F7Fab from './components/fab';
 import F7Gauge from './components/gauge';
 import F7Icon from './components/icon';
 import F7Input from './components/input';
-import F7Label from './components/label';
 import F7Link from './components/link';
 import F7ListButton from './components/list-button';
 import F7ListGroup from './components/list-group';
 import F7ListIndex from './components/list-index';
+import F7ListInput from './components/list-input';
 import F7ListItemCell from './components/list-item-cell';
 import F7ListItemContent from './components/list-item-content';
 import F7ListItemRow from './components/list-item-row';
@@ -47,6 +49,10 @@ import F7ListItem from './components/list-item';
 import F7List from './components/list';
 import F7LoginScreenTitle from './components/login-screen-title';
 import F7LoginScreen from './components/login-screen';
+import F7MenuDropdownItem from './components/menu-dropdown-item';
+import F7MenuDropdown from './components/menu-dropdown';
+import F7MenuItem from './components/menu-item';
+import F7Menu from './components/menu';
 import F7Message from './components/message';
 import F7MessagebarAttachment from './components/messagebar-attachment';
 import F7MessagebarAttachments from './components/messagebar-attachments';
@@ -58,6 +64,7 @@ import F7MessagesTitle from './components/messages-title';
 import F7Messages from './components/messages';
 import F7NavLeft from './components/nav-left';
 import F7NavRight from './components/nav-right';
+import F7NavTitleLarge from './components/nav-title-large';
 import F7NavTitle from './components/nav-title';
 import F7Navbar from './components/navbar';
 import F7PageContent from './components/page-content';
@@ -75,7 +82,8 @@ import F7Row from './components/row';
 import F7Searchbar from './components/searchbar';
 import F7Segmented from './components/segmented';
 import F7Sheet from './components/sheet';
-import F7Statusbar from './components/statusbar';
+import F7SkeletonBlock from './components/skeleton-block';
+import F7SkeletonText from './components/skeleton-text';
 import F7Stepper from './components/stepper';
 import F7Subnavbar from './components/subnavbar';
 import F7SwipeoutActions from './components/swipeout-actions';
@@ -84,12 +92,21 @@ import F7SwiperSlide from './components/swiper-slide';
 import F7Swiper from './components/swiper';
 import F7Tab from './components/tab';
 import F7Tabs from './components/tabs';
+import F7TextEditor from './components/text-editor';
 import F7Toggle from './components/toggle';
 import F7Toolbar from './components/toolbar';
+import F7TreeviewItem from './components/treeview-item';
+import F7Treeview from './components/treeview';
 import F7View from './components/view';
 import F7Views from './components/views';
 
-declare interface Framework7Extensions {
+export interface Framework7Theme {
+  ios: boolean
+  md: boolean
+  aurora: boolean
+}
+
+export interface Framework7Extensions {
   /** Main Framework7's initialized instance. It allows you to use any of Framework7 APIs */
   $f7: Framework7
   /** Callback function that will be executed when Framework7 fully intialized. Useful to use in components when you need to access Framework7 API and to be sure it is ready. So it is safe to put all Framework7 related logic into this callback. As an argument it receives initialized Framework7 instance */
@@ -109,14 +126,18 @@ declare interface Framework7Extensions {
   /** Access to Utils object with few useful utilities */
   $utils: Utils
   /** Object with boolean properties with information about currently used theme (iOS or MD) */
-  $theme: {
-    ios: boolean
-    md: boolean
-  }
+  $theme: Framework7Theme
 }
 
+/** Object with boolean properties with information about currently used theme (iOS or MD) */
+declare const theme : Framework7Theme;
+/** Main Framework7's initialized instance. It allows you to use any of Framework7 APIs */
+declare const f7 : Framework7;
+/** Callback function that will be executed when Framework7 fully intialized. Useful to use in components when you need to access Framework7 API and to be sure it is ready. So it is safe to put all Framework7 related logic into this callback. As an argument it receives initialized Framework7 instance */
+declare const f7ready: (onF7Ready: (f7: Framework7) => void) => void;
+
 declare module 'react' {
-  interface Component extends Framework7Extensions {}
+  interface Component extends Partial<Framework7Extensions> {}
 }
 
 export {
@@ -138,6 +159,8 @@ export {
   F7Actions as Actions,
   F7App,
   F7App as App,
+  F7Appbar,
+  F7Appbar as Appbar,
   F7Badge,
   F7Badge as Badge,
   F7BlockFooter,
@@ -164,6 +187,8 @@ export {
   F7Chip as Chip,
   F7Col,
   F7Col as Col,
+  F7FabBackdrop,
+  F7FabBackdrop as FabBackdrop,
   F7FabButton,
   F7FabButton as FabButton,
   F7FabButtons,
@@ -176,8 +201,6 @@ export {
   F7Icon as Icon,
   F7Input,
   F7Input as Input,
-  F7Label,
-  F7Label as Label,
   F7Link,
   F7Link as Link,
   F7ListButton,
@@ -186,6 +209,8 @@ export {
   F7ListGroup as ListGroup,
   F7ListIndex,
   F7ListIndex as ListIndex,
+  F7ListInput,
+  F7ListInput as ListInput,
   F7ListItemCell,
   F7ListItemCell as ListItemCell,
   F7ListItemContent,
@@ -200,6 +225,14 @@ export {
   F7LoginScreenTitle as LoginScreenTitle,
   F7LoginScreen,
   F7LoginScreen as LoginScreen,
+  F7MenuDropdownItem,
+  F7MenuDropdownItem as MenuDropdownItem,
+  F7MenuDropdown,
+  F7MenuDropdown as MenuDropdown,
+  F7MenuItem,
+  F7MenuItem as MenuItem,
+  F7Menu,
+  F7Menu as Menu,
   F7Message,
   F7Message as Message,
   F7MessagebarAttachment,
@@ -222,6 +255,8 @@ export {
   F7NavLeft as NavLeft,
   F7NavRight,
   F7NavRight as NavRight,
+  F7NavTitleLarge,
+  F7NavTitleLarge as NavTitleLarge,
   F7NavTitle,
   F7NavTitle as NavTitle,
   F7Navbar,
@@ -256,8 +291,10 @@ export {
   F7Segmented as Segmented,
   F7Sheet,
   F7Sheet as Sheet,
-  F7Statusbar,
-  F7Statusbar as Statusbar,
+  F7SkeletonBlock,
+  F7SkeletonBlock as SkeletonBlock,
+  F7SkeletonText,
+  F7SkeletonText as SkeletonText,
   F7Stepper,
   F7Stepper as Stepper,
   F7Subnavbar,
@@ -274,14 +311,29 @@ export {
   F7Tab as Tab,
   F7Tabs,
   F7Tabs as Tabs,
+  F7TextEditor,
+  F7TextEditor as TextEditor,
   F7Toggle,
   F7Toggle as Toggle,
   F7Toolbar,
   F7Toolbar as Toolbar,
+  F7TreeviewItem,
+  F7TreeviewItem as TreeviewItem,
+  F7Treeview,
+  F7Treeview as Treeview,
   F7View,
   F7View as View,
   F7Views,
   F7Views as Views
+}
+
+export {
+  theme,
+  theme as $theme,
+  f7,
+  f7 as $f7,
+  f7ready,
+  f7ready as $f7ready,
 }
 
 declare const Framework7React: Framework7Plugin;

@@ -1,6 +1,1282 @@
-<a href="https://www.patreon.com/vladimirkharlampidi"><img src="https://cdn.framework7.io/i/support-badge.png" height="20"></a>
+<a href="https://www.patreon.com/vladimirkharlampidi"><img src="https://framework7.io/i/support-badge.png" height="20"></a>
 
 # Change Log
+
+# [v5.4.5](https://github.com/framework7io/framework7/compare/v5.4.2...v5.4.5) - February 21, 2020
+  * Core
+    * FAB (Floatin Action Button)
+      * Now it supports backdrop, by adding `<div clas="fab-backdrop"></div>` element on same level as FAB element
+    * Page
+      * Added custom CSS properties for custom transitions durations: `--f7-page-parallax-transition-duration`, `--f7-page-cover-transition-duration`, `--f7-page-dive-transition-duration`, `--f7-page-fade-transition-duration`, `--f7-page-flip-transition-duration`, `--f7-page-push-transition-duration`
+    * Preloader
+      * New methods `app.preloader.showIn(el, color)` and `app.preloader.hideIn(el)` to show/hide preloader overlay in specific element
+    * Request
+      * Now it uses "native" XHR timeout
+  * React, Vue, Svelte
+    * Added `<FabBackdrop />` component
+  * Minor fixes
+
+# [v5.4.2](https://github.com/framework7io/framework7/compare/v5.4.1...v5.4.2) - February 16, 2020
+  * Core
+    * Card
+      * Fixed issue with expandable card overflow on iOS devices
+      * Fixed expandable card transition in RTL
+    * Text Editor
+      * Fixed issue when keyboard toolbar stays opened on navigating to another page
+  * Minor fixes
+
+# [v5.4.1](https://github.com/framework7io/framework7/compare/v5.4.0...v5.4.1) - February 8, 2020
+  * Core
+    * Touch
+      * Fully switch to `pointer` events where supported
+    * Tooltip
+      * New `trigger` parameter to define how to open Tooltip - on `hover` (default) or on `click`
+    * Swiper - updated to latest 5.3.1
+      * Fixed issue when slider could stuck after last slide (#3414)
+      * Added `label` to list of form events to keep clicks on it (#3407)
+    * Request
+      * Now it won't set headers with `undefined` value
+  * Vue/React/Svelte
+    * Tooltip
+      * New `tooltipTrigger` prop for `Button`, `FabButton`, `Fab`, `Icon`, `Link`, `ListButton` and `ListItem` components
+  * Minor fixes
+
+# [v5.4.0](https://github.com/framework7io/framework7/compare/v5.3.2...v5.4.0) - January 29, 2020
+  * Framework7 Svelte 🎉
+  * Core
+    * Autocomplete
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Calendar
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Card
+      * New `scrollabelEl` parameter that allows to define child scrollable element (if used) to correctly handle expandable card close with touch move
+    * Color Picker
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Photo Browser
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Picker
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+      * New `scrollToEl` parameter to specify cutom elements to scroll to on open
+    * Smart Select
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+  * React/Vue
+    * Card
+      * New `scrollabelEl` prop that allows to define child scrollable element (if used) to correctly handle expandable card close with touch move
+  * Lot of minor fixes
+
+# [v5.4.0-beta.3](https://github.com/framework7io/framework7/compare/v5.4.0-beta.2...v5.4.0-beta.3) - January 25, 2020
+  * Core
+    * Autocomplete
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Calendar
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Color Picker
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Photo Browser
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Picker
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+    * Smart Select
+      * Now it falls back to not "routable" modal when there is no View passed or it can't be found.
+
+# [v5.4.0-beta.2](https://github.com/framework7io/framework7/compare/v5.4.0-beta.1...v5.4.0-beta.2) - January 25, 2020
+  * Fix missing packages
+
+# [v5.4.0-beta.1](https://github.com/framework7io/framework7/compare/v5.3.2...v5.4.0-beta.1) - January 25, 2020
+  * Card
+    * New `scrollabelEl` parameter that allows to define child scrollable element (if used) to correctly handle expandable card close with touch move
+  * React/Vue
+    * Card
+      * New `scrollabelEl` prop that allows to define child scrollable element (if used) to correctly handle expandable card close with touch move
+  * Framework7 Svelte 🎉
+  * Minor fixes
+
+# [v5.3.2](https://github.com/framework7io/framework7/compare/v5.3.0...v5.3.2) - January 18, 2020
+  * Core
+    * Component
+      * Now main app component will be created on app init respecting cordova's deviceready event
+    * Toolbar
+      * Fixed Tabbar init when it used in main app component
+    * Picker
+      * Added `backdrop` parameter support
+    * Swiper updated to latest 5.3.0
+      * Core
+        * New `slidesPerGroupSkip` behavior (#3361)
+        * New ratio-based breakpoints (#3389)
+        * Added SCSS interpolation (#3373, #3374)
+      * Mousehweel
+        * Fixed issue when it can fail on load (#3383)
+    * Touch
+      * Fixed issue when it could prevent Leaflet map controls on iOS 12.x
+  * Vue/React
+    * Navbar - fixed issue when it could disappear with custom transitions
+  * Minor fixes
+
+# [v5.3.0](https://github.com/framework7io/framework7/compare/v5.2.0...v5.3.0) - January 3, 2020
+  * Core
+    * Card
+      * Increased default `z-index` for expandable card
+    * Dialog
+      * Added support for `backdrop` parameter to be able to disable backdrop
+    * Sheet
+      * New `sheet.setSwipeSet()` method to update swipe step position if content was modified manually
+    * Tooltip
+      * New `offset` parameter to add extra offset to tooltip position
+    * Touch
+      * New `touch.activeStateOnMouseMove` boolean app parameter. If enabled it will not remove "active state" from clicked elements on mouse move
+    * Router Component
+      * Fixed issue with parsing CSS media queries in scoped styles
+      * Now it is possible to use whole app layout as a component
+        * Main app component can be specified in app `component` or `componentUrl` parameter
+        * `app.rootComponent` now refers to main app component instance
+        * If main app component is used, then `$root` in components refers to main app component instance
+    * Minor fixes
+
+# [v5.2.0](https://github.com/framework7io/framework7/compare/v5.1.3...v5.2.0) - December 8, 2019
+  * Core
+    * Accordion
+      * It is now possible to use accordion chevron on opposite side (on left in LTR) by adding `accordion-opposite` class to accordion list
+    * Calendar
+      * Fixed issue when custom `dateFormat` parsed twice (#3434)
+      * Added custom time tokens support to `dateFormat` when  `timePicker` is enabled: `HH`, `H`, `hh`, `h`, `:mm`, `:m`, `:ss`, `:s`, `A`, `a` (#3439)
+    * Dialog
+      * New `app.dialog.autoFocus` boolean parameter to auto focus predefined dialog inputs on open (valid for predefined Prompt, Login and Password dialogs). Enabled by default
+      * Added hover and pressed state for dialog buttons in Aurora theme
+    * Panel
+      * All panel instance events now have Panel instance as argument (#3404)
+    * Photo Browser
+      * Size navbar after updating count text (`1 of 4`) (#3420)
+    * Router Component
+      * Fixed issue when calling `$setState` recursively didn't work as expected (#3421)
+    * Smart Select
+      * Fixed issue calling scrollToSelectedItem caused error when there were no any items (#3412)
+    * Sortable
+      * It is now possible to make sortable handler appear on opposite side (on left in LTR) adding `sortable-opposite` class to sortable list
+  * Phenome
+    * Added lock to not throw and error and ignore further attempts to init Framework7 (for example when App component unmounted and mounted again)
+    * List
+      * New boolean `sortableOpposite` prop to render sortable handler on opposite side
+      * New boolean `accordionOpposite` prop to render accordion checron icon on opposite side
+    * Navbar
+      * Fixed issue when `no-shadow` and `no-hairline` props didn't have expected effect (#3436)
+      * Fixed issue when it was loosing required position classes in Master Detail layout
+  * Minor fixes
+
+# [v5.1.3](https://github.com/framework7io/framework7/compare/v5.1.2...v5.1.3) - November 17, 2019
+  * Core
+    * Fixed issue with setting wrong class on page
+
+# [v5.1.2](https://github.com/framework7io/framework7/compare/v5.1.1...v5.1.2) - November 17, 2019
+  * Core
+    * Fixed issue when `.once` could be called more than once (#3322)
+    * Navbar
+      * Fixed issue when `scrollTopOnTitleClick` didn't work in iOS theme
+    * Swiper - updated to latest 5.2.1
+      * Core
+        * New loop events `beforeLoopFix` and `loopFix`
+        * New parameter `updateOnWindowResize` (by default `true`) that will update/recalc swiper on window resize/orientationchange
+      * Mousewheel
+        * Fixed scroll wheel unwanted frozen effect (#3328)
+      * Thumbs
+        * New `multipleActiveThumbs` (by default `true`) option to control whether multiple thumbnail slides may get activated or not.
+  * Phenome
+    * Navbar
+      * Fixed issue when dynamically updating its classes/props could break its layout
+  * Minor fixes
+
+# [v5.1.1](https://github.com/framework7io/framework7/compare/v5.1.0...v5.1.1) - November 3, 2019
+  * Core
+    * Calendar
+      * Fixed `d`, `m`, `D`, `M` tokens parsing in custom date format
+    * Photo Browser
+      * Fixed issue when opening PhotoBrowser on not first slide can cause empty text in its Navbar
+    * Router Component
+      * New syntax to use custom components in strict HTML layout using `component` attribute, e.g. `<tr component="my-table-row"></tr>` instead of `<my-table-row></my-table-row>`
+  * Minor fixes
+
+# [v5.1.0](https://github.com/framework7io/framework7/compare/v5.0.5...v5.1.0) - October 27, 2019
+  * Core
+    * Grid
+      * New resizable grid
+    * Router Component
+      * Fixed issue when triggering update could break scoped styles
+      * Fixed update callbacks queue
+    * Swiper - updated to latest 5.2.0
+      * Core
+        * New `centeredSlidesBounds` parameter that when enabled will keep first and last slides at bounds
+        * Fixed issue when `freeMode` could break position on resize (#2708, #3303)
+        * Fixed transitin duration issue with `freeModeSticky` (#3302)
+        * Fixed issue with wrong row/column if not full groups (#3294)
+        * Fixed issue when `watchOverflow` and `slidesOffsetBefore`/`slidesOffsetAfter` couldn't work together (#3291)
+      * Mousewheel
+        * Faster & smoother mousewheel inertial scrolling (#3304)
+  * Phenome
+    * Row/Col
+      * New `resizable` components properties to enable resizable grid
+
+# [v5.0.5](https://github.com/framework7io/framework7/compare/v5.0.4...v5.0.5) - October 16, 2019
+  * Core
+    * Toolbar
+      * Now it fires `toolbar:show` and `toolbar:hide` events on show/hide
+    * Card
+      * Now it should consider `hideStatusbarOnOpen` when calculating expandable card size
+    * PhotoBrowser
+      * Fixed issue with double preloader
+      * Fixed issue when double tap to zoom also toggled exposition
+    * Router Component
+      * Fixed issue when `updated` hook had wrong context
+    * Sheet Modal
+      * Tweaked Sheet dark theme background color to have more contrast with page
+    * Input
+      * Added more events when resizable textarea's size should be recalculated
+    * Swiper updated to latest v5.1.0
+      * Core
+        * Fixed issues with touch on iOS 13
+        * New `translateTo` method
+      * Pagination
+        * Improved dynamic bullets behavior when `loop: true`
+      * Zoom
+        * Fixed issue with pinch to zoom on Android
+  * Phenome
+    * Page
+      * Fixed issue when pages can stuck on swipe back
+    * TextEditor
+      * Fixed issue with not working component events
+
+# [v5.0.4](https://github.com/framework7io/framework7/compare/v5.0.3...v5.0.4) - October 9, 2019
+  * Core
+    * Messages
+      * Fixed iOS dark theme Messages colors
+    * Text Editor
+      * Fixed TypeScript definitions error
+
+# [v5.0.3](https://github.com/framework7io/framework7/compare/v5.0.2...v5.0.3) - October 8, 2019
+  * Core
+    * Input
+      * `scrollIntoViewOnFocus` functionality now considers the case when input is inside of expandable card
+    * TextEditor
+      * Prevent parent form submission on editor button click
+  * Phenome
+    * Page
+      * Fixed issue when page after can stay "blocked" after expandable card close
+
+# [v5.0.2](https://github.com/framework7io/framework7/compare/v5.0.1...v5.0.2) - October 7, 2019
+  * Phenome
+    * ListGroup
+      * Fixed issue breaking this component
+
+# [v5.0.1](https://github.com/framework7io/framework7/compare/v5.0.0...v5.0.1) - October 7, 2019
+  * Core
+    * Tooltip
+      * Fixed issue when Tooltip stays hidden on desktop
+
+# [v5.0.0](https://github.com/framework7io/framework7/compare/v4.5.2...v5.0.0) - October 7, 2019
+
+## CSS & Theming
+
+* iOS Dark theme colors reworked to match iOS 13 dark theme colors
+* Most of CSS variables related to colors (especially "gray" colors) reworked to `rgba` colors to appear better on custom designs. It is related to text colors, background colors, icons colors, borders and hairlines colors.
+* Most of iOS theme `15px` sizes (list/blocks paddings and margins) are changed to `16px` instead
+* New CSS breakpoints. Now there are new names for app sizes instead of `tablet-` and `desktop-` before. Now they are:
+  * `xsmall` - width more than `480px`
+  * `small` - width more than `568px`
+  * `medium` - width more than `768px`
+  * `large` - width more than `1024px`
+  * `xlarge` - width more than `1200px`
+* Dark Theme can now be excluded from bundle (custom build)
+* Light Theme can now also be excluded from bundle (custom build)
+
+## Core Package
+* Now core package contains new `framework7-lite.js`, `framework7-lite.bundle.js` scripts. Difference with usual scripts is that these "lite" versions don't contain Component (Router Component) functionality. This version is recommended to use with F7-Vue/React versions where you anyway use Vue/React components instead.
+
+## Core APIs & Modules
+
+* **iOS Translucent**
+  * New `iosTranslucentBars` app parameter to enable translucent effect (blur background) on navigation bars (by default enabled)
+  * New `iosTranslucentModals` app parameter to enable translucent effect (blur background) on modals (Dialog, Popover, Actions) (by default enabled)
+* **Connection API** (new)
+  * New F7 instance's `online` boolean property that is `true` when app online and `false` otherwise
+  * Now app emits `online` event when app goes online
+  * Now app emits `offline` event when app goes offline
+  * Now app emits `connection` event on app connection change
+* **Device**
+  * `.needsStatusbarOverlay()` method has been removed
+  * `.statusbar` property and detection has been removed
+  * `.iphoneX` property and detection has been removed
+  * `.windowsPhone` property and detection has been removed
+  * It doesn't set `device-ios-gt-{version}` classes on `html` element anymore
+  * It doesn't set `device-{os}-{version}` classes on `html` element anymore
+  * It doesn't set `retina` class on `html` element anymore
+* **Request**
+  * Request "promise" methods now will be resolved with `{ data, status, xhr }` object (rather than with just `data` like before)
+  * Request "promise" methods now will be rejected with `{ message, status, xhr }` object (rather than with just `status` like before)
+* **Statusbar**
+    * Statusbar overlay element (`<div class="statusbar">`) and related functionality has been removed in favor of using that space by navigation bars and other elements to provide true full-screen experience and customization. Statusbar cordova's API is there as it was before.
+* **Touch**
+  * Fast clicks functionality has been completely removed. Following `app.touch`' parameters are not supported anymore: `fastClicks`, `fastClicksDistanceThreshold`, `fastClicksDelayBetweenClicks` and `fastClicksExclude`
+  * Added support to disable "active state" on specific elements by adding `no-active-state` class to such elements
+* **View/Router**
+  * New `loadInitialPage` (boolean) parameter. When enabled, and there is no children pages inside of the View. It will load initial page that matches to initial URL (default true)
+  * New `componentCache` (boolean) parameter. When enabled, Router will cache components specified via `componentUrl` (default true)
+  * Removed `.clearPreviousPages()` method. Now there is only `.clearPreviousHistory()` that removes both history and pages from DOM
+  * Root (first) detail page (in master-detail layout) will now have extra `page-master-detail-root`
+  * Root (first) detail navbar (in master-detail layout) will now have extra `navbar-master-detail-root`.
+  * Added custom page transitions support and 8 new page transitions: `f7-circle`, `f7-cover`, `f7-cover-v`, `f7-dive`, `f7-fade`, `f7-flip`, `f7-parallax`, `f7-push`
+  * Custom transition can now also be specified via `data-transition` attribute on links
+  * Route declaration now supports new `viewName` property. And whatever View such route requested, it will be loaded in View specified in `viewName` property.
+  * Route declaration now supports new `options.transition` string property to specify custom transition for this route
+  * Route declaration now supports new `asyncComponent` method that should return Promise resolved with Component or ES module with `.default` property containing Component
+  * It is now possible to specify "current" view for link to load the page with `data-view="current"` attribute
+  * `iosSeparateDynamicNavbar` parameter has been removed and behavior that uses with `iosSeparateDynamicNavbar: false` is not supported anymore
+
+## Core Components
+
+* **Action Sheet**
+  * Now it also appears in dark when dark theme enabled
+* **Autocomplete**
+  * New `popupPush` parameter - enables Autocomplete popup to push view(s) behind on open
+  * New `popupSwipeToClose` parameter - enables ability to close Autocomplete popup with swipe
+* **Block**
+  * Now it uses new breakpoint names for `{size}-inset` classes (e.g. `tablet-inset` -> `medium-inset`, etc.)
+  * Block title in iOS theme is now larger and bolder
+* **Button**
+  * iOS theme buttons are reworked a bit. They now has thicker border and uppercased
+  * New "strong" segmented style (e.g. iOS 13 segmented). Can be enabled by adding `segmented-strong` class to segmented element (`<div class="segmented">`)
+* **Calendar**
+  * Now calendar value will be cleared on related input's clear (when "clear button" clicked)
+  * Calendar has been reworked to use `Intl.DateTimeFormat` API.
+    * New `locale` parameter (e.g. `en-US`). If not specified, it will use browser locale
+    * `dateFormat` now can accept `Intl.DateTimeFormatOptions` (e.g. `{ month: 'long', day: 'numeric' }`)
+    * `monthNames` now by default is `auto` - it will display month names based on specified locale (or browser locale)
+    * `monthNamesShort` now by default is `auto` - it will display month names based on specified locale (or browser locale)
+    * `dayNames` now by default is `auto` - it will display week day names based on specified locale (or browser locale)
+    * `dayNamesShort` now by default is `auto` - it will display week day names based on specified locale (or browser locale)
+    * Jalali calendar and `IDate` dependency removed in favor of new Intl api
+  * New month picker functionality (clicking month name in toolbar will open month picker) with new `monthPicker` parameter (by default true)
+  * New year picker functionality (clicking year in toolbar will open year picker) with new `yearPicker` parameter (by default true)
+  * New `yearPickerMin` parameter to specify minimum available year for year picker, by default is today minus 100 years
+  * New `yearPickerMax` parameter to specify maximum available year for year picker, by default is today plus 100 years
+  * New time picker functionality (to select a time in addition to date) with new `timePicker` parameter (by default false)
+  * New `timePickerFormat` parameter to specify time format displayed in time selector. (default `{ hour: 'numeric', minute: 'numeric' }`)
+  * New `timePickerPlaceholder` parameter to specify time picker placeholder text (default "Select time")
+  * New `sheetPush` parameter - enables Calendar sheet to push view(s) behind on open
+  * New `sheetSwipeToClose` parameter - to close Calendar sheet with swipe
+* **Card**
+  * New `hideStatusbarOnOpen` app card parameter - will hide "Statusbar" on expandable card open. (default `true`)
+* **Color Picker**
+  * New `popupPush` parameter - enables Color Picker popup to push view(s) behind on open
+  * New `popupSwipeToClose` parameter - enables ability to close Color Picker popup with swipe
+  * New `sheetPush` parameter - enables Color Picker sheet to push view(s) behind on open
+  * New `sheetSwipeToClose` parameter - enables ability to close Color Picker sheet with swipe
+* **Data Table**
+  * Removed support for `tablet-only` and `desktop-only` classes for table columns. Now it uses new breakpoint names and classes accordingly (e.g. `medium-only`, `xlarge-only`, etc.)
+* **Dialog**
+  * Now it also appears in dark when dark theme enabled
+* **Grid**
+  * Now it uses new breakpoint names for responsive columns classes (e.g. `tablet-50` -> `medium-50`, etc.)
+* **List**
+  * Now it uses new breakpoint names for `{size}-inset` classes (e.g. `tablet-inset` -> `medium-inset`, etc.)
+  * Removed declaration for list icon default color (that could make it harder to customize)
+* **Login Screen**
+  * Now it centers content vertically
+* **Navbar**
+  * iOS theme dynamic Navbar behavior totally reworked. Now it doesn't take `navbar-inner` from the page's Navbar, but takes whole Navbar element. It makes it easier to customize each navbar (bg color, text color, hairlines, shadows) and brings better transitions between them.
+  * Navbar size now will be increased (when top safe-area is in place) to cover the status bar space. This gives even better full-screen experience and transitions.
+  * Navbar HTML layout has been reworked, now it has new `navbar-bg` element:
+    ```html
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        ...
+      </div>
+    </div>
+    ```
+  * Large Navbar should now have addition `navbar-large` class on navbar itself (instead of `navbar-large-inner` on `navbar-inner`):
+    ```html
+    <div class="navbar navbar-large">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        ...
+      </div>
+    </div>
+    ```
+  * New large transparent Navbar (like in iOS 13), can enabled with additional `navbar-large-transparent` class:
+    ```html
+    <div class="navbar navbar-large navbar-large-transparent">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        ...
+      </div>
+    </div>
+    ```
+* **Panel**
+  * Panels functionality has been fully reworked and now behaves more like a modals, which means we now can have as many panels as we want (or need) not limited to only 2 (left and right) panels.
+  * The following parameter has been removed from `app.panel` parameters: `leftBreakpoint`, `rightBreakpoint`, `swipe`, `swipeActiveArea`, `swipeColoseAtiveSide`, `swipeOnlyClose`, `swipeThreshold`, `closeByBackdropClick`.
+  * Now every panel must be initialized separately and panel parameters must be specified for each panel.
+  * It is now possible to auto init the panel by adding `panel-init` class and specify such panel parameters with `data-` attributes, e.g.:
+    ```html
+      <div class="panel panel-left panel-cover" data-swipe="true" data-visible-breakpoint="1200">
+        ...
+      </div>
+    ```
+  * Each panel supports new set of parameters:
+    * `backdrop` - enables backdrop
+    * `backdropEl` - specify custom backdop element
+    * `collapsedBreakpoint` (number) - app width when panel becomes partially visible (collapsed)
+    * `visibleBreakpoint` (number) - app width when panel becomes fully visible
+    * `swipe` (boolean) - makes panel swipeable
+    * `swipeOnlyClose` (boolean) - makes panel swipeable but only to close
+    * `swipeActiveArea` (number) - active area from the edge of the screen where panel swipes enabled
+    * `swipeThreshold` (number) - panel will not move with swipe if "touch distance" will be less than this value
+  * Each panel instance has new methods:
+    * `enableVisibleBreakpoint()`
+    * `disableVisibleBreakpoint()`
+    * `toggleVisibleBreakpoint()`
+    * `enableCollapsedBreakpoint()`
+    * `disableCollapsedBreakpoint()`
+    * `toggleCollapsedBreakpoint()`
+    * `enableResizable()`
+    * `disableResizable()`
+    * `enableSwipe()`
+    * `disableSwipe()`
+  * `app.panel.open(panel)/close(panel)` methods now can receive panel element (or CSS selector) of the panel to open/close. `left` and `right` values are still work buton only if you have only one left or right panel
+  * The following F7 instance props and methods removed and indended to be used on panel instance instead:
+    * `app.panel.enableSwipe()`
+    * `app.panel.disableSwipe()`
+    * `app.panel.enableResizableSwipe()`
+    * `app.panel.disableResizableSwipe()`
+    * `app.panel.left`
+    * `app.panel.right`
+  * `panel-active` panel class renamed to `panel-in`
+* **PhotoBrowser**
+  * `backLinkText` parameter renamed to `pageBackLinkText`
+  * New `popupCloseLinkText` parameter to specify "close" link text when it is opened as Popup or as Standalone
+  * New `navbarShowCount` parameter to define should it display "3 of 5" text in navbar title or not. If not specified (undefined) then it will show this text if there is more than 1 item
+  * New `popupPush` parameter - enables Photo Browser popup to push view(s) behind on open
+* **Picker**
+  * Font size on picker items became smaller in iOS and MD themes
+  * New `sheetPush` parameter - enables Picker sheet to push view(s) behind on open
+  * New `sheetSwipeToClose` parameter - enables ability to close Picker sheet with swipe
+* **Popup**
+  * New boolean `push` parameter. When enabled it will push view behind on open. Works only when top safe area is in place. It can also enabled by adding `popup-push` class to popup element.
+* **Sheet Modal**
+  * In iOS theme it now has white background color by default
+  * New boolean `push` parameter. When enabled it will push view behind on open. Works only when top safe area is in place. It can also enabled by adding `sheet-push` class to sheet modal element.
+  * Swipeable Sheet Modal now correctly handles scrolling inside of nested `page-content` element
+* **Sortable**
+  * Sortable `sort` event data now also contain `el` property with reference to sorted item
+  * Now sorting can be done on tap-hold. It can be enabled by adding additional `sortable-tap-hold` to `sortable` container. Also `app.touch.tapHold` should be enabled to emit `taphold` events.
+* **Smart Select**
+  * Fixed behavior when it is `multiple` and with Virtual List enabled
+  * New `.unsetValue()` method to unset smart select value
+  * New `popupPush` parameter - enables Smart Select popup to push view(s) behind on open
+  * New `popupSwipeToClose` parameter - enables ability to close Smart Select popup with swipe
+  * New `sheetPush` parameter - enables Smart Select sheet to push view(s) behind on open
+  * New `sheetSwipeToClose` parameter - enables ability to close Smart Select sheet with swipe
+* **Subnavbar**
+  * Subnavbar's title element (`<div class="title">`) now should be used with class `subnavbar-title` instead (`<div class="subnavbar-title">`)
+* **Swiper** updated to latest 5 version:
+  * Core
+    * All new CSS Scroll Snap mode (can be enabled with `cssMode: true`). It doesn't support all of Swiper's features, but potentially should bring a much better performance in simple configurations
+    * Fully removed Internet Explorer support
+    * `breakpointsInverse` parameter has been removed and now `breakpoints` behave like with `breakpointsInverse: true` before.
+    * `touchMoveStopPropagation` parameter now defaults to `false`
+    * `click` event won't be fired with 300ms delay anymore. Now it will be fired at the same time as `tap` event
+    * When `slidesPerColumnFill: 'column'` it now uses `flex-direction: column` layout which requires specified height on swiper-container
+    * `slidesPerColumn` now can be used with breakpoints
+    * Now Swiper styles use CSS Custom Properties (CSS Custom Variables) to specify swiper's color theme (color of navigation buttons/pagination). It is now `--swiper-theme-color: #007aff;`
+    * Improved `es` module "tree-shake-ability"
+    * New `swiper.esm.browser.bundle.js` package that can be used directly in browser (`import Swiper from 'swiper.esm.browser.bundle.js'`)
+  * Autoplay
+    * Now it will be paused when document becomes hidden (in not active tab) and continued again when document becomes visible
+  * Lazy
+    * Swiper preloader image replaced with a little bit simpler loader. Now its color can be changed with `--swiper-preloader-color` CSS custom property (which is defaults to `--swiper-theme-color`)
+  * Pagination
+    * Active pagination bullets and pagination theme colors now use CSS Custom Properties. It can be defined with `--swiper-pagination-color` property (which is defaults to `--swiper-theme-color`)
+  * Navigation
+    * Navigation icons reworked with built-in (base64) icon font. It allows to apply any color and size without replacing image
+    * Navigation buttons colors now use CSS Custom Properties. It can be defined with `--swiper-navigation-color` property (which is defaults to `--swiper-theme-color`)
+    * With `--swiper-navigation-size` (defaults to `44px`) it is now possible to change size of the navigation buttons (and icons)
+* **Text Editor**
+  * All new touch-friendly Rich Text Editor component
+* **Timeline**
+  * Now it uses new breakpoint names for `{size}-sides` classes (e.g. `tablet-sides` -> `medium-sides`, etc.)
+* **Toolbar**
+  * Tabbar labels text (font) size increased in iOS theme
+
+## Framework7 Router Component
+
+* Now it supports async `data` method (where it must return Promise)
+  ```js
+  export default {
+    async data() {
+      const user = await fetch('some/path').then(res => res.json());
+      return {
+        user,
+      }
+    }
+  }
+  ```
+  or
+  ```js
+  export default {
+    data() {
+      return new Promise((resolve) => {
+        fetch('some/path')
+          .then(res => res.json())
+          .then(user => resolve({ user }))
+      });
+    }
+  }
+  ```
+* Component DOM updates are now async. It means that it is not guaranteed that DOM will be updated right after calling `$setState`. So there is a new `$tick` context method that can be safely used to reference DOM and ensure it was updated:
+  ```js
+  this.$setState({foo: 'bar'});
+  this.$setState({john: 'doe'});
+  this.$tick(() => {
+    // DOM updated
+  });
+  ```
+* `$setState` now also receives second callback argument that will be fired on DOM update:
+  ```js
+  this.$setState({foo: 'bar'}, () => {
+    // DOM updated
+  });
+  ```
+* Component context has new `$update(callback)` method that can be used instead of `$setState` to just trigger DOM update:
+  ```js
+  this.foo = 'bar';
+  this.$update(() => {
+    // DOM updated
+  });
+  ```
+* Added support for mixins that can be re-used in components. Mixin can extend any component lifecycle hook, methods and `data`. Mixins should be passed in component's `mixins` property as an array:
+  ```js
+  const mountedMixin = {
+    mounted() {
+      // do something on mounted
+      console.log('mounted');
+    }
+  }
+  const defaultDataMixin = {
+    data() {
+      return { foo: 'bar' }
+    }
+  }
+  // extend component with mixins
+  export default {
+    mixins: [ mountedMixin, defaultDataMixin ],
+    data() {
+      return { john: 'doe' }
+    },
+    // ...
+  }
+  ```
+* It is also possible to register global mixins with new method `Framework7.registerComponentMixin(mixinName, mixin)`
+  ```js
+  Framework7.registerComponentMixin('default-data-mixin', {
+    data() {
+      return { foo: 'bar' }
+    }
+  });
+  ```
+  And use it like:
+  ```js
+  export default {
+    mixins: [ 'default-data-mixin' ],
+    data() {
+      return { john: 'doe' }
+    },
+    // ...
+  }
+  ```
+* Now it is possible to create custom reusable components with new method `Framework7.registerComponent(tagName, component)`
+  ```js
+  Framework7.registerComponent('my-list-item', {
+    data() {
+      return { foo: 'bar' }
+    },
+    template: `
+      <li class="list-item" id="{{foo}}">...</li>
+    `,
+  })
+  ```
+  And use it in other components like:
+  ```html
+  <div class="list">
+    <ul>
+      <my-list-item></my-list-item>
+    </ul>
+  </div>
+  ```
+* New `class` based syntax for components for better TypeScript support:
+  ```js
+  import { Component } from 'famework7';
+
+  export default class extends Component {
+    data() {
+      return { foo: 'bar' }
+    }
+    mounted() {
+      console.log('mounted');
+      this.onMounted(); // call method
+    }
+    onMounted() {
+      // ...
+    }
+    // ...
+  }
+
+## Phenome (Vue/React)
+
+* Now it is possible to get Framework7 instance, `f7ready` function and `theme` by directly importing them from package. This can be useful for functional components that don't have F7 extensions, e.g.:
+  ```js
+    import { f7, f7ready, theme } from 'framework7-react';
+
+    // or
+
+    import { f7, f7ready, theme } from 'framework7-vue';
+  ```
+* Most of internal events reworked to use custom events system instead of DOM events. So all component events don't contain reference to HTML elements anymore.
+
+## Phenome (Vue/React) Components
+
+* **Block**
+  * `tabletInset` prop has been removed
+  * New inset props to reflect new breakpoint names: `xsmallInset`, `smallInset`, `mediumInset`, `largeInset`, `xlargeInset`
+* **Button**
+  * New `transition` (string) prop to specify custom page transition name for list link
+* **Grid**
+  * `Col` component now uses new breakpoint names for responsive size props. So there are new props instead of `tabletWidth` and `desktopWidth`: `xsmall`, `small`, `medium`, `large`, `xlarge`.
+    ```html
+      <Col size="50" medium="33" large="25">...</Col>
+    ```
+* **Icon**
+  * `size` prop will also set element `width` and `height` in addition to just `font-size` (like before)
+  * Removed support for Font Awesome and Ionic icons, props `fa` and `ion` not supported anymore
+* **Link**
+  * New `transition` (string) prop to specify custom page transition name for list link
+* **List**
+  * Sortable `sort` event data now also contain `el` property with reference to sorted item
+  * Sortable `sort` event data now contains `sortableData` property as first argument
+  * New `sortableTapHold` prop to enable sorting on tap hold. Also `app.touch.tapHold` parameter should be enable to emit `taphold` events.
+  * `tabletInset` prop has been removed
+  * New inset props to reflect new breakpoint names: `xsmallInset`, `smallInset`, `mediumInset`, `largeInset`, `xlargeInset`
+* **ListItem**
+  * `accordionBeforeOpen`, `accordionBeforeClose` events now contain `prevent` method as first argument
+  * `swipeout` event now contains swipeout `progress` as first argument
+  * New `transition` (string) prop to specify custom page transition name for list link
+* **ListInput/Input**
+  * Support for new `type="texteditor"` prop to make it appear as Text Editor
+  * New `textEditorParams` prop to specify text editor parameters
+* **Navbar**
+  * Removed support for boolean `inner` prop and removed ability to render it without navbar-inner element
+  * New `largeTransparent` prop to make large navbar transparent (should be used in addition to `large` prop)
+  * `nav-left` slot renamed to `left`
+  * `nav-right` slot renamed to `right`
+  * New `title-large` slot
+* **Panel**
+  * New`collapsedBreakpoint` (number) prop - app width when panel becomes partially visible (collapsed)
+  * New`visibleBreakpoint` (number) prop - app width when panel becomes fully visible
+  * New`swipe` (boolean) prop - makes panel swipeable
+  * New`swipeOnlyClose` (boolean) prop - makes panel swipeable but only to close
+  * New`swipeActiveArea` (number) prop - active area from the edge of the screen where panel swipes enabled
+  * New`swipeThreshold` (number) prop - panel will not move with swipe if "touch distance" will be less than this value
+* **Page**
+  * `ptr:refresh` event now contains `done` method as first argument
+* **PageContent**
+  * `ptr:refresh` event now contains `done` method as first argument
+* **PhotoBrowser**
+  * `backLinkText` prop renamed to `pageBackLinkText`
+  * New `popupCloseLinkText` prop to specify "close" link text when it is opened as Popup or as Standalone
+  * New `navbarShowCount` prop to define should it display "3 of 5" text in navbar title or not. If not specified (undefined) then it will show this text if there is more than 1 item
+* **Popup**
+  * New `push` prop to push view(s) behind on open
+* **Segmented**
+  * New `strong`, `strongIos`, `strongMd` and `strongAurora` props to enable new "strong" segmented style
+* **Sheet**
+  * New `push` prop to push view(s) behind on open
+* **Statusbar**
+  * `Statusbar` component has been removed
+* **Tabs**
+  * New `swiperParams` prop to specify swipeable tabs swiper parameters
+* **TextEditor**
+  * New `TextEditor` component
+
+# [v4.5.2](https://github.com/framework7io/framework7/compare/v4.5.1...v4.5.2) - September 27, 2019
+  * Core
+    * Router
+      * Fixed issue in Firefox when going back from routable modal could reload the page in (#3316)
+    * Card
+      * Fixed issue with expandable card close, when it is opened in view with sidebar (#3315)
+    * Swipeout
+      * Fixed issue when overswipe didn't work with single item (#3279)
+    * SmartSelect
+      * Fixed issue when destroying it on close could throw and error
+    * Autocomplete
+      * Fixed issue when destroying it on close could throw and error
+    * Photo Browser
+      * Fixed issue when destroying it on close could throw and error
+
+# [v4.5.1](https://github.com/framework7io/framework7/compare/v4.5.0...v4.5.1) - September 19, 2019
+  * Core
+    * Router Component
+      * Improved scoped styles parsing algorithm
+    * Swiper
+      * Fixed error in swiper lazy module
+    * Color Picker
+      * Fixed error with "Current Color" module destroy
+    * Panel
+      * Fixed issue with not working `breakpoint` events
+
+# [v4.5.0](https://github.com/framework7io/framework7/compare/v4.4.10...v4.5.0) - August 21, 2019
+  * Core
+    * Router Component
+      * Fixed issue breaking rendering when root component element is not a `div`
+    * Searchbar
+      * Fixed issue with scroll for expandable Searchbar in RTL direction
+    * Sortable
+      * Now new `no-sorting` or `disallow-sorting` class can be added to specific list item to disable sorting for it
+    * Infinite Scroll
+      * Fixed issue when it may not work on routable tab if routable tab content is infinite-scroll element
+    * Pull To Refresh
+      * Fixed issue when it may not work on routable tab if routable tab content is PTR element
+    * Dialog
+      * Fixed issue when calling `.close()` on queued dialog would still open it
+    * Smart Select
+      * New `formatValueText(values)` parameter to return formatted (custom) text value that appears on list item (in `item-after`)
+      * New `setValueText` (by default is `true`) parameter to set formatted text value on list item (in `item-after`)
+      * Now it emits `beforeOpen(instance, prevent)` event that allows to prevent its opening by calling `prevent()` function
+    * Preloader
+      * Fixed issue when it didn't initialize correctly in routable tab
+    * Progressbar
+      * Fixed issue when it didn't initialize correctly in routable tab
+    * Popover
+      * Fixed issue when during positioning it didn't consider top safe area
+  * Phenome
+    * Button, FabButton, Fab, Icon, Link, ListButton, ListItem
+      * Imporved `tooltip` prop reactivity to change, set or unset tooltip correctly
+    * ListItem
+      * Now settings `sortable: false` prop on it, will prevent this specific item from sorting
+    * Navbar
+      * `nav-left` slot is also available as `left` slot
+      * `nav-right` slot is also available as `right` slot
+      * New `title-large` slot to add custom content/layout to large title text
+    * List, ListGroup
+      * New `sortableMoveElements` (boolean) prop that allow to override same `sortable.moveElements` global app parameter. That when disabled (`false`) won't move DOM elements on sort
+  * Minor fixes
+
+# [v4.4.10](https://github.com/framework7io/framework7/compare/v4.4.9...v4.4.10) - July 29, 2019
+  * Core
+    * Device
+      * Fixed `device-desktop` class
+
+# [v4.4.9](https://github.com/framework7io/framework7/compare/v4.4.7...v4.4.9) - July 29, 2019
+  * Core
+    * Infinite Scroll
+      * Fixed issue when destroying infinite scroll could detach all other `scroll` event listeners
+    * Navbar/Toolbar
+      * Fixed issue with enabled `hideNavbar/ToolbarOnScroll` could hide toolbar on nested elements scrolling
+    * Device
+      * On desktop `device.os` will contain `macos` or `windows` if it is running under these OS
+  * Phenome
+    * Card
+      * Added `backdropEl` property to specify custom card backdrop
+
+# [v4.4.7](https://github.com/framework7io/framework7/compare/v4.4.6...v4.4.7) - July 19, 2019
+  * Core
+    * Card
+      * Fixed issue when `data-close-by-backdrop-click` was ignored
+    * Sheet
+      * New `sheet:stepprogress` and `sheetStepPropgress` events firing during swipe step
+    * Inputs
+      * New `--f7-input-padding-left` and `--f7-input-padding-right` CSS variables
+      * New `--f7-textarea-height` CSS variable
+    * Device
+      * Fixed iOS 13 iPad detection when it is in desktop mode
+    * View/Router
+      * Fixed issue when `currentView` may not return View in tabs layout
+      * Fixed issue when returning to previous page could block its scroll in iOS
+    * Tooltip
+      * Fixed issue when tooltip wasn't initialized if added dynamically with VDOM
+  * Minor fixes
+
+# [v4.4.6](https://github.com/framework7io/framework7/compare/v4.4.5...v4.4.6) - July 1, 2019
+  * Core
+    * Router
+      * Fixed issue when loading detail page in (Master Detail) with `reloadAll` loaded only detail page
+
+# [v4.4.5](https://github.com/framework7io/framework7/compare/v4.4.3...v4.4.5) - June 27, 2019
+  * Core
+    * Router
+      * Improved Master-Detail behavior with `pushState` enabled
+      * Fixed issue when routable modal template contains comments before actual template
+      * Route `params` now url-decoded
+    * Router Component
+      * Fixed issue when Progressbar progress wasn't updated with `$setState`
+  * Phenome
+    * Page
+      * Fixed issue with not correctly rendered preloader when infinite or ptr preloader property set dynamically
+  * Minor tweaks and fixes
+
+# [v4.4.3](https://github.com/framework7io/framework7/compare/v4.4.0...v4.4.3) - June 4, 2019
+  * Core
+    * Color Picker
+      * New Hue-Saturation spectrum module (`hs-spectrum`)
+      * New Brightness slider module (`brightness-slider`)
+    * Router
+      * Fixed issue when `beforeIn` page callback called before `beforeOut` of other page
+    * Virtual List
+      * Now it is possible to pass custom scrollable parent element with new `scrollableParentEl` parameter
+  * Phenome
+    * Range
+      * New `name` prop to specify input's "name" attribute
+    * Stepper
+      * New `name` prop to specify input's "name" attribute
+    * ListButton
+      * Now also supports `tooltip` property to display tooltip
+    * ListItem
+      * Now also supports `tooltip` property to display tooltip
+  * Minor fixes
+
+# [v4.4.0](https://github.com/framework7io/framework7/compare/v4.3.1...v4.4.0) - May 13, 2019
+  * Core
+    * All new Treeview component 🎉
+    * Popup
+      * Added "swipe-to-close" feature
+      * New `swipeToClose` parameter that will allow to close Popup with swipe
+      * New `swipeHandler` parameter to specify swipe to close handler element
+    * Sheet Modal
+      * Added "swipe-to-close" feature
+      * Added "swipe-to-step" feature
+      * New `swipeToClose` parameter that will allow to close Sheet modal with swipe
+      * New `swipeToStep` parameter that will allow to expand Sheet modal with swipe
+      * New `swipeHandler` parameter to specify swipe to close handler element
+      * New `stepOpen()`, `stepClose()` and `stepToggle()` sheet instance methods to open, close and toggle swipe step.
+      * New `app.sheet.stepOpen()`, `app.sheet.stepClose()` and `app.sheet.stepToggle()` app sheet methods to open, close and toggle swipe step.
+      * New `sheet:stepopen`, `sheet:stepclose` sheet DOM events
+      * New `stepOpen`, `stepClose` sheet instance events
+      * New `sheetStepOpen`, `sheetStepClose` app instance events
+    * Autocomplete
+      * Now it is possible to select dropdown values with keyboard UP and DOWN keys
+      * Now it will close dropdown on ESC key
+    * Checkbox
+      * Added support for indeterminate checkboxes
+    * Data Table
+      * Now it uses indeterminate checkbox in head when some of the rows are selected
+    * Range Slider
+      * New `limitKnobPosition` boolean property to limit knob position to size of the bar. By default enabled for iOS theme
+  * Phenome
+    * Treeview
+      * New `Treeview` and `TreeviewItem` components
+    * Popup
+      * Added "swipe-to-close" feature
+      * New `swipeToClose` prop that will allow to close Popup with swipe
+      * New `swipeHandler` prop to specify swipe to close handler element
+    * Sheet Modal
+      * Added "swipe-to-close" feature
+      * Added "swipe-to-step" feature
+      * New `swipeToClose` parameter that will allow to close Sheet modal with swipe
+      * New `swipeToStep` parameter that will allow to expand Sheet modal with swipe
+      * New `swipeHandler` parameter to specify swipe to close handler element
+      * New `sheet:stepopen` (`sheetStepOpen`), `sheet:stepclose` (`sheetStepClose`) sheet events
+    * Checkbox/ListItem
+      * New `indeterminate` prop to make checkbox indeterminate
+    * Range Slider
+      * New `limitKnobPosition` boolean property to limit knob position to size of the bar. By default enabled for iOS theme
+  * Minor fixes
+
+# [v4.3.1](https://github.com/framework7io/framework7/compare/v4.3.0...v4.3.1) - April 29, 2019
+  * Core
+    * Range Slider
+      * Fixed issue with vertical slider not working correctly with side swipes
+    * Cards
+      * Fixed issue with expandable cards glitches in iOS
+      * Expandable card app parameters can now be set on each card individually with `data-` attributes: `data-animate`, `data-backdrop`, `data-swipe-to-close`, `data-close-by-backdrop-click`, `data-hide-navbar-on-open`, `data-hide-toolbar-on-open`
+    * Router
+      * Fixed missing reference to `pageFrom` in swipe-back data
+      * Router component has new `$id` property
+    * Touch
+      * Now touch clicks threshold is configurable with `app.touch.touchClicksDistanceThreshold` parameter
+  * Phenome
+    * Card
+      * Expandable card app parameters can now be set on each card individually with new props: `animate`, `hideNavbarOnOpen`, `hideToolbarOnOpen`, `swipeToClose`, `closeByBackdropClick`, `backdrop`
+    * Navbar
+      * Now it should return all children correctly when `inner: false` passed
+  * Minor fixes
+
+# [v4.3.0](https://github.com/framework7io/framework7/compare/v4.2.2...v4.3.0) - April 17, 2019
+  * Core
+    * Color Picker - all new modular Color Picker component 🎉
+    * Auto Dark Theme
+      * Now it can be set automatically based on user system color scheme preference (where supported). To enable `autoDarkTheme: true` must be passed to app init parameters
+      * New `app.enableAutoDarkTheme()` to enable this feature manually (where supported)
+      * New `app.disableAutoDarkTheme()` to disable this feature manually
+    * Panel
+      * Now side panels can be resizable 🎊. Requires `panel-resizable` class on panel element to enable
+    * Device
+      * New `prefersColorScheme()` that returns `dark` or `light` where supported, or `undefined` where not supported
+    * Cards
+      * Fixed issue whith "jumpy" layout when expandable card closes on iOS
+    * Navbar
+      * New `navbar:hide` and `navbar:show` events when navbar hidden/shown
+      * New `navbar:collapse` and `navbar:expand` events when navbar collapsed/expanded to large title navbar
+    * Popover
+      * New `closeOnEscape` parameter to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` parameter to pass custom backdrop element
+      * Now it won't be closed on backdrop click if onscreen keyboard opened (requires cordova keyboard plugin)
+      * Now it will be repositioned when onscreen keyboard opens and closes (requires cordova keyboard plugin)
+      * Reworked/tweaked positioning in MD theme
+    * Popup
+      * New `closeOnEscape` parameter to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` parameter to pass custom backdrop element
+      * Now it won't be closed on backdrop click if onscreen keyboard opened (requires cordova keyboard plugin)
+    * Actions
+      * New `closeOnEscape` parameter to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` parameter to pass custom backdrop element
+      * Now it won't be closed on backdrop click if onscreen keyboard opened (requires cordova keyboard plugin)
+    * Sheet
+      * New `closeOnEscape` parameter to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` parameter to pass custom backdrop element
+      * Now it won't be closed on backdrop click if onscreen keyboard opened (requires cordova keyboard plugin)
+      * Now it can be opened from top (instead of bottom) by adding `sheet-modal-top` class to sheet modal element
+    * Stepper
+      * Reworked RTL layout to be in same direction as in LTR
+    * Request
+      * Now it automatically set `Accept: 'application/json'` header when `dataType: 'json'` parameter passed
+    * Touch
+      * Fixed issue with not-removed touch-ripple with very fast clicks or multi-touch
+    * Utils
+      * New `utils.colorHsbToHsl(h, s, b)` method to convert HSB(V) color to HSL color
+      * New `utils.colorHslToHsb(h, s, l)` method to convert HSL color to HSB(V) color
+  * Phenome
+    * Panel
+      * New `resizable` prop to enable resizable panel
+    * Navbar
+      * New `navbar:hide`/`navbarHide` and `navbar:show`/`navbarShow` events when navbar hidden/shown
+      * New `navbar:collapse`/`navbarCollapse` and `navbar:expand`/`navbarExpand` events when navbar collapsed/expanded to large title navbar
+    * Popover
+      * Added `backdrop` prop to enable/disable backdrop
+      * New `closeOnEscape` prop to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` prop to pass custom backdrop element
+    * Popup
+      * New `closeOnEscape` prop to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` prop to pass custom backdrop element
+    * Actions
+      * Added `backdrop` prop to enable/disable backdrop
+      * New `closeOnEscape` prop to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` prop to pass custom backdrop element
+    * Sheet
+      * New `closeOnEscape` prop to allow to close it when `ESC` keyboard key pressed (disabled by default)
+      * New `backdropEl` prop to pass custom backdrop element
+      * New `position` prop, can be `top` or `bottom` (default) to define how to open Sheet
+      * New `top` prop, alias for `position="top"`
+      * New `bottom` prop, alias for `position="bottom"`
+    * ListInput / Input
+      * Now it accepts special type `colorpicker` to open color picker on focus
+      * New prop `colorPickerParams` to specify color picker params for `colorpicker` type
+    * SwipeoutButton
+      * New `confirmTitle` prop to set confirm dialog title
+  * Lots of minor fixes and improvements
+
+# [v4.2.2](https://github.com/framework7io/framework7/compare/v4.2.0...v4.2.2) - April 4, 2019
+  * Core
+    * Smart Select
+      * New `scrollToSelectedItem` parameter - when enabled it will scroll smart select content to first selected item on open (default `false`)
+      * New `.scrollToSelectedItem()` smart select instance method to scroll smart select content to first selected item (when opened)
+      * Now when opened in Popup, it will render Popup's close button as a plain text link on the right side in Navbar
+    * Autocomplete
+      * Now when opened in Popup, it will render Popup's close button as a plain text link on the right side in Navbar
+    * Router
+      * Fixed issue with swipe-back when used in Master-Detail layout
+    * List Index
+      * Fixed issue with wrong positioning when used with large navbar
+  * Phenome
+    * ListInput / Input
+      * Now it accepts special type `datepicker` to open calendar on focus
+      * New prop `calendarParams` to specify calendar params for `datepicker` type
+    * Button
+      * New `type` prop. If this prop is one of `submit`, `button` or `reset` then it will be rendered as `<button>` tag
+  * Lots of minor fixes
+
+# [v4.2.0](https://github.com/framework7io/framework7/compare/v4.1.1...v4.2.0) - March 20, 2019
+  * All new Aurora theme! 🖥🎉
+  * Core
+    * New Appbar component
+    * Button
+      * New `button-round-aurora`, `button-raised-aurora`, `button-fill-aurora`, `button-small-aurora`, `button-large-aurora`, `button-outline-aurora` modifier classes for Aurora theme
+    * Cards
+      * Now it is possible to specify custom expandable card backdrop element with `data-backdrop-el` attribute on card
+    * Device
+      * New `device.electron` property which is `true` when app runs in Electron environment
+    * List Index
+      * New `auroraItemHeight` parameter to specify item height in Aurora theme
+    * Navbar
+      * New `auroraCenterTitle` parameter (enabled by default) to position title at the center in Aurora theme.
+    * Panel
+      * New `app.panel.toggle(side, animate)` method to toggle (open or close) specified panel
+      * New `panel.toggle(animate)` method to toggle (open or close) current panel
+      * Support for `panel-toggle` class on links to toggle panels
+    * Picker
+      * New `mousewheel` parameter (enabled by default) to scroll picker values with mousewheel
+      * New `updateValuesOnMousewheel` parameter (enabled by default) to updates picker and input values during mousewheel scrolling
+    * Pull To Refresh
+      * Added mousewheel support with additional `data-ptr-mousewheel="true"` attribute on PTR content element
+    * Searchbar
+      * New Inline Searchbar to fit it better within other components. Can be enabled by adding `searchbar-inline` class to searchbar
+    * Stepper
+      * New `stepper-round-aurora`, `stepper-raised-aurora`, `stepper-fill-aurora`, `stepper-small-aurora`, `stepper-large-aurora` modifier classes for Aurora theme
+    * Toolbar
+      * New `toolbar-top-aurora` and `toolbar-bottom-aurora` modifier classes for Aurora theme
+    * Touch
+      * Not it is possible to prevent active state bubbling on nested active-state elements with additional `prevent-active-state-propagation` class on nested active-state element
+      * Improved clicks handling with Apple Pencil
+    * Typography
+      * New half-value margin and padding classes: `margin-half`, `margin-left-half`, `margin-right-half`, `margin-top-half`, `margin-bottom-half`, `margin-horizontal-half`, `margin-vertical-half`, `padding-half`, `padding-left-half`, `padding-right-half`, `padding-top-half`, `padding-bottom-half`, `padding-horizontal-half`, `padding-vertical-half`
+    * View / Router
+      * Router component's `$theme` object now contains boolean `aurora` property which is `true` for Aurora theme
+      * New Aurora-related parameters: `auroraPageLoadDelay`, `auroraSwipeBack`, `auroraSwipeBackThreshold`, `auroraSwipeBackActiveArea`, `auroraSwipeBackAnimateShadow`, `auroraSwipeBackAnimateOpacity`
+      * Fixed VDOM rendering with SVG elements
+  * Phenome
+    * React and Vue's component prototype `$theme`object now contains boolean `aurora` property which is `true` for Aurora theme
+    * New Appbar component
+    * Button
+      * New Aurora related modifier props: `raisedAurora`, `roundAurora`, `largeAurora`, `smallAurora`, `fillAurora`, `outlineAurora`
+    * Icon
+      * New `aurora` prop to specify icon for Aurora theme
+    * Link
+      * New `iconAurora` prop to specify icon for Aurora theme
+    * ListIndex
+      * New `auroraItemHeight` prop to specify item height in Aurora theme
+    * Navbar
+      * New boolean `backLinkForce` prop to load and ignore previous page in history
+      * New boolean `backLinkShowText` prop to hide or show back button text. By default  disable for MD theme
+    * Page
+      * New `ptrMousewheel` prop to make PTR work with mousewheel
+    * Searchbar
+      * New `inline` boolean prop to enable inline searchbar
+    * Stepper
+      * New Aurora related modifier props: `raisedAurora`, `roundAurora`, `largeAurora`, `smallAurora`, `fillAurora`
+      * New `iconAurora` prop to specify icon for Aurora theme
+    * Toolbar
+      * New `topAurora` and `bottomAurora` boolean props to set Toolbar position for Aurora theme
+  * Lots of minor fixed and improvements
+
+# [v4.1.1](https://github.com/framework7io/framework7/compare/v4.1.0...v4.1.1) - March 14, 2019
+  * Core
+    * Form
+      * Fix form ajax event arguments (`xhr` and `data`) to be in `e.detail`
+    * Panel
+      * Unset breakpoint layout on panel destroy
+    * Autocomplete
+      * Fixed issue with autcomplete dropdown click on iOS devices
+    * Router
+      * Fixed wrong behavior of navbar back link with swipe back in `ios` theme
+    * Cards
+      * Fixed issue when opened expanadble cards wasn't positioned correctly in some layouts
+  * Minor fixes
+
+# [v4.1.0](https://github.com/framework7io/framework7/compare/v4.0.6...v4.1.0) - March 4, 2019
+  * Core
+    * Input
+      * New "outline" input styles
+    * List
+      * Fixed sticky list group titles when used with large navbar
+    * Cards
+      * Fixed issue when opened expanadble cards wasn't positioned correctly in some layouts
+    * Tooltip
+      * Fixed tooltip auto init under ios theme when it is used in navbar
+    * Calendar
+      * Fixed issue when `monthSelector` and `yearSelector` params were ignored
+  * Phenome
+    * Support for new outline inputs by adding boolean `outline` prop to `f7-list-input`/`ListInput` component
+  * Minor fixes
+
+# [v4.0.6](https://github.com/framework7io/framework7/compare/v4.0.5...v4.0.6) - February 25, 2019
+  * Core
+    * Searchbar
+      * Tweaked/fixed styles for MD-Dark theme
+    * Pull To Refresh
+      * Now it will be ignored on opened expandable cards
+      * Now it will be ignored on elements with `ptr-ignore` class
+    * Dialog
+      * Fixed text alignment in RTL direction
+    * Swiper update to latest 4.5.0:
+      * Core
+        * New `swiper.changeDirection()` method to change direction from horizontal to vertical (and back) dynamically
+        * `direction` parameter can be used in breakpoints
+      * Virtual Slides
+        * `swiper.virtual.appendSlide` now accepts array of slides to add
+        * `swiper.virtual.prependSlide` now accepts array of slides to prepend
+        * New `swiper.virtual.removeSlide(indexes)` to remove virtual selected slides
+        * New `swiper.virtual.removeAllSlides()` to remove all virtual slides
+      * Navigation
+        * Now it emits `navigationHide` and `navigationShow` events when on nav hide/show
+      * Pagination
+        * Now it emits `paginationHide` and `paginationShow` events when on pagination hide/show
+  * Phenome
+    * Fixed broken `textarea:resize` / `textareaResize` on `Input` and `ListInput` components
+  * Minor fixes
+
+# [v4.0.5](https://github.com/framework7io/framework7/compare/v4.0.4...v4.0.5) - February 14, 2019
+  * Core
+    * Fixed d.ts reference path
+
+# [v4.0.4](https://github.com/framework7io/framework7/compare/v4.0.3...v4.0.4) - February 13, 2019
+  * Core
+    * Fixed lost messages color
+
+# [v4.0.3](https://github.com/framework7io/framework7/compare/v4.0.2...v4.0.3) - February 13, 2019
+  * Core
+    * Fixed d.ts reference path
+
+# [v4.0.2](https://github.com/framework7io/framework7/compare/v4.0.1...v4.0.2) - February 13, 2019
+  * Core
+    * Fixed issue when event handlers attached with `.once` may not be detached correctly later
+    * Router
+      * Fixed issue when routable tab with params `/:param/` in path could produce new page loading instead of switching tab
+    * Card
+      * Add `card-prevent-open` class that can be added to element inside of the expandable card. Click on that element won't open expandable card.
+    * Searchbar
+      * Fixed Searchbar position when it is used on page with large navbar
+  * Dom7 update to latest 2.1.3:
+    * Fixed issue when event handlers attached with `.once` may not be detached correctly later
+  * Phenome
+    * Card
+      * New `cardPreventOpen` prop on Link-like components to prevent expandable card open on this element click.
+  * Minor fixes
+
+# [v4.0.1](https://github.com/framework7io/framework7/compare/v4.0.0...v4.0.1) - February 8, 2019
+  * Core
+    * Fixed issue with Safari crashing on `button-large` rendering
+    * Fixed issue with wrong active button color in bars
+    * Removed not needed animation prefixes in utils
+
+# [v4.0.0](https://github.com/framework7io/framework7/compare/v3.6.6...v4.0.0) - February 7, 2019 🎉🎉🎉
+  * [What Is New In v4](https://blog.framework7.io/the-best-framework7-yet-what-is-new-in-v4-74b2b467047c)
+
+# [v3.6.6](https://github.com/framework7io/framework7/compare/v3.6.5...v3.6.6) - February 5, 2019
+  * Core
+    * App `data` and `methods` now available before app initialization. Useful when you delay app initialization (like on `deviceready` event in Cordova app) and need to access data before
+    * Pull To Refresh
+      * Support for `ptr-watch-scroll` that should be added on scollable elements inside of `ptr-content`, so pull to refresh won't trigger during their scrolling
+    * Panel
+      * Fixed issue when panel backdrop not removed for routable panel
+    * Template7 update to latest 1.4.1:
+      * Relaxed `escape` helper to escape only `<>&"'` characters
+      * Improved variables parsing in `js` and `js_if` helpers
+  * Minor fixes
+
+# [v3.6.5](https://github.com/framework7io/framework7/compare/v3.6.3...v3.6.5) - January 4, 2019
+  * Core
+    * Router
+      * Now router methods will throw error if accessed on main app router, e.g. `app.router.navigate()`, it was never allowed, and done to avoid further issues
+  * Minor fixes
+
+# [v3.6.3](https://github.com/framework7io/framework7/compare/v3.6.2...v3.6.3) - December 27, 2018
+  * Core
+    * Range
+      * New `formatLabel` parameter that allows to pass function and return formatted value for range knob label
+    * Tabs
+      * Fixes issue when routable swipeable tabs don't emit `tab:show` events
+    * Dialog
+      * Now it is possible to specify default value for Prompt dialog by adding it as last parameter to `app.dialog.prompt()` method
+  * Phenome
+    * New `routeProps` prop for Link, Button, ListItem, ListButton components that allows to pass props directly to target route component. For example, `<f7-link :props="{foo: 'bar'}">`
+    * New `formatLabel` prop for Range component that allows to pass function and return formatted value for range knob label
+  * Lost of minor fixes
+
+# [v3.6.2](https://github.com/framework7io/framework7/compare/v3.6.1...v3.6.2) - December 11, 2018
+  * Core
+    * View
+      * Fixed wrong type for `name` parameter in typescript definitions
+  * Phenome
+    * Message - fixed wrong click handler target
+
+# [v3.6.1](https://github.com/framework7io/framework7/compare/v3.6.0...v3.6.1) - December 10, 2018
+  * Phenome (React / Vue)
+    * Tabs - fixed issue with broken Animated/Swipeable tabs
+
+# [v3.6.0](https://github.com/framework7io/framework7/compare/v3.5.2...v3.6.0) - December 7, 2018
+  * Core
+    * Router
+      * New `keepAlive` routes. When route's page is specified with `keepAlive: true`, then it, instead of removing and destroying component, it will be detached from DOM and attached back when required.
+      * New `router.clearPreviousPages()` method that removes all previous (stacked) pages from DOM
+    * Accordion
+      * New `accordion:beforeopen` event that is triggered right before accordion will be opened. `event.detail.prevent` contains function that will prevent it from opening if called;
+      * New `accordion:beforeclose` event that is triggered right before accordion will be closed. `event.detail.prevent` contains function that will prevent it from closing if called;
+  * Phenome (React / Vue)
+    * AccordionItem and ListItem have new `accordion:beforeopen` / `accordionBeforeOpen` events, second argument passed to handler contains function that will prevent it from closing if called;
+    * AccordionItem and ListItem have new `accordion:beforeclose` / `accordionBeforeClose` events, second argument passed to  handler contains function that will prevent it from closing if called;
+    *  View component now accepts MD-theme related swipeback props: `mdSwipeBack`, `mdSwipeBackAnimateShadow`, `mdSwipeBackAnimateOpacity`, `mdSwipeBackActiveArea`, `mdSwipeBackThreshold`
+    * ListItem has new `virtualListIndex: Number` property to specify item index when rendered inside of Virtual List
+    * Searchbar has new `value` property to specify Searchbar input's value. Can be usefule when used with `customSearch` enabled
+  * Lots of minor fixes and improvements
+
+# [v3.5.2](https://github.com/framework7io/framework7/compare/v3.5.1...v3.5.2) - November 12, 2018
+  * Core
+    * List
+      * Fixed issue with hairlines in last swipeout-list item
+    * Panel
+      * Fixed issue when routable Panel can appear without backdrop
+    * Searchbar
+      * New `inputEvents` parameter that allow to specify which input events should be tracked for search
+  * Phenome
+    * ListInput - add `tag` property to allow to change default `li` tag to anything else
+    * Searchbar - new `inputEvents` prop that allow to specify which input events should be tracked for search
+    * Fixed issue with router page classes
+  * Minor fixes
+
+# [v3.5.1](https://github.com/framework7io/framework7/compare/v3.5.0...v3.5.1) - November 2, 2018
+  * Core
+    * Swiper update to latest 4.4.2:
+      * New `touchStartForcePreventDefault` parameter to force touch start event prevent default
+      * Breakpoints fix when breakpoint keys are strings
+      * Fixed issue when draggable scrollbar may not work on desktop Safari
+      * Fixed issue with wrong sort of Virtual Slides
+    * Swipeout
+      * Added new `swipeout:overswipeenter` and `swipeout:overswipeexit` events fired when overswipe enabled/disabled
+    * Panel
+      * Fixed issue when Swipe Panel could cause kind of screen flickering on open
+  * Phenome
+    * Messagebar - new `textareaId` property to set ID attribute on its textarea
+    * ListItem - new `swipeoutOverswipeEnter` and `swipeoutOverswipeExit` events
+  * Minor fixes
+
+# [v3.5.0](https://github.com/framework7io/framework7/compare/v3.4.3...v3.5.0) - October 26, 2018
+  * Phenome
+    * Fix issues with handling "stacked" pages
+    * New **ListInput** component to be used instead of ListItem+Label+Input
+  * Minor fixes
+
+# [v3.4.3](https://github.com/framework7io/framework7/compare/v3.4.2...v3.4.3) - October 19, 2018
+  * Phenome
+    * Input - better handling of `with-value` and `focused` states
+    * Messagebar - make `resizePage` enabled by default like in docs
+  * Minor fixes
+
+# [v3.4.2](https://github.com/framework7io/framework7/compare/v3.4.0...v3.4.2) - October 12, 2018
+  * Core
+    * Device
+      * Added correct detection for `webView` prop when app installed to home screen
+    * Accordion
+      * Fixes issue when `accordionOpened` event fired without passing opened element as argument
+    * Request
+      * If `contentType: 'application/json'` and `processData: false` it will automatically send POST data as JSON
+    * Picker
+      * Fixed issue when double click outside of opened Picker could cause router navigating to previous page
+    * Pull To Refresh
+      * Now it will ignore PTR when scrolling in page's nested container
+    * Panel
+      * Now it respects `swipeThreshold` parameter when `swipeNoFollow` is enabled
+    * Searchbar
+      * New `searchGroup` parameter to handle custom item groups to hide on search
+      * New `searchGroupTitle` parameter to handle custom item groups titles to hide on search
+  * Phenome (React / Vue)
+    * Input - better handling of `with-value` and `focused` states when used in list item
+    * Searchbar - new `searchGroup` and `searchGroupTitle` props
+    * Page - improved router-related page classes handling that could cause issue with navigation
+  * Minor fixes
 
 # [v3.4.0](https://github.com/framework7io/framework7/compare/v3.3.2...v3.4.0) - September 28, 2018
   * Core
@@ -25,7 +1301,6 @@
   * Phenome
     * Lots of TypeScript definitions fixes and tweaks
   * Minor fixes
-
 
 # [v3.3.2](https://github.com/framework7io/framework7/compare/v3.3.1...v3.3.2) - September 20, 2018
   * Core
@@ -193,7 +1468,7 @@
   * Phenome
     * Fixed `TypeError` error in `ActionsGroup` component
 
-# [v3.0.0](https://github.com/framework7io/framework7/compare/v3.0.0-beta.19...v3.0.0) - July 5, 2018 🎉 
+# [v3.0.0](https://github.com/framework7io/framework7/compare/v3.0.0-beta.19...v3.0.0) - July 5, 2018 🎉
 
 # [v3.0.0-beta.19](https://github.com/framework7io/framework7/compare/v3.0.0-beta.18...v3.0.0-beta.19) - July 3, 2018
   * Core
@@ -573,7 +1848,7 @@
   * Router
     * `async` route support for routable tabs
     * `async` route support for routable modals
-  * Virutal List
+  * Virtual List
     * New `ul` and `createUl` parameters. When disabled then VL can be used with any elements not expecting the list only
   * Dialog
     * New `app.destroyPredefinedDialogs` parameter to automatically destroy predefined dialogs like Alert, Confirm, Prompt, etc.

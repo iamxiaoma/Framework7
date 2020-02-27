@@ -9,6 +9,7 @@ export default class extends React.Component {
       attachments: [],
       sheetVisible: false,
       typingMessage: null,
+      messageText: '',
       messagesData: [
         {
           type: 'sent',
@@ -22,13 +23,13 @@ export default class extends React.Component {
           name: 'Kate',
           type: 'received',
           text: 'Hi, I am good!',
-          avatar: 'http://lorempixel.com/100/100/people/9',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
         },
         {
           name: 'Blue Ninja',
           type: 'received',
           text: 'Hi there, I am also fine, thanks! And how are you?',
-          avatar: 'http://lorempixel.com/100/100/people/7',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
         },
         {
           type: 'sent',
@@ -40,48 +41,48 @@ export default class extends React.Component {
         },
         {
           type: 'sent',
-          image: 'http://lorempixel.com/200/260/cats/4/',
+          image: 'https://cdn.framework7.io/placeholder/cats-200x260-4.jpg',
 
         },
         {
           name: 'Kate',
           type: 'received',
           text: 'Nice!',
-          avatar: 'http://lorempixel.com/100/100/people/9',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
         },
         {
           name: 'Kate',
           type: 'received',
           text: 'Like it very much!',
-          avatar: 'http://lorempixel.com/100/100/people/9',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
         },
         {
           name: 'Blue Ninja',
           type: 'received',
           text: 'Awesome!',
-          avatar: 'http://lorempixel.com/100/100/people/7',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
         },
       ],
       images: [
-        'http://lorempixel.com/300/300/cats/1/',
-        'http://lorempixel.com/200/300/cats/2/',
-        'http://lorempixel.com/400/300/cats/3/',
-        'http://lorempixel.com/300/150/cats/4/',
-        'http://lorempixel.com/150/300/cats/5/',
-        'http://lorempixel.com/300/300/cats/6/',
-        'http://lorempixel.com/300/300/cats/7/',
-        'http://lorempixel.com/200/300/cats/8/',
-        'http://lorempixel.com/400/300/cats/9/',
-        'http://lorempixel.com/300/150/cats/10/',
+        'https://cdn.framework7.io/placeholder/cats-300x300-1.jpg',
+        'https://cdn.framework7.io/placeholder/cats-200x300-2.jpg',
+        'https://cdn.framework7.io/placeholder/cats-400x300-3.jpg',
+        'https://cdn.framework7.io/placeholder/cats-300x150-4.jpg',
+        'https://cdn.framework7.io/placeholder/cats-150x300-5.jpg',
+        'https://cdn.framework7.io/placeholder/cats-300x300-6.jpg',
+        'https://cdn.framework7.io/placeholder/cats-300x300-7.jpg',
+        'https://cdn.framework7.io/placeholder/cats-200x300-8.jpg',
+        'https://cdn.framework7.io/placeholder/cats-400x300-9.jpg',
+        'https://cdn.framework7.io/placeholder/cats-300x150-10.jpg',
       ],
       people: [
         {
           name: 'Kate Johnson',
-          avatar: 'http://lorempixel.com/100/100/people/9',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
         },
         {
           name: 'Blue Ninja',
-          avatar: 'http://lorempixel.com/100/100/people/7',
+          avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
         },
       ],
       answers: [
@@ -104,22 +105,26 @@ export default class extends React.Component {
   render() {
     return (
       <Page>
-        <Navbar title="Messsages" backLink="Back"></Navbar>
+        <Navbar title="Messages" backLink="Back"></Navbar>
 
         <Messagebar
           placeholder={this.placeholder}
           ref={(el) => {this.messagebarComponent = el}}
           attachmentsVisible={this.attachmentsVisible}
           sheetVisible={this.state.sheetVisible}
+          value={this.state.messageText}
+          onInput={(e) => this.setState({messageText: e.target.value})}
         >
           <Link
             iconIos="f7:camera_fill"
+            iconAurora="f7:camera_fill"
             iconMd="material:camera_alt"
             slot="inner-start"
             onClick={() => {this.setState({sheetVisible: !this.state.sheetVisible})}}
           ></Link>
           <Link
-            iconIos="f7:arrow_up_fill"
+            iconIos="f7:arrow_up_circle_fill"
+            iconAurora="f7:arrow_up_circle_fill"
             iconMd="material:send"
             slot="inner-end"
             onClick={this.sendMessage.bind(this)}
@@ -239,14 +244,14 @@ export default class extends React.Component {
   }
   sendMessage() {
     const self = this;
-    const text = self.messagebar.getValue().replace(/\n/g, '<br>').trim();
+    const text = self.state.messageText.replace(/\n/g, '<br>').trim();
     const messagesToSend = [];
     self.state.attachments.forEach((attachment) => {
       messagesToSend.push({
         image: attachment,
       });
     });
-    if (text.trim().length) {
+    if (text.length) {
       messagesToSend.push({
         text,
       });
@@ -262,8 +267,9 @@ export default class extends React.Component {
       sheetVisible: false,
       // Send message
       messagesData: [...self.state.messagesData, ...messagesToSend],
+      // Clear
+      messageText: '',
     });
-    self.messagebar.clear();
 
     // Focus area
     if (text.length) self.messagebar.focus();

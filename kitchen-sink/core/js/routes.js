@@ -17,11 +17,12 @@ var routes = [
     content: '\
       <div class="page">\
         <div class="navbar">\
+          <div class="navbar-bg"></div>\
           <div class="navbar-inner sliding">\
             <div class="left">\
               <a href="#" class="link back">\
                 <i class="icon icon-back"></i>\
-                <span class="ios-only">Back</span>\
+                <span class="if-not-md">Back</span>\
               </a>\
             </div>\
             <div class="title">Panel Page 1</div>\
@@ -41,11 +42,12 @@ var routes = [
     content: '\
       <div class="page">\
         <div class="navbar">\
+          <div class="navbar-bg"></div>\
           <div class="navbar-inner sliding">\
             <div class="left">\
               <a href="#" class="link back">\
                 <i class="icon icon-back"></i>\
-                <span class="ios-only">Back</span>\
+                <span class="if-not-md">Back</span>\
               </a>\
             </div>\
             <div class="title">Panel Page 2</div>\
@@ -69,6 +71,10 @@ var routes = [
   {
     path: '/action-sheet/',
     componentUrl: './pages/action-sheet.html',
+  },
+  {
+    path: '/appbar/',
+    componentUrl: './pages/appbar.html',
   },
   {
     path: '/autocomplete/',
@@ -95,12 +101,20 @@ var routes = [
     url: './pages/cards.html',
   },
   {
+    path: '/cards-expandable/',
+    url: './pages/cards-expandable.html',
+  },
+  {
     path: '/checkbox/',
-    url: './pages/checkbox.html',
+    componentUrl: './pages/checkbox.html',
   },
   {
     path: '/chips/',
     componentUrl: './pages/chips.html',
+  },
+  {
+    path: '/color-picker/',
+    componentUrl: './pages/color-picker.html',
   },
   {
     path: '/contacts-list/',
@@ -175,6 +189,10 @@ var routes = [
     componentUrl: './pages/login-screen-page.html',
   },
   {
+    path: '/menu/',
+    componentUrl: './pages/menu.html',
+  },
+  {
     path: '/messages/',
     componentUrl: './pages/messages.html',
   },
@@ -243,16 +261,16 @@ var routes = [
     componentUrl: './pages/sheet-modal.html',
   },
   {
+    path: '/skeleton/',
+    componentUrl: './pages/skeleton.html',
+  },
+  {
     path: '/smart-select/',
     url: './pages/smart-select.html',
   },
   {
     path: '/sortable/',
     url: './pages/sortable.html',
-  },
-  {
-    path: '/statusbar/',
-    componentUrl: './pages/statusbar.html',
   },
   {
     path: '/stepper/',
@@ -407,6 +425,10 @@ var routes = [
     ],
   },
   {
+    path: '/text-editor/',
+    componentUrl: './pages/text-editor.html'
+  },
+  {
     path: '/toast/',
     componentUrl: './pages/toast.html',
   },
@@ -439,6 +461,10 @@ var routes = [
   {
     path: '/tooltip/',
     componentUrl: './pages/tooltip.html',
+  },
+  {
+    path: '/treeview/',
+    componentUrl: './pages/treeview.html',
   },
   {
     path: '/timeline/',
@@ -475,6 +501,16 @@ var routes = [
     componentUrl: './pages/color-themes.html',
   },
 
+  // Effects
+  {
+    path: '/page-transitions/',
+    componentUrl: './pages/page-transitions.html',
+  },
+  {
+    path: '/page-transitions/:effect',
+    componentUrl: './pages/page-transitions-effect.html',
+  },
+
   // Page Loaders
   {
     path: '/page-loader-template7/:user/:userId/:posts/:postId/',
@@ -495,6 +531,17 @@ var routes = [
         foo: 'bar',
       },
     },
+  },
+  {
+    path: '/master-detail/',
+    url: './pages/master-detail-master.html',
+    master: true,
+    detailRoutes: [
+      {
+        path: '/master-detail/:id/',
+        templateUrl: './pages/master-detail-detail.html',
+      },
+    ]
   },
 
   // Default route (404 page). MUST BE THE LAST

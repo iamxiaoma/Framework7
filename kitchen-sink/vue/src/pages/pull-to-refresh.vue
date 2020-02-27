@@ -1,5 +1,5 @@
 <template>
-  <f7-page ptr @ptr:refresh="loadMore">
+  <f7-page ptr :ptr-mousewheel="true" @ptr:refresh="loadMore">
     <f7-navbar title="Pull To Refresh" back-link="Back"></f7-navbar>
     <f7-list media-list>
       <f7-list-item
@@ -33,17 +33,17 @@
           {
             title: 'Yellow Submarine',
             author: 'Beatles',
-            cover: 'http://lorempixel.com/88/88/abstract/1',
+            cover: 'https://cdn.framework7.io/placeholder/abstract-88x88-1.jpg',
           },
           {
             title: 'Don\'t Stop Me Now',
             author: 'Queen',
-            cover: 'http://lorempixel.com/88/88/abstract/2',
+            cover: 'https://cdn.framework7.io/placeholder/abstract-88x88-2.jpg',
           },
           {
             title: 'Billie Jean',
             author: 'Michael Jackson',
-            cover: 'http://lorempixel.com/88/88/abstract/3',
+            cover: 'https://cdn.framework7.io/placeholder/abstract-88x88-3.jpg',
           },
         ],
         songs: ['Yellow Submarine', 'Don\'t Stop Me Now', 'Billie Jean', 'Californication'],
@@ -51,18 +51,18 @@
       };
     },
     methods: {
-      loadMore(event, done) {
+      loadMore(done) {
         const self = this;
 
         setTimeout(() => {
-          const picURL = `http://lorempixel.com/88/88/abstract/${Math.round(Math.random() * 10)}`;
+          const picURL = `https://cdn.framework7.io/placeholder/abstract-88x88-${(Math.floor(Math.random() * 10) + 1)}.jpg`;
           const song = self.songs[Math.floor(Math.random() * self.songs.length)];
           const author = self.authors[Math.floor(Math.random() * self.authors.length)];
 
           self.items.push({
             title: song,
             author,
-            img: picURL,
+            cover: picURL,
           });
 
           done();

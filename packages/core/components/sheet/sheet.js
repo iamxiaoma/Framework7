@@ -7,8 +7,15 @@ export default {
   name: 'sheet',
   params: {
     sheet: {
+      push: false,
+      backdrop: undefined,
+      backdropEl: undefined,
       closeByBackdropClick: true,
       closeByOutsideClick: false,
+      closeOnEscape: false,
+      swipeToClose: false,
+      swipeToStep: false,
+      swipeHandler: null,
     },
   },
   static: {
@@ -16,16 +23,30 @@ export default {
   },
   create() {
     const app = this;
-    if (!app.passedParams.sheet || app.passedParams.sheet.backdrop === undefined) {
-      app.params.sheet.backdrop = app.theme === 'md';
-    }
     app.sheet = Utils.extend(
       {},
       ModalMethods({
         app,
         constructor: Sheet,
         defaultSelector: '.sheet-modal.modal-in',
-      })
+      }),
+      {
+        stepOpen(sheet) {
+          const sheetInstance = app.sheet.get(sheet);
+          if (sheetInstance && sheetInstance.stepOpen) return sheetInstance.stepOpen();
+          return undefined;
+        },
+        stepClose(sheet) {
+          const sheetInstance = app.sheet.get(sheet);
+          if (sheetInstance && sheetInstance.stepClose) return sheetInstance.stepClose();
+          return undefined;
+        },
+        stepToggle(sheet) {
+          const sheetInstance = app.sheet.get(sheet);
+          if (sheetInstance && sheetInstance.stepToggle) return sheetInstance.stepToggle();
+          return undefined;
+        },
+      },
     );
   },
   clicks: {

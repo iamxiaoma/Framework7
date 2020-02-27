@@ -6,7 +6,7 @@ export default () => (
     <Navbar title="Buttons" backLink="Back" />
 
     <BlockTitle>Usual Buttons</BlockTitle>
-    <Block>
+    <Block strong>
       <Row>
         <Col>
           <Button>Button</Button>
@@ -21,7 +21,7 @@ export default () => (
     </Block>
 
     <BlockTitle>Fill Buttons</BlockTitle>
-    <Block>
+    <Block strong>
       <Row>
         <Col>
           <Button fill>Button</Button>
@@ -35,8 +35,8 @@ export default () => (
       </Row>
     </Block>
 
-    <BlockTitle>Outline Buttons (MD-theme only)</BlockTitle>
-    <Block>
+    <BlockTitle>Outline Buttons</BlockTitle>
+    <Block strong>
       <Row>
         <Col>
           <Button outline>Button</Button>
@@ -50,8 +50,8 @@ export default () => (
       </Row>
     </Block>
 
-    <BlockTitle>Raised Buttons (MD-theme only)</BlockTitle>
-    <Block>
+    <BlockTitle>Raised Buttons</BlockTitle>
+    <Block strong>
       <Row tag="p">
         <Col tag="span">
           <Button raised>Button</Button>
@@ -77,13 +77,23 @@ export default () => (
     </Block>
 
     <BlockTitle>Segmented</BlockTitle>
-    <Block>
-      <Segmented raised tag="p">
+    <Block strong>
+      <Segmented tag="p">
+        <Button>Button</Button>
+        <Button>Button</Button>
+        <Button active>Active</Button>
+      </Segmented>
+      <Segmented strong tag="p">
         <Button>Button</Button>
         <Button>Button</Button>
         <Button active>Active</Button>
       </Segmented>
       <Segmented raised tag="p">
+        <Button>Button</Button>
+        <Button>Button</Button>
+        <Button active>Active</Button>
+      </Segmented>
+      <Segmented tag="p">
         <Button outline>Outline</Button>
         <Button outline>Outline</Button>
         <Button outline active>Active</Button>
@@ -93,61 +103,61 @@ export default () => (
         <Button round>Button</Button>
         <Button round active>Active</Button>
       </Segmented>
-      <Segmented raised round tag="p">
+      <Segmented round tag="p">
         <Button round outline>Outline</Button>
         <Button round outline>Outline</Button>
         <Button round outline active>Active</Button>
       </Segmented>
     </Block>
 
-    <BlockTitle>Big Buttons</BlockTitle>
-    <Block>
+    <BlockTitle>Large Buttons</BlockTitle>
+    <Block strong>
       <Row tag="p">
         <Col tag="span">
-          <Button big>Button</Button>
+          <Button large>Button</Button>
         </Col>
         <Col tag="span">
-          <Button big fill>Fill</Button>
+          <Button large fill>Fill</Button>
         </Col>
       </Row>
       <Row tag="p">
         <Col tag="span">
-          <Button big raised>Raised</Button>
+          <Button large raised>Raised</Button>
         </Col>
         <Col tag="span">
-          <Button big raised fill>Raised Fill</Button>
+          <Button large raised fill>Raised Fill</Button>
         </Col>
       </Row>
     </Block>
 
     <BlockTitle>Small Buttons</BlockTitle>
-    <Block>
+    <Block strong>
       <Row tag="p">
         <Col tag="span">
-          <Button big small>Button</Button>
+          <Button large small>Button</Button>
         </Col>
         <Col tag="span">
-          <Button big small outline>Outline</Button>
+          <Button large small outline>Outline</Button>
         </Col>
         <Col tag="span">
-          <Button big small fill>Fill</Button>
+          <Button large small fill>Fill</Button>
         </Col>
       </Row>
       <Row tag="p">
         <Col tag="span">
-          <Button big small round>Button</Button>
+          <Button large small round>Button</Button>
         </Col>
         <Col tag="span">
-          <Button big small outline round>Outline</Button>
+          <Button large small outline round>Outline</Button>
         </Col>
         <Col tag="span">
-          <Button big small fill round>Fill</Button>
+          <Button large small fill round>Fill</Button>
         </Col>
       </Row>
     </Block>
 
     <BlockTitle>Color Buttons</BlockTitle>
-    <Block>
+    <Block strong>
       <Row>
         <Col>
           <Button color="red">Red</Button>
@@ -162,7 +172,7 @@ export default () => (
     </Block>
 
     <BlockTitle>Color Fill Buttons</BlockTitle>
-    <Block>
+    <Block strong>
       <Row>
         <Col>
           <Button fill color="red">Red</Button>
@@ -183,7 +193,7 @@ export default () => (
       <ListButton title="List Button 3"></ListButton>
     </List>
     <List inset>
-      <ListButton title="Big Red Button" color="red"></ListButton>
+      <ListButton title="Large Red Button" color="red"></ListButton>
     </List>
   </Page>
 );

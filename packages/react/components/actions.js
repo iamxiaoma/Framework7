@@ -2,7 +2,6 @@ import React from 'react';
 import Mixins from '../utils/mixins';
 import Utils from '../utils/utils';
 import __reactComponentWatch from '../runtime-helpers/react-component-watch.js';
-import __reactComponentEl from '../runtime-helpers/react-component-el.js';
 import __reactComponentDispatchEvent from '../runtime-helpers/react-component-dispatch-event.js';
 import __reactComponentSlots from '../runtime-helpers/react-component-slots.js';
 import __reactComponentSetProps from '../runtime-helpers/react-component-set-props.js';
@@ -11,34 +10,38 @@ class F7Actions extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onOpen', 'onOpened', 'onClose', 'onClosed']);
+    })();
   }
 
-  onOpen(event) {
-    this.dispatchEvent('actions:open actionsOpen', event);
+  onOpen(instance) {
+    this.dispatchEvent('actions:open actionsOpen', instance);
   }
 
-  onOpened(event) {
-    this.dispatchEvent('actions:opened actionsOpened', event);
+  onOpened(instance) {
+    this.dispatchEvent('actions:opened actionsOpened', instance);
   }
 
-  onClose(event) {
-    this.dispatchEvent('actions:close actionsClose', event);
+  onClose(instance) {
+    this.dispatchEvent('actions:close actionsClose', instance);
   }
 
-  onClosed(event) {
-    this.dispatchEvent('actions:closed actionsClosed', event);
+  onClosed(instance) {
+    this.dispatchEvent('actions:closed actionsClosed', instance);
   }
 
   open(animate) {
     const self = this;
-    if (!self.$f7) return undefined;
-    return self.$f7.actions.open(self.refs.el, animate);
+    if (!self.f7Actions) return undefined;
+    return self.f7Actions.open(animate);
   }
 
   close(animate) {
     const self = this;
-    if (!self.$f7) return undefined;
-    return self.$f7.actions.close(self.refs.el, animate);
+    if (!self.f7Actions) return undefined;
+    return self.f7Actions.close(animate);
   }
 
   render() {
@@ -66,26 +69,13 @@ class F7Actions extends React.Component {
   componentWillUnmount() {
     const self = this;
     if (self.f7Actions) self.f7Actions.destroy();
-    const el = self.el;
-    if (!el) return;
-    el.removeEventListener('actions:open', self.onOpenBound);
-    el.removeEventListener('actions:opened', self.onOpenedBound);
-    el.removeEventListener('actions:close', self.onCloseBound);
-    el.removeEventListener('actions:closed', self.onClosedBound);
+    delete self.f7Actions;
   }
 
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
     if (!el) return;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    el.addEventListener('actions:open', self.onOpenBound);
-    el.addEventListener('actions:opened', self.onOpenedBound);
-    el.addEventListener('actions:close', self.onCloseBound);
-    el.addEventListener('actions:closed', self.onClosedBound);
     const props = self.props;
     const {
       grid,
@@ -94,18 +84,30 @@ class F7Actions extends React.Component {
       forceToPopover,
       opened,
       closeByBackdropClick,
-      closeByOutsideClick
+      closeByOutsideClick,
+      closeOnEscape,
+      backdrop,
+      backdropEl
     } = props;
     const actionsParams = {
-      el: self.refs.el,
-      grid
+      el,
+      grid,
+      on: {
+        open: self.onOpen,
+        opened: self.onOpened,
+        close: self.onClose,
+        closed: self.onClosed
+      }
     };
     if (target) actionsParams.targetEl = target;
     {
       if ('convertToPopover' in props) actionsParams.convertToPopover = convertToPopover;
       if ('forceToPopover' in props) actionsParams.forceToPopover = forceToPopover;
+      if ('backdrop' in props) actionsParams.backdrop = backdrop;
+      if ('backdropEl' in props) actionsParams.backdropEl = backdropEl;
       if ('closeByBackdropClick' in props) actionsParams.closeByBackdropClick = closeByBackdropClick;
       if ('closeByOutsideClick' in props) actionsParams.closeByOutsideClick = closeByOutsideClick;
+      if ('closeOnEscape' in props) actionsParams.closeOnEscape = closeOnEscape;
     }
     self.$f7ready(() => {
       self.f7Actions = self.$f7.actions.create(actionsParams);
@@ -118,10 +120,6 @@ class F7Actions extends React.Component {
 
   get slots() {
     return __reactComponentSlots(this.props);
-  }
-
-  get el() {
-    return __reactComponentEl(this);
   }
 
   dispatchEvent(events, ...args) {
@@ -158,8 +156,11 @@ __reactComponentSetProps(F7Actions, Object.assign({
   convertToPopover: Boolean,
   forceToPopover: Boolean,
   target: [String, Object],
+  backdrop: Boolean,
+  backdropEl: [String, Object, window.HTMLElement],
   closeByBackdropClick: Boolean,
-  closeByOutsideClick: Boolean
+  closeByOutsideClick: Boolean,
+  closeOnEscape: Boolean
 }, Mixins.colorProps));
 
 F7Actions.displayName = 'f7-actions';

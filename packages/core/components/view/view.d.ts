@@ -28,7 +28,7 @@ export namespace View {
   }
   interface Parameters {
     /**	View name. If view was created with name, then it may be accessed via app.views.[name] */
-    name?: boolean
+    name?: string
     /**	Specify whether this is View is main or not. If not passed then will be determined based on whether its element has view-main class or not */
     main?: boolean
     /**	Set to false to disable view router */
@@ -43,16 +43,24 @@ export namespace View {
     allowDuplicateUrls?: boolean
     /**	Enables transitions between pages */
     animate?: boolean
+    /** Custom page transition effect name */
+    transition?: string
     /**	Enable/disable preloading of previous page when you go deep in navigation. Should be enabled for correct work of "swipe back page" feature. */
     preloadPreviousPage?: boolean
     /**	When enabled, View will always reload currently active page without loading new one */
     reloadPages?: boolean
+    /** When enabled it will reload every detail page when navigating (by default false) */
+    reloadDetail?: boolean
+    /** Minimum app width to enable Master Detail view for master routes (routes with master: true parameter) */
+    masterDetailBreakpoint?: number
     /**	When enabled it will restore page scroll top when you get back to this page */
     restoreScrollTopOnBack?: boolean
     /**	Delay (in ms) after new page will be loaded and inserted to DOM and before it will be transitioned. Can be increased a bit to improve performance. Will have effect only under iOS theme */
     iosPageLoadDelay?: number
     /**	Delay (in ms) after new page will be loaded and inserted to DOM and before it will be transitioned. Can be increased a bit to improve performance. Will have effect only under MD theme */
-    materialPageLoadDelay?: number
+    mdPageLoadDelay?: number
+    /**	Delay (in ms) after new page will be loaded and inserted to DOM and before it will be transitioned. Can be increased a bit to improve performance. Will have effect only under Aurora theme */
+    auroraPageLoadDelay?: number
     /**	When enabled then router will pass route url query to request url query (for url, templateUrl and componentUrl route properties) */
     passRouteQueryToRequest?: boolean
     /**	When enabled then router will pass current route parameters to request url query (for url, templateUrl and componentUrl route properties) */
@@ -81,10 +89,12 @@ export namespace View {
     xhrCacheIgnoreGetParameters?: boolean
     /**	Duration in ms (milliseconds) while app will use cache instead of loading page with another Ajax request. By default it takes 10 minutes. */
     xhrCacheDuration?: number
+    /** When enabled, Router will cache components specified via `componentUrl` (default true) */
+    componentCache?: boolean
+    /** When enabled, and there is no children pages inside of the View. It will load initial page that matches to initial URL (default true) */
+    loadInitialPage?: boolean
     /**	Enables dynamic navbar for iOS theme */
     iosDynamicNavbar?: boolean
-    /**	When enabled will extract dynamic navbar HTML element from page element and put it as a child of Views element. It improves dynamic navbar transition appearance, but in case you need dynamic navbar to be always as a page's child, then disable this parameter */
-    iosSeparateDynamicNavbar?: boolean
     /**	This option (when enabled) gives more native look for dynamic navbar left back-link icon animation. Useful only when you use dynamic navbar with default back-link icon on left side set as "sliding". */
     iosAnimateNavbarBackIcon?: boolean
     /**	Enable/disable ability to swipe back from left edge of screen to get to the previous page. For iOS theme */
@@ -107,6 +117,16 @@ export namespace View {
     mdSwipeBackAnimateShadow?: boolean
     /**	Enable/disable opacity animation during swipe back action. You can disable it to improve performance. For MD theme */
     mdSwipeBackAnimateOpacity?: boolean
+    /**	Enable/disable ability to swipe back from left edge of screen to get to the previous page. For Aurora theme */
+    auroraSwipeBack?: boolean
+    /**	Value in px. Swipe back action will start if "touch distance" will be more than this value. For Aurora theme */
+    auroraSwipeBackThreshold?: number
+    /**	Value in px. Width of invisible left edge of the screen that triggers swipe back action. For Aurora theme */
+    auroraSwipeBackActiveArea?: number
+    /**	Enable/disable box-shadow animation during swipe back action. You can disable it to improve performance. For Aurora theme */
+    auroraSwipeBackAnimateShadow?: boolean
+    /**	Enable/disable opacity animation during swipe back action. You can disable it to improve performance. For Aurora theme */
+    auroraSwipeBackAnimateOpacity?: boolean
     /**	If you develop web app (not PhoneGap or Home Screen web app) it is useful to enable hash navigation (browser url will look like "http://my-webapp.com/#!/about.html"). User as well will be able to navigate through app's history by using browser's default back and forward buttons. */
     pushState?: boolean
     /**	Push state root URL separator, for example "http://my-app.com/". It is useful only in case when you use empty ("") pushStateSeparator */

@@ -10,21 +10,35 @@ export default {
     size: [Number, String],
     ...Mixins.colorProps,
   },
+  state() {
+    const self = this;
+    const $f7 = self.$f7;
+    if (!$f7) {
+      self.$f7ready(() => {
+        self.setState({ _theme: self.$theme });
+      });
+    }
+    return {
+      _theme: $f7 ? self.$theme : null,
+    };
+  },
   render() {
     const self = this;
-    const { sizeComputed } = self;
-    const props = self.props;
+    const { sizeComputed, props } = self;
     const { id, style, className } = props;
+    // eslint-disable-next-line
+    const theme = self.state._theme;
 
     const preloaderStyle = {};
     if (sizeComputed) {
       preloaderStyle.width = `${sizeComputed}px`;
       preloaderStyle.height = `${sizeComputed}px`;
+      preloaderStyle['--f7-preloader-size'] = `${sizeComputed}px`;
     }
     if (style) Utils.extend(preloaderStyle, style || {});
 
     let innerEl;
-    if (self.$theme.md) {
+    if (theme && theme.md) {
       innerEl = (
         <span className="preloader-inner">
           <span className="preloader-inner-gap" />
@@ -35,6 +49,33 @@ export default {
             <span className="preloader-inner-half-circle" />
           </span>
         </span>
+      );
+    } else if (theme && theme.ios) {
+      innerEl = (
+        <span className="preloader-inner">
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+          <span className="preloader-inner-line"></span>
+        </span>
+      );
+    } else if (theme && theme.aurora) {
+      innerEl = (
+        <span className="preloader-inner">
+          <span className="preloader-inner-circle"></span>
+        </span>
+      );
+    } else if (!theme) {
+      innerEl = (
+        <span className="preloader-inner"></span>
       );
     }
 

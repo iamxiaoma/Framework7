@@ -19,13 +19,16 @@ class Dialog extends Modal {
     if (typeof extendedParams.closeByBackdropClick === 'undefined') {
       extendedParams.closeByBackdropClick = app.params.dialog.closeByBackdropClick;
     }
+    if (typeof extendedParams.backdrop === 'undefined') {
+      extendedParams.backdrop = app.params.dialog.backdrop;
+    }
 
     // Extends with open/close Modal methods;
     super(app, extendedParams);
 
     const dialog = this;
 
-    const { title, text, content, buttons, verticalButtons, cssClass } = extendedParams;
+    const { title, text, content, buttons, verticalButtons, cssClass, backdrop } = extendedParams;
 
     dialog.params = extendedParams;
 
@@ -72,10 +75,13 @@ class Dialog extends Modal {
       return dialog.destroy();
     }
 
-    let $backdropEl = app.root.children('.dialog-backdrop');
-    if ($backdropEl.length === 0) {
-      $backdropEl = $('<div class="dialog-backdrop"></div>');
-      app.root.append($backdropEl);
+    let $backdropEl;
+    if (backdrop) {
+      $backdropEl = app.root.children('.dialog-backdrop');
+      if ($backdropEl.length === 0) {
+        $backdropEl = $('<div class="dialog-backdrop"></div>');
+        app.root.append($backdropEl);
+      }
     }
 
     // Assign events
@@ -88,7 +94,7 @@ class Dialog extends Modal {
       if (button.close !== false) dialog.close();
     }
     let addKeyboardHander;
-    function onKeyPress(e) {
+    function onKeyDown(e) {
       const keyCode = e.keyCode;
       buttons.forEach((button, index) => {
         if (button.keyCodes && button.keyCodes.indexOf(keyCode) >= 0) {
@@ -112,7 +118,7 @@ class Dialog extends Modal {
           && !app.device.android
           && !app.device.cordova
         ) {
-          $(document).on('keydown', onKeyPress);
+          $(document).on('keydown', onKeyDown);
         }
       });
       dialog.on('close', () => {
@@ -125,7 +131,7 @@ class Dialog extends Modal {
           && !app.device.android
           && !app.device.cordova
         ) {
-          $(document).off('keydown', onKeyPress);
+          $(document).off('keydown', onKeyDown);
         }
         addKeyboardHander = false;
       });
@@ -135,7 +141,7 @@ class Dialog extends Modal {
       $el,
       el: $el[0],
       $backdropEl,
-      backdropEl: $backdropEl[0],
+      backdropEl: $backdropEl && $backdropEl[0],
       type: 'dialog',
       setProgress(progress, duration) {
         app.progressbar.set($el.find('.progressbar'), progress, duration);

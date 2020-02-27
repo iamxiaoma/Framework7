@@ -52,11 +52,21 @@ export default {
       type: Boolean,
       default: true,
     },
-    backLinkText: {
+    pageBackLinkText: {
       type: String,
+      default: undefined,
+    },
+    popupCloseLinkText: {
+      type: String,
+      default: undefined,
     },
     navbarOfText: {
       type: String,
+      default: undefined,
+    },
+    navbarShowCount: {
+      type: Boolean,
+      default: undefined,
     },
     swiper: {
       type: Object,
@@ -91,7 +101,7 @@ export default {
       const self = this;
       const pb = self.f7PhotoBrowser;
       if (!pb) return;
-      self.f7PhotoBrowser.photos = newValue;
+      self.f7PhotoBrowser.params.photos = newValue;
       if (pb.opened && pb.swiper) {
         pb.swiper.update();
       }

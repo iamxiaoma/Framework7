@@ -24,6 +24,7 @@ export default {
       default: 'right-bottom',
     },
     tooltip: String,
+    tooltipTrigger: String,
     ...Mixins.colorProps,
   },
   render() {
@@ -73,7 +74,7 @@ export default {
     let linkEl;
     if (linkChildren.length || (linkSlots && linkSlots.length)) {
       linkEl = (
-        <a target={target} href={href} onClick={self.onClick.bind(self)} key="f7-fab-link">
+        <a ref="linkEl" target={target} href={href} key="f7-fab-link">
           {linkChildren}
           {textEl}
           {linkSlots}
@@ -104,36 +105,60 @@ export default {
       </div>
     );
   },
-  methods: {
-    onClick(event) {
-      const self = this;
-      self.dispatchEvent('click', event);
-    },
-  },
   watch: {
     'props.tooltip': function watchTooltip(newText) {
       const self = this;
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger,
+        });
+        return;
+      }
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     },
   },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick']);
+  },
   componentDidMount() {
     const self = this;
-    const { tooltip } = self.props;
+    if (self.refs.linkEl) {
+      self.refs.linkEl.addEventListener('click', self.onClick);
+    }
+    const { tooltip, tooltipTrigger } = self.props;
     if (!tooltip) return;
     self.$f7ready((f7) => {
       self.f7Tooltip = f7.tooltip.create({
         targetEl: self.refs.el,
         text: tooltip,
+        trigger: tooltipTrigger,
       });
     });
   },
   componentWillUnmount() {
     const self = this;
+    if (self.refs.linkEl) {
+      self.refs.linkEl.removeEventListener('click', self.onClick);
+    }
     if (self.f7Tooltip && self.f7Tooltip.destroy) {
       self.f7Tooltip.destroy();
       self.f7Tooltip = null;
       delete self.f7Tooltip;
     }
+  },
+  methods: {
+    onClick(event) {
+      const self = this;
+      self.dispatchEvent('click', event);
+    },
   },
 };

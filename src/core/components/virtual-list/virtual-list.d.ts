@@ -43,7 +43,7 @@ export namespace VirtualList {
     /** Prepend array with items to virtual list */
     prependItems(items: any[]): void
     /** Replace item at specified index with the new one */
-    replaceItem(index: number, items: any[]): void
+    replaceItem(index: number, item: any): void
     /** Replace all items with arrays of new items */
     replaceAllItems(items: any[]): void
     /** Move virtual item from oldIndex to newIndex */
@@ -80,7 +80,7 @@ export namespace VirtualList {
     rowsAfter?: number
     /** Number of items per row. Doesn't compatible when using Virtual List with dynamic height (default 1) */
     cols?: number
-    /** If number - list item height in px. If function then function should return item height. By default equals to 44 for iOS theme and 48 for MD theme */
+    /** If number - list item height in px. If function then function should return item height. By default equals to 44 for iOS theme, 48 for MD theme, and 38 for Aurora theme */
     height?: number | Function
     /** Template7 string template or Template7 compiled template that used to render single item. Template should contain full HTML layout for single item, including wrapping <li></li> tags */
     itemTemplate?: string | Function
@@ -110,13 +110,13 @@ export namespace VirtualList {
     }
   }
   interface Events {
-    itemBeforeInsert: (virutalList: VirtualList, itemEl: HTMLElement, item: any) => void
-    itemsBeforeInsert: (virutalList: VirtualList, fragment: DocumentFragment) => void
-    beforeClear: (virutalList: VirtualList, fragment: DocumentFragment) => void
-    itemsAfterInsert: (virutalList: VirtualList, fragment: DocumentFragment) => void
+    itemBeforeInsert: (virtualList: VirtualList, itemEl: HTMLElement, item: any) => void
+    itemsBeforeInsert: (virtualList: VirtualList, fragment: DocumentFragment) => void
+    beforeClear: (virtualList: VirtualList, fragment: DocumentFragment) => void
+    itemsAfterInsert: (virtualList: VirtualList, fragment: DocumentFragment) => void
   }
   interface AppMethods {
-    virutalList: {
+    virtualList: {
       /** initialize virtual list with parameters */
       create(parameters: Parameters): VirtualList
       /** destroy Virtual List instance */
@@ -126,13 +126,13 @@ export namespace VirtualList {
     }
   }
   interface AppParams {
-    virutalList?: Parameters | undefined
+    virtualList?: Parameters | undefined
   }
   interface AppEvents {
-    vlItemBeforeInsert: (virutalList: VirtualList, itemEl: HTMLElement, item: any) => void
-    vlItemsBeforeInsert: (virutalList: VirtualList, fragment: DocumentFragment) => void
-    vlBeforeClear: (virutalList: VirtualList, fragment: DocumentFragment) => void
-    vlItemsAfterInsert: (virutalList: VirtualList, fragment: DocumentFragment) => void
+    vlItemBeforeInsert: (virtualList: VirtualList, itemEl: HTMLElement, item: any) => void
+    vlItemsBeforeInsert: (virtualList: VirtualList, fragment: DocumentFragment) => void
+    vlBeforeClear: (virtualList: VirtualList, fragment: DocumentFragment) => void
+    vlItemsAfterInsert: (virtualList: VirtualList, fragment: DocumentFragment) => void
   }
 }
 

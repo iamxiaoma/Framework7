@@ -17,12 +17,10 @@ declare namespace F7ListItemContent {
     badgeColor? : string
     mediaList? : boolean
     mediaItem? : boolean
-    itemInput? : boolean
-    itemInputWithInfo? : boolean
-    inlineLabel? : boolean
     checkbox? : boolean
     checked? : boolean
     defaultChecked? : boolean
+    indeterminate? : boolean
     radio? : boolean
     name? : string
     value? : string | number | Array<any>
@@ -41,7 +39,6 @@ declare namespace F7ListItemContent {
   }
 }
 declare class F7ListItemContent extends React.Component<F7ListItemContent.Props, {}> {
-  checkHasInputState() : unknown
   onClick(event? : any) : unknown
   onChange(event? : any) : unknown
 }

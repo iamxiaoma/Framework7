@@ -14,11 +14,27 @@ export default {
       type: [Number, String],
       default: 'auto'
     },
-    tabletWidth: {
+    xsmall: {
       type: [Number, String]
     },
-    desktopWidth: {
+    small: {
       type: [Number, String]
+    },
+    medium: {
+      type: [Number, String]
+    },
+    large: {
+      type: [Number, String]
+    },
+    xlarge: {
+      type: [Number, String]
+    },
+    resizable: Boolean,
+    resizableFixed: Boolean,
+    resizableAbsolute: Boolean,
+    resizableHandler: {
+      type: Boolean,
+      default: true
     }
   }, Mixins.colorProps),
 
@@ -32,31 +48,72 @@ export default {
       style,
       tag,
       width,
-      tabletWidth,
-      desktopWidth
+      xsmall,
+      small,
+      medium,
+      large,
+      xlarge,
+      resizable,
+      resizableFixed,
+      resizableAbsolute,
+      resizableHandler
     } = props;
     const ColTag = tag;
     const classes = Utils.classNames(className, {
       col: width === 'auto',
       [`col-${width}`]: width !== 'auto',
-      [`tablet-${tabletWidth}`]: tabletWidth,
-      [`desktop-${desktopWidth}`]: desktopWidth
+      [`xsmall-${xsmall}`]: xsmall,
+      [`small-${small}`]: small,
+      [`medium-${medium}`]: medium,
+      [`large-${large}`]: large,
+      [`xlarge-${xlarge}`]: xlarge,
+      resizable,
+      'resizable-fixed': resizableFixed,
+      'resizable-absolute': resizableAbsolute
     }, Mixins.colorClasses(props));
     return _h(ColTag, {
       style: style,
       class: classes,
-      on: {
-        click: self.onClick.bind(self)
-      },
+      ref: 'el',
       attrs: {
         id: id
       }
-    }, [this.$slots['default']]);
+    }, [this.$slots['default'], resizable && resizableHandler && _h('span', {
+      class: 'resize-handler'
+    })]);
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onClick', 'onResize']);
+  },
+
+  mounted() {
+    const self = this;
+    self.eventTargetEl = self.$refs.el;
+    self.eventTargetEl.addEventListener('click', self.onClick);
+    self.$f7ready(f7 => {
+      f7.on('gridResize', self.onResize);
+    });
+  },
+
+  beforeDestroy() {
+    const self = this;
+    const el = self.$refs.el;
+    if (!el || !self.$f7) return;
+    el.removeEventListener('click', self.onClick);
+    self.$f7.off('gridResize', self.onResize);
+    delete self.eventTargetEl;
   },
 
   methods: {
     onClick(event) {
       this.dispatchEvent('click', event);
+    },
+
+    onResize(el) {
+      if (el === this.eventTargetEl) {
+        this.dispatchEvent('grid:resize gridResize');
+      }
     },
 
     dispatchEvent(events, ...args) {

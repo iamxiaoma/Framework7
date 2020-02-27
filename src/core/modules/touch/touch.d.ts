@@ -11,14 +11,8 @@ export namespace Touch {
   interface AppParams {
     /** Object with touch-module related parameters */
     touch?: {
-      /** Fast clicks is a built-in library that removes 300ms delay from links and form elements in mobile browser while you click them. You can disable this built-in library if you want to use other third party fast clicks script.. (default true) */
-      fastClicks? : boolean
-      /** Distance threshold (in px) to prevent short taps. So if tap/move distance is larger than this value then "click" will not be triggered. (default 10) */
-      fastClicksDistanceThreshold? : number
-      /** Minimal allowed delay (in ms) between multiple clicks. (default 50) */
-      fastClicksDelayBetweenClicks? : number
-      /** This parameter allows to specify elements not handled by fast clicks by passing CSS selector of such elements. */
-      fastClicksExclude? : string
+      /** Distance threshold (in px) to prevent short swipes. So if tap/move distance is larger than this value then "click" will not be triggered. (default 5) */
+      touchClicksDistanceThreshold? : number
       /** . (default true) */
       disableContextMenu? : boolean
       /** Enables tap hold. (default false) */
@@ -29,12 +23,16 @@ export namespace Touch {
       tapHoldPreventClicks? : boolean
       /** When enabled, app will add "active-state" class to currently touched (:active) element.. (default true) */
       activeState? : boolean
-      /** CSS selector of elements where enabled activeState will add appropriate active class. (default a, button, label, span, .actions-button) */
+      /** CSS selector of elements where enabled activeState will add appropriate active class. (default a, button, label, span, .actions-button, .stepper-button, .stepper-button-plus, .stepper-button-minus, .card-expandable, .menu-item, .link, .item-link) */
       activeStateElements? : string
-      /** Enables Material theme specific touch ripple effect. (default true) */
-      materialRipple? : boolean
-      /** CSS selector of elements to apply touch ripple effect on click. (default .ripple, .link, .item-link, .links-list a, .button, button, .input-clear-button, .dialog-button, .tab-link, .item-radio, .item-checkbox, .actions-button, .searchbar-disable-button, .fab a, .checkbox, .radio, .data-table .sortable-cell, .notification-close-button) */
-      materialRippleElements? : string
+      /** Enables MD-theme specific touch ripple effect. (default true) */
+      mdTouchRipple? : boolean
+      /** Enables iOS-theme specific touch ripple effect. (default false) */
+      iosTouchRipple? : boolean
+      /** Enables Aurora-theme specific touch ripple effect. (default false) */
+      auroraTouchRipple? : boolean
+      /** CSS selector of elements to apply touch ripple effect on click. (default .ripple, .link, .item-link, .list-button, .links-list a, .button, button, .input-clear-button, .dialog-button, .tab-link, .item-radio, .item-checkbox, .actions-button, .searchbar-disable-button, .fab a, .checkbox, .radio, .data-table .sortable-cell:not(.input-cell), .notification-close-button, .stepper-button, .stepper-button-minus, .stepper-button-plus, .menu-item-content) */
+      touchRippleElements? : string
     } | undefined
   }
   interface AppEvents {

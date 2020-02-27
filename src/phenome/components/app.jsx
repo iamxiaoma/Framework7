@@ -22,11 +22,6 @@ export default {
     */
     ...Mixins.colorProps,
   },
-  state() {
-    return {
-      modals: [],
-    };
-  },
   render() {
     const self = this;
     const props = self.props;
@@ -58,7 +53,7 @@ export default {
     if (parentEl && parentEl !== document.body && parentEl.parentNode === document.body) {
       parentEl.style.height = '100%';
     }
-
+    if (f7.instance) return;
     f7.init(el, params, routes);
   },
 };

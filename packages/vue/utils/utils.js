@@ -1,4 +1,8 @@
 const Utils = {
+  text(text) {
+    if (typeof text === 'undefined' || text === null) return '';
+    return text;
+  },
   noUndefinedProps(obj) {
     const o = {};
     Object.keys(obj).forEach((key) => {
@@ -72,7 +76,16 @@ const Utils = {
         });
       } else if (arg) classes.push(arg);
     });
-    return classes.join(' ');
+    const uniqueClasses = [];
+    classes.forEach((c) => {
+      if (uniqueClasses.indexOf(c) < 0) uniqueClasses.push(c);
+    });
+    return uniqueClasses.join(' ');
+  },
+  bindMethods(context, methods = []) {
+    for (let i = 0; i < methods.length; i += 1) {
+      if (context[methods[i]]) context[methods[i]] = context[methods[i]].bind(context);
+    }
   },
 };
 export default Utils;

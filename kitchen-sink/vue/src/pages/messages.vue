@@ -1,21 +1,25 @@
 <template>
   <f7-page>
-    <f7-navbar title="Messsages" back-link="Back"></f7-navbar>
+    <f7-navbar title="Messages" back-link="Back"></f7-navbar>
 
     <f7-messagebar
       :placeholder="placeholder"
       ref="messagebar"
       :attachments-visible="attachmentsVisible"
       :sheet-visible="sheetVisible"
+      :value="messageText"
+      @input="messageText = $event.target.value"
     >
       <f7-link
         icon-ios="f7:camera_fill"
+        icon-aurora="f7:camera_fill"
         icon-md="material:camera_alt"
         slot="inner-start"
         @click="sheetVisible = !sheetVisible"
       ></f7-link>
       <f7-link
-        icon-ios="f7:arrow_up_fill"
+        icon-ios="f7:arrow_up_circle_fill"
+        icon-aurora="f7:arrow_up_circle_fill"
         icon-md="material:send"
         slot="inner-end"
         @click="sendMessage"
@@ -88,6 +92,7 @@
         attachments: [],
         sheetVisible: false,
         typingMessage: null,
+        messageText: '',
         messagesData: [
           {
             type: 'sent',
@@ -101,13 +106,13 @@
             name: 'Kate',
             type: 'received',
             text: 'Hi, I am good!',
-            avatar: 'http://lorempixel.com/100/100/people/9',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
           },
           {
             name: 'Blue Ninja',
             type: 'received',
             text: 'Hi there, I am also fine, thanks! And how are you?',
-            avatar: 'http://lorempixel.com/100/100/people/7',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
           },
           {
             type: 'sent',
@@ -119,48 +124,48 @@
           },
           {
             type: 'sent',
-            image: 'http://lorempixel.com/200/260/cats/4/',
+            image: 'https://cdn.framework7.io/placeholder/cats-200x260-4.jpg',
 
           },
           {
             name: 'Kate',
             type: 'received',
             text: 'Nice!',
-            avatar: 'http://lorempixel.com/100/100/people/9',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
           },
           {
             name: 'Kate',
             type: 'received',
             text: 'Like it very much!',
-            avatar: 'http://lorempixel.com/100/100/people/9',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
           },
           {
             name: 'Blue Ninja',
             type: 'received',
             text: 'Awesome!',
-            avatar: 'http://lorempixel.com/100/100/people/7',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
           },
         ],
         images: [
-          'http://lorempixel.com/300/300/cats/1/',
-          'http://lorempixel.com/200/300/cats/2/',
-          'http://lorempixel.com/400/300/cats/3/',
-          'http://lorempixel.com/300/150/cats/4/',
-          'http://lorempixel.com/150/300/cats/5/',
-          'http://lorempixel.com/300/300/cats/6/',
-          'http://lorempixel.com/300/300/cats/7/',
-          'http://lorempixel.com/200/300/cats/8/',
-          'http://lorempixel.com/400/300/cats/9/',
-          'http://lorempixel.com/300/150/cats/10/',
+          'https://cdn.framework7.io/placeholder/cats-300x300-1.jpg',
+          'https://cdn.framework7.io/placeholder/cats-200x300-2.jpg',
+          'https://cdn.framework7.io/placeholder/cats-400x300-3.jpg',
+          'https://cdn.framework7.io/placeholder/cats-300x150-4.jpg',
+          'https://cdn.framework7.io/placeholder/cats-150x300-5.jpg',
+          'https://cdn.framework7.io/placeholder/cats-300x300-6.jpg',
+          'https://cdn.framework7.io/placeholder/cats-300x300-7.jpg',
+          'https://cdn.framework7.io/placeholder/cats-200x300-8.jpg',
+          'https://cdn.framework7.io/placeholder/cats-400x300-9.jpg',
+          'https://cdn.framework7.io/placeholder/cats-300x150-10.jpg',
         ],
         people: [
           {
             name: 'Kate Johnson',
-            avatar: 'http://lorempixel.com/100/100/people/9',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-9.jpg',
           },
           {
             name: 'Blue Ninja',
-            avatar: 'http://lorempixel.com/100/100/people/7',
+            avatar: 'https://cdn.framework7.io/placeholder/people-100x100-7.jpg',
           },
         ],
         answers: [
@@ -238,14 +243,14 @@
       },
       sendMessage() {
         const self = this;
-        const text = self.messagebar.getValue().replace(/\n/g, '<br>').trim();
+        const text = self.messageText.replace(/\n/g, '<br>').trim();
         const messagesToSend = [];
         self.attachments.forEach((attachment) => {
           messagesToSend.push({
             image: attachment,
           });
         });
-        if (text.trim().length) {
+        if (text.length) {
           messagesToSend.push({
             text,
           });
@@ -259,7 +264,7 @@
         // Hide sheet
         self.sheetVisible = false;
         // Clear area
-        self.messagebar.clear();
+        self.messageText = '';
         // Focus area
         if (text.length) self.messagebar.focus();
         // Send message

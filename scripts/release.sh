@@ -19,22 +19,27 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
   # remove old builds
   rm -rf ./packages/core/components
+  rm -rf ./packages/core/lazy-components
   rm -rf ./packages/core/css
   rm -rf ./packages/core/js
   rm -rf ./packages/core/less
   rm -rf ./packages/core/modules
   rm -rf ./packages/core/utils
+  rm -rf ./packages/core/icons
   rm -rf ./packages/core/*.js
+  rm -rf ./packages/core/*.ts
   rm -rf ./packages/core/*.less
   rm -rf ./packages/react/components
   rm -rf ./packages/react/runtime-helpers
   rm -rf ./packages/react/utils
   rm -rf ./packages/react/*.js
+  rm -rf ./packages/react/*.ts
   rm -rf ./packages/react/*.map
   rm -rf ./packages/vue/components
   rm -rf ./packages/vue/runtime-helpers
   rm -rf ./packages/vue/utils
   rm -rf ./packages/vue/*.js
+  rm -rf ./packages/vue/*.ts
   rm -rf ./packages/vue/*.map
 
   # build
@@ -61,11 +66,18 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
       npm version "$VERSION"
       npm publish
     )
+    (
+      cd packages/svelte
+      npm version "$VERSION"
+      npm publish
+    )
   )
+
+  # Build Production Kitchen Sink
+  npm run ks:prod
 
   # commit
   git add -A
-  git add -f packages/**/*.*
   git commit -m "$VERSION release"
 
   # publish
@@ -88,6 +100,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
       cd packages/vue
       tar -zcvf ../framework7-vue.tar.gz ./*
     )
+    (
+      cd packages/svelte
+      tar -zcvf ../framework7-svelte.tar.gz ./*
+    )
   )
 
   # Read TOKEN
@@ -102,6 +118,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   source "scripts/release-asset.sh" github_api_token=$token tag=v$VERSION filename=./packages/framework7.tar.gz
   source "scripts/release-asset.sh" github_api_token=$token tag=v$VERSION filename=./packages/framework7-react.tar.gz
   source "scripts/release-asset.sh" github_api_token=$token tag=v$VERSION filename=./packages/framework7-vue.tar.gz
+  source "scripts/release-asset.sh" github_api_token=$token tag=v$VERSION filename=./packages/framework7-svelte.tar.gz
 
   # Remove generated assets
   rm -rf ./packages/*.tar.gz

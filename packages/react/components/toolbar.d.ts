@@ -6,13 +6,22 @@ declare namespace F7Toolbar {
     id? : string | number
     className? : string
     style? : React.CSSProperties
-    bottomMd? : boolean
     tabbar? : boolean
     labels? : boolean
     scrollable? : boolean
     hidden? : boolean
     noShadow? : boolean
     noHairline? : boolean
+    noBorder? : boolean
+    position? : string
+    topMd? : boolean
+    topIos? : boolean
+    topAurora? : boolean
+    top? : boolean
+    bottomMd? : boolean
+    bottomIos? : boolean
+    bottomAurora? : boolean
+    bottom? : boolean
     inner? : boolean
     color? : string
     colorTheme? : string
@@ -21,10 +30,13 @@ declare namespace F7Toolbar {
     borderColor? : string
     rippleColor? : string
     themeDark? : boolean
-    
+    onToolbarHide? : (...args: any[]) => void
+    onToolbarShow? : (...args: any[]) => void
   }
 }
 declare class F7Toolbar extends React.Component<F7Toolbar.Props, {}> {
+  onHide(navbarEl? : any) : unknown
+  onShow(navbarEl? : any) : unknown
   hide(animate? : any) : unknown
   show(animate? : any) : unknown
 }

@@ -2,6 +2,7 @@ import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 import F7Input from './input';
 import F7Link from './link';
+import __vueComponentTransformJSXProps from '../runtime-helpers/vue-component-transform-jsx-props.js';
 import __vueComponentDispatchEvent from '../runtime-helpers/vue-component-dispatch-event.js';
 import __vueComponentProps from '../runtime-helpers/vue-component-props.js';
 export default {
@@ -24,11 +25,15 @@ export default {
       default: 0
     },
     maxHeight: Number,
-    resizePage: Boolean,
+    resizePage: {
+      type: Boolean,
+      default: true
+    },
     sendLink: String,
     value: [String, Number, Array],
     disabled: Boolean,
     readonly: Boolean,
+    textareaId: [Number, String],
     name: String,
     placeholder: {
       type: String,
@@ -41,14 +46,7 @@ export default {
   }, Mixins.colorProps),
 
   created() {
-    this.onChangeBound = this.onChange.bind(this);
-    this.onInputBound = this.onInput.bind(this);
-    this.onFocusBound = this.onFocus.bind(this);
-    this.onBlurBound = this.onBlur.bind(this);
-    this.onClickBound = this.onClick.bind(this);
-    this.onDeleteAttachmentBound = this.onDeleteAttachment.bind(this);
-    this.onClickAttachmentBound = this.onClickAttachment.bind(this);
-    this.onResizePageBound = this.onResizePage.bind(this);
+    Utils.bindMethods(this, ['onChange', 'onInput', 'onFocus', 'onBlur', 'onClick', 'onAttachmentDelete', 'onAttachmentClick,', 'onResizePage']);
   },
 
   render() {
@@ -95,6 +93,8 @@ export default {
       });
     }
 
+    const valueProps = {};
+    if ('value' in self.props) valueProps.value = value;
     return _h('div', {
       ref: 'el',
       style: style,
@@ -106,13 +106,14 @@ export default {
       class: 'toolbar-inner'
     }, [slotsInnerStart, _h('div', {
       class: 'messagebar-area'
-    }, [slotsBeforeArea, messagebarAttachmentsEl, _h(F7Input, {
-      ref: 'area',
+    }, [slotsBeforeArea, messagebarAttachmentsEl, _h(F7Input, __vueComponentTransformJSXProps(Object.assign({
+      ref: 'area'
+    }, valueProps, {
       on: {
-        input: self.onInputBound,
-        change: self.onChangeBound,
-        focus: self.onFocusBound,
-        blur: self.onBlurBound
+        input: self.onInput,
+        change: self.onChange,
+        focus: self.onFocus,
+        blur: self.onBlur
       },
       attrs: {
         type: 'textarea',
@@ -121,12 +122,11 @@ export default {
         disabled: disabled,
         name: name,
         readonly: readonly,
-        resizable: resizable,
-        value: value
+        resizable: resizable
       }
-    }), slotsAfterArea]), (sendLink && sendLink.length > 0 || slotsSendLink) && _h(F7Link, {
+    }))), slotsAfterArea]), (sendLink && sendLink.length > 0 || slotsSendLink) && _h(F7Link, {
       on: {
-        click: self.onClickBound
+        click: self.onClick
       }
     }, [slotsSendLink || sendLink]), slotsInnerEnd, innerEndEls]), slotsAfterInner, messagebarSheetEl]);
   },
@@ -177,16 +177,18 @@ export default {
     if (!init) return;
     const el = self.$refs.el;
     if (!el) return;
-    el.addEventListener('messagebar:attachmentdelete', self.onDeleteAttachmentBound);
-    el.addEventListener('messagebar:attachmentclick', self.onClickAttachmentBound);
-    el.addEventListener('messagebar:resizepage', self.onResizePageBound);
     const params = Utils.noUndefinedProps({
       el,
       top,
       resizePage,
       bottomOffset,
       topOffset,
-      maxHeight
+      maxHeight,
+      on: {
+        attachmentDelete: self.onAttachmentDelete,
+        attachmentClick: self.onAttachmentClick,
+        resizePage: self.onResizePage
+      }
     });
     self.$f7ready(() => {
       self.f7Messagebar = self.$f7.messagebar.create(params);
@@ -217,11 +219,6 @@ export default {
   beforeDestroy() {
     const self = this;
     if (self.f7Messagebar && self.f7Messagebar.destroy) self.f7Messagebar.destroy();
-    const el = self.$refs.el;
-    if (!el) return;
-    el.removeEventListener('messagebar:attachmentdelete', self.onDeleteAttachmentBound);
-    el.removeEventListener('messagebar:attachmentclick', self.onClickAttachmentBound);
-    el.removeEventListener('messagebar:resizepage', self.onResizePageBound);
   },
 
   methods: {
@@ -320,16 +317,16 @@ export default {
       this.dispatchEvent('click', event);
     },
 
-    onDeleteAttachment(event) {
-      this.dispatchEvent('messagebar:attachmentdelete messagebarAttachmentDelete', event);
+    onAttachmentDelete(instance, attachmentEl, attachmentElIndex) {
+      this.dispatchEvent('messagebar:attachmentdelete messagebarAttachmentDelete', instance, attachmentEl, attachmentElIndex);
     },
 
-    onClickAttachment(event) {
-      this.dispatchEvent('messagebar:attachmentclick messagebarAttachmentClick', event);
+    onAttachmentClick(instance, attachmentEl, attachmentElIndex) {
+      this.dispatchEvent('messagebar:attachmentclick messagebarAttachmentClick', instance, attachmentEl, attachmentElIndex);
     },
 
-    onResizePage(event) {
-      this.dispatchEvent('messagebar:resizepage messagebarResizePage', event);
+    onResizePage(instance) {
+      this.dispatchEvent('messagebar:resizepage messagebarResizePage', instance);
     },
 
     dispatchEvent(events, ...args) {

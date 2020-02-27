@@ -7,6 +7,7 @@ export default {
   props: Object.assign({
     id: [String, Number],
     text: String,
+    confirmTitle: String,
     confirmText: String,
     overswipe: Boolean,
     close: Boolean,
@@ -25,6 +26,7 @@ export default {
       delete: deleteProp,
       close,
       href,
+      confirmTitle,
       confirmText,
       text
     } = props;
@@ -34,17 +36,28 @@ export default {
       'swipeout-close': close
     }, Mixins.colorClasses(props));
     return _h('a', {
+      ref: 'el',
       style: style,
       class: classes,
-      on: {
-        click: this.onClick.bind(this)
-      },
       attrs: {
         href: href || '#',
         id: id,
-        'data-confirm': confirmText || undefined
+        'data-confirm': confirmText || undefined,
+        'data-confirm-title': confirmTitle || undefined
       }
     }, [this.$slots['default'] || [text]]);
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onClick']);
+  },
+
+  mounted() {
+    this.$refs.el.addEventListener('click', this.onClick);
+  },
+
+  beforeDestroy() {
+    this.$refs.el.removeEventListener('click', this.onClick);
   },
 
   methods: {

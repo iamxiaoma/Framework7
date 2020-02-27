@@ -6,6 +6,23 @@ import __reactComponentSetProps from '../runtime-helpers/react-component-set-pro
 class F7Preloader extends React.Component {
   constructor(props, context) {
     super(props, context);
+
+    this.state = (() => {
+      const self = this;
+      const $f7 = self.$f7;
+
+      if (!$f7) {
+        self.$f7ready(() => {
+          self.setState({
+            _theme: self.$theme
+          });
+        });
+      }
+
+      return {
+        _theme: $f7 ? self.$theme : null
+      };
+    })();
   }
 
   get sizeComputed() {
@@ -21,25 +38,27 @@ class F7Preloader extends React.Component {
   render() {
     const self = this;
     const {
-      sizeComputed
+      sizeComputed,
+      props
     } = self;
-    const props = self.props;
     const {
       id,
       style,
       className
     } = props;
+    const theme = self.state._theme;
     const preloaderStyle = {};
 
     if (sizeComputed) {
       preloaderStyle.width = `${sizeComputed}px`;
       preloaderStyle.height = `${sizeComputed}px`;
+      preloaderStyle['--f7-preloader-size'] = `${sizeComputed}px`;
     }
 
     if (style) Utils.extend(preloaderStyle, style || {});
     let innerEl;
 
-    if (self.$theme.md) {
+    if (theme && theme.md) {
       innerEl = React.createElement('span', {
         className: 'preloader-inner'
       }, React.createElement('span', {
@@ -53,6 +72,44 @@ class F7Preloader extends React.Component {
       }, React.createElement('span', {
         className: 'preloader-inner-half-circle'
       })));
+    } else if (theme && theme.ios) {
+      innerEl = React.createElement('span', {
+        className: 'preloader-inner'
+      }, React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }), React.createElement('span', {
+        className: 'preloader-inner-line'
+      }));
+    } else if (theme && theme.aurora) {
+      innerEl = React.createElement('span', {
+        className: 'preloader-inner'
+      }, React.createElement('span', {
+        className: 'preloader-inner-circle'
+      }));
+    } else if (!theme) {
+      innerEl = React.createElement('span', {
+        className: 'preloader-inner'
+      });
     }
 
     const classes = Utils.classNames(className, 'preloader', Mixins.colorClasses(props));

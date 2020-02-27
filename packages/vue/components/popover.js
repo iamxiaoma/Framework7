@@ -8,8 +8,11 @@ export default {
     id: [String, Number],
     opened: Boolean,
     target: [String, Object],
+    backdrop: Boolean,
+    backdropEl: [String, Object, window.HTMLElement],
     closeByBackdropClick: Boolean,
-    closeByOutsideClick: Boolean
+    closeByOutsideClick: Boolean,
+    closeOnEscape: Boolean
   }, Mixins.colorProps),
 
   render() {
@@ -49,32 +52,41 @@ export default {
     }
   },
 
+  created() {
+    Utils.bindMethods(this, ['onOpen', 'onOpened', 'onClose', 'onClosed']);
+  },
+
   mounted() {
     const self = this;
     const el = self.$refs.el;
     if (!el) return;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    el.addEventListener('popover:open', self.onOpenBound);
-    el.addEventListener('popover:opened', self.onOpenedBound);
-    el.addEventListener('popover:close', self.onCloseBound);
-    el.addEventListener('popover:closed', self.onClosedBound);
     const props = self.props;
     const {
       target,
       opened,
+      backdrop,
+      backdropEl,
       closeByBackdropClick,
-      closeByOutsideClick
+      closeByOutsideClick,
+      closeOnEscape
     } = props;
     const popoverParams = {
-      el
+      el,
+      on: {
+        open: self.onOpen,
+        opened: self.onOpened,
+        close: self.onClose,
+        closed: self.onClosed
+      }
     };
     if (target) popoverParams.targetEl = target;
     {
-      if (typeof self.$options.propsData.closeByBackdropClick !== 'undefined') popoverParams.closeByBackdropClick = closeByBackdropClick;
-      if (typeof self.$options.propsData.closeByOutsideClick !== 'undefined') popoverParams.closeByOutsideClick = closeByOutsideClick;
+      const propsData = self.$options.propsData;
+      if (typeof propsData.closeByBackdropClick !== 'undefined') popoverParams.closeByBackdropClick = closeByBackdropClick;
+      if (typeof propsData.closeByOutsideClick !== 'undefined') popoverParams.closeByOutsideClick = closeByOutsideClick;
+      if (typeof propsData.closeOnEscape !== 'undefined') popoverParams.closeOnEscape = closeOnEscape;
+      if (typeof propsData.backdrop !== 'undefined') popoverParams.backdrop = backdrop;
+      if (typeof propsData.backdropEl !== 'undefined') popoverParams.backdropEl = backdropEl;
     }
     self.$f7ready(() => {
       self.f7Popover = self.$f7.popover.create(popoverParams);
@@ -88,41 +100,35 @@ export default {
   beforeDestroy() {
     const self = this;
     if (self.f7Popover) self.f7Popover.destroy();
-    const el = self.$refs.el;
-    if (!el) return;
-    el.removeEventListener('popover:open', self.onOpenBound);
-    el.removeEventListener('popover:opened', self.onOpenedBound);
-    el.removeEventListener('popover:close', self.onCloseBound);
-    el.removeEventListener('popover:closed', self.onClosedBound);
   },
 
   methods: {
-    onOpen(event) {
-      this.dispatchEvent('popover:open popoverOpen', event);
+    onOpen(instance) {
+      this.dispatchEvent('popover:open popoverOpen', instance);
     },
 
-    onOpened(event) {
-      this.dispatchEvent('popover:opened popoverOpened', event);
+    onOpened(instance) {
+      this.dispatchEvent('popover:opened popoverOpened', instance);
     },
 
-    onClose(event) {
-      this.dispatchEvent('popover:close popoverClose', event);
+    onClose(instance) {
+      this.dispatchEvent('popover:close popoverClose', instance);
     },
 
-    onClosed(event) {
-      this.dispatchEvent('popover:closed popoverClosed', event);
+    onClosed(instance) {
+      this.dispatchEvent('popover:closed popoverClosed', instance);
     },
 
-    open(target, animate) {
+    open(animate) {
       const self = this;
-      if (!self.$f7) return undefined;
-      return self.$f7.popover.open(self.$refs.el, target, animate);
+      if (!self.f7Popover) return undefined;
+      return self.f7Popover.open(animate);
     },
 
     close(animate) {
       const self = this;
-      if (!self.$f7) return undefined;
-      return self.$f7.sheet.close(self.$refs.el, animate);
+      if (!self.f7Popover) return undefined;
+      return self.f7Popover.close(animate);
     },
 
     dispatchEvent(events, ...args) {

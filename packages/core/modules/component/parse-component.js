@@ -35,17 +35,21 @@ function parseComponent(componentString) {
   } else if (componentString.indexOf('<style scoped>') >= 0) {
     styleScoped = true;
     style = componentString.split('<style scoped>')[1].split('</style>')[0];
-    style = style.split('\n').map((line) => {
-      const trimmedLine = line.trim();
-      if (trimmedLine.indexOf('@') === 0) return line;
-      if (line.indexOf('{') >= 0) {
-        if (line.indexOf('{{this}}') >= 0) {
-          return line.replace('{{this}}', `[data-f7-${id}]`);
-        }
-        return `[data-f7-${id}] ${line.trim()}`;
-      }
-      return line;
-    }).join('\n');
+    style = style
+      .replace(/{{this}}/g, `[data-f7-${id}]`)
+      .replace(/[\n]?([^{^}]*){/ig, (string, rules) => {
+        // eslint-disable-next-line
+        rules = rules
+          .split(',')
+          .map((rule) => {
+            if (rule.indexOf('@') >= 0) return rule;
+            if (rule.indexOf(`[data-f7-${id}]`) >= 0) return rule;
+            return `[data-f7-${id}] ${rule.trim()}`;
+          })
+          .join(', ');
+
+        return `\n${rules} {`;
+      });
   }
 
   // Parse Script
@@ -57,6 +61,8 @@ function parseComponent(componentString) {
   } else {
     scriptContent = 'return {}';
   }
+  if (!scriptContent || !scriptContent.trim()) scriptContent = 'return {}';
+
   scriptContent = `window.${callbackCreateName} = function () {${scriptContent}}`;
 
   // Insert Script El
@@ -65,6 +71,7 @@ function parseComponent(componentString) {
   $('head').append(scriptEl);
 
   const component = window[callbackCreateName]();
+  const isClassComponent = typeof component === 'function';
 
   // Remove Script El
   $(scriptEl).remove();
@@ -78,7 +85,14 @@ function parseComponent(componentString) {
   }
   if (component.template) {
     if (component.templateType === 't7') {
-      component.template = Template7.compile(component.template);
+      if (isClassComponent) {
+        const templateFunction = Template7.compile(component.template);
+        component.prototype.render = function render() {
+          return templateFunction(this);
+        };
+      } else {
+        component.template = Template7.compile(component.template);
+      }
     }
     if (component.templateType === 'es') {
       const renderContent = `window.${callbackRenderName} = function () {
@@ -90,13 +104,22 @@ function parseComponent(componentString) {
       scriptEl.innerHTML = renderContent;
       $('head').append(scriptEl);
 
-      component.render = window[callbackRenderName]();
+      if (isClassComponent) {
+        component.prototype.render = component.template;
+      } else {
+        component.render = window[callbackRenderName]();
+      }
 
       // Remove Script El
       $(scriptEl).remove();
       window[callbackRenderName] = null;
       delete window[callbackRenderName];
     }
+  }
+
+  if (isClassComponent) {
+    delete component.template;
+    delete component.templateType;
   }
 
   // Assign Style

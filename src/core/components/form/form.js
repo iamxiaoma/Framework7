@@ -16,11 +16,7 @@ const FormData = {
     app.form.data[`form-${formId}`] = data;
 
     // Store form data in local storage also
-    try {
-      window.localStorage[`f7form-${formId}`] = JSON.stringify(data);
-    } catch (e) {
-      throw e;
-    }
+    window.localStorage[`f7form-${formId}`] = JSON.stringify(data);
   },
   get(form) {
     const app = this;
@@ -31,12 +27,8 @@ const FormData = {
       formId = $formEl.attr('id');
     }
 
-    try {
-      if (window.localStorage[`f7form-${formId}`]) {
-        return JSON.parse(window.localStorage[`f7form-${formId}`]);
-      }
-    } catch (e) {
-      throw e;
+    if (window.localStorage[`f7form-${formId}`]) {
+      return JSON.parse(window.localStorage[`f7form-${formId}`]);
     }
     if (app.form.data[`form-${formId}`]) {
       return app.form.data[`form-${formId}`];
@@ -59,13 +51,9 @@ const FormData = {
     }
 
     // Delete form data from local storage also
-    try {
-      if (window.localStorage[`f7form-${formId}`]) {
-        window.localStorage[`f7form-${formId}`] = '';
-        window.localStorage.removeItem(`f7form-${formId}`);
-      }
-    } catch (e) {
-      throw e;
+    if (window.localStorage[`f7form-${formId}`]) {
+      window.localStorage[`f7form-${formId}`] = '';
+      window.localStorage.removeItem(`f7form-${formId}`);
     }
   },
 };
@@ -250,19 +238,19 @@ function initAjaxForm() {
       contentType,
       data,
       beforeSend(xhr) {
-        $formEl.trigger('formajax:beforesend', data, xhr);
+        $formEl.trigger('formajax:beforesend', { data, xhr });
         app.emit('formAjaxBeforeSend', $formEl[0], data, xhr);
       },
       error(xhr) {
-        $formEl.trigger('formajax:error', data, xhr);
+        $formEl.trigger('formajax:error', { data, xhr });
         app.emit('formAjaxError', $formEl[0], data, xhr);
       },
       complete(xhr) {
-        $formEl.trigger('formajax:complete', data, xhr);
+        $formEl.trigger('formajax:complete', { data, xhr });
         app.emit('formAjaxComplete', $formEl[0], data, xhr);
       },
       success(response, status, xhr) {
-        $formEl.trigger('formajax:success', data, xhr);
+        $formEl.trigger('formajax:success', { data, xhr });
         app.emit('formAjaxSuccess', $formEl[0], data, xhr);
       },
     });

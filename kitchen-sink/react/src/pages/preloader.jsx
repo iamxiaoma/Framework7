@@ -10,11 +10,11 @@ export default class extends React.Component {
       <Page>
         <Navbar title="Preloader" backLink="Back"></Navbar>
         <Block>
-          <p>How about an activity indicator? Framework 7 has a nice one. The F7 Preloader is made with SVG and animated with CSS so it can be easily resized.</p>
+          <p>How about an activity indicator? Framework7 has a nice one. The F7 Preloader is made with SVG and animated with CSS so it can be easily resized.</p>
         </Block>
 
         <BlockTitle>Default</BlockTitle>
-        <Block className="row demo-preloaders align-items-stretch text-align-center">
+        <Block strong className="row demo-preloaders align-items-stretch text-align-center">
           <Col>
             <Preloader></Preloader>
           </Col>
@@ -30,7 +30,7 @@ export default class extends React.Component {
         </Block>
 
         <BlockTitle>Color Preloaders</BlockTitle>
-        <Block className="row text-align-center">
+        <Block strong className="row text-align-center">
           <Col>
             <Preloader color="red"></Preloader>
           </Col>
@@ -46,23 +46,23 @@ export default class extends React.Component {
         </Block>
 
         <BlockTitle>Multi-color (MD-theme only)</BlockTitle>
-        <Block className="text-align-center">
+        <Block strong className="text-align-center">
           <Preloader color="multi"></Preloader>
         </Block>
 
         <BlockTitle>Preloader Modals</BlockTitle>
-        <Block>
+        <Block strong>
           <p>With <b>app.preloader.show()</b> you can show small overlay with preloader indicator.</p>
           <p>
-            <a className="button button-raised" onClick={this.openIndicator.bind(this)}>Open Small Indicator</a>
+            <a className="button button-fill" onClick={this.openIndicator.bind(this)}>Open Small Indicator</a>
           </p>
           <p>With <b>app.dialog.preloader()</b> you can show dialog modal with preloader indicator.</p>
           <p>
-            <a className="button button-raised" onClick={this.openDialog.bind(this)}>Open Dialog Preloader</a>
+            <a className="button button-fill" onClick={this.openDialog.bind(this)}>Open Dialog Preloader</a>
           </p>
           <p>With <b>app.dialog.preloader('My text...')</b> you can show dialog preloader modal with custom title.</p>
           <p>
-            <a className="button button-raised" onClick={this.openCustomDialog.bind(this)}>Open Dialog Preloader</a>
+            <a className="button button-fill" onClick={this.openCustomDialog.bind(this)}>Open Dialog Preloader</a>
           </p>
         </Block>
       </Page>

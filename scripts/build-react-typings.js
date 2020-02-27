@@ -3,10 +3,9 @@
 /* eslint global-require: "off" */
 /* eslint no-param-reassign: "off" */
 
-const gulp = require('gulp');
-const modifyFile = require('gulp-modify-file');
-const rename = require('gulp-rename');
-const fs = require('fs');
+const path = require('path');
+const getOutput = require('./get-output');
+const fs = require('./utils/fs-extra');
 
 const importLib = `
 import * as React from 'react';
@@ -14,7 +13,7 @@ import * as React from 'react';
 
 const libExtension = `
 declare module 'react' {
-  interface Component extends Framework7Extensions {}
+  interface Component extends Partial<Framework7Extensions> {}
 }
 `.trim();
 
@@ -27,8 +26,7 @@ export default Framework7React;
 `.trim();
 
 function buildTypings(cb) {
-  const env = process.env.NODE_ENV || 'development';
-  const output = `${env === 'development' ? './build' : './packages'}/react`;
+  const output = `${getOutput()}/react`;
 
   const files = fs.readdirSync(`${output}/components`).filter(file => file.indexOf('.d.ts') < 0);
 
@@ -50,23 +48,20 @@ function buildTypings(cb) {
     componentExports.push(`  F7${componentName}`, `  F7${componentName} as ${componentName}`);
   });
 
-  gulp.src('./src/phenome/framework7-phenome.d.ts')
-    .pipe(modifyFile((content) => {
-      // Modify content
-      content = content
-        .replace('// IMPORT_LIB', importLib)
-        .replace('// IMPORT_COMPONENTS', componentImports.join('\n'))
-        .replace('// LIB_EXTENSION', libExtension)
-        .replace('// EXPORT_COMPONENTS', `export {\n${componentExports.join(',\n')}\n}`)
-        .replace('// DECLARE_PLUGIN', declarePlugin)
-        .replace('// EXPORT_PLUGIN', exportPlugin);
-      return content;
-    }))
-    .pipe(rename((file) => { file.basename = 'framework7-react.d'; file.extname = '.ts'; }))
-    .pipe(gulp.dest(`${output}/`))
-    .pipe(rename((file) => { file.basename = 'framework7-react.esm.d'; }))
-    .pipe(gulp.dest(`${output}/`))
-    .on('end', cb);
+  let reactTypings = fs.readFileSync(path.resolve(__dirname, '../src/phenome/framework7-phenome.d.ts'));
+  reactTypings = reactTypings
+    .replace('// IMPORT_LIB', importLib)
+    .replace('// IMPORT_COMPONENTS', componentImports.join('\n'))
+    .replace('// LIB_EXTENSION', libExtension)
+    .replace('// EXPORT_COMPONENTS', `export {\n${componentExports.join(',\n')}\n}`)
+    .replace('// DECLARE_PLUGIN', declarePlugin)
+    .replace('// EXPORT_PLUGIN', exportPlugin);
+
+  fs.writeFileSync(`${output}/framework7-react.d.ts`, reactTypings);
+  fs.writeFileSync(`${output}/framework7-react.bundle.d.ts`, reactTypings);
+  fs.writeFileSync(`${output}/framework7-react.esm.d.ts`, reactTypings);
+
+  cb();
 }
 
 module.exports = buildTypings;

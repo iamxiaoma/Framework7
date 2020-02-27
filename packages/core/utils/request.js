@@ -36,7 +36,7 @@ function Request(requestOptions) {
       beforeCreate (options),
       beforeOpen (xhr, options),
       beforeSend (xhr, options),
-      error (xhr, status),
+      error (xhr, status, message),
       complete (xhr, stautus),
       success (response, status, xhr),
       statusCode ()
@@ -100,7 +100,7 @@ function Request(requestOptions) {
     script.type = 'text/javascript';
     script.onerror = function onerror() {
       clearTimeout(abortTimeout);
-      fireCallback('error', null, 'scripterror');
+      fireCallback('error', null, 'scripterror', 'scripterror');
       fireCallback('complete', null, 'scripterror');
     };
     script.src = requestUrl;
@@ -119,7 +119,7 @@ function Request(requestOptions) {
       abortTimeout = setTimeout(() => {
         script.parentNode.removeChild(script);
         script = null;
-        fireCallback('error', null, 'timeout');
+        fireCallback('error', null, 'timeout', 'timeout');
       }, options.timeout);
     }
 
@@ -174,6 +174,8 @@ function Request(requestOptions) {
             newData.push(`Content-Disposition: form-data; name="${data[i].split('=')[0]}"\r\n\r\n${data[i].split('=')[1]}\r\n`);
           }
           postData = `--${boundary}\r\n${newData.join(`--${boundary}\r\n`)}--${boundary}--\r\n`;
+        } else if (options.contentType === 'application/json') {
+          postData = JSON.stringify(options.data);
         } else {
           postData = data;
         }
@@ -183,10 +185,14 @@ function Request(requestOptions) {
       xhr.setRequestHeader('Content-Type', options.contentType);
     }
   }
+  if (options.dataType === 'json' && (!options.headers || !options.headers.Accept)) {
+    xhr.setRequestHeader('Accept', 'application/json');
+  }
 
   // Additional headers
   if (options.headers) {
     Object.keys(options.headers).forEach((headerName) => {
+      if (typeof options.headers[headerName] === 'undefined') return;
       xhr.setRequestHeader(headerName, options.headers[headerName]);
     });
   }
@@ -205,11 +211,9 @@ function Request(requestOptions) {
     Utils.extend(xhr, options.xhrFields);
   }
 
-  let xhrTimeout;
 
   // Handle XHR
   xhr.onload = function onload() {
-    if (xhrTimeout) clearTimeout(xhrTimeout);
     if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) {
       let responseData;
       if (options.dataType === 'json') {
@@ -222,14 +226,14 @@ function Request(requestOptions) {
         if (!parseError) {
           fireCallback('success', responseData, xhr.status, xhr);
         } else {
-          fireCallback('error', xhr, 'parseerror');
+          fireCallback('error', xhr, 'parseerror', 'parseerror');
         }
       } else {
         responseData = xhr.responseType === 'text' || xhr.responseType === '' ? xhr.responseText : xhr.response;
         fireCallback('success', responseData, xhr.status, xhr);
       }
     } else {
-      fireCallback('error', xhr, xhr.status);
+      fireCallback('error', xhr, xhr.status, xhr.statusText);
     }
     if (options.statusCode) {
       if (globals.statusCode && globals.statusCode[xhr.status]) globals.statusCode[xhr.status](xhr);
@@ -239,21 +243,17 @@ function Request(requestOptions) {
   };
 
   xhr.onerror = function onerror() {
-    if (xhrTimeout) clearTimeout(xhrTimeout);
-    fireCallback('error', xhr, xhr.status);
+    fireCallback('error', xhr, xhr.status, xhr.status);
     fireCallback('complete', xhr, 'error');
   };
 
   // Timeout
   if (options.timeout > 0) {
-    xhr.onabort = function onabort() {
-      if (xhrTimeout) clearTimeout(xhrTimeout);
-    };
-    xhrTimeout = setTimeout(() => {
-      xhr.abort();
-      fireCallback('error', xhr, 'timeout');
+    xhr.timeout = options.timeout;
+    xhr.ontimeout = () => {
+      fireCallback('error', xhr, 'timeout', 'timeout');
       fireCallback('complete', xhr, 'timeout');
-    }, options.timeout);
+    };
   }
 
   // Ajax start callback
@@ -299,19 +299,53 @@ function RequestShortcut(method, ...args) {
   }
   return Request(requestOptions);
 }
-Request.get = function get(...args) {
-  return RequestShortcut('get', ...args);
+function RequestShortcutPromise(method, ...args) {
+  const [url, data, dataType] = args;
+  return new Promise((resolve, reject) => {
+    RequestShortcut(
+      method,
+      url,
+      data,
+      (responseData, status, xhr) => {
+        resolve({ data: responseData, status, xhr });
+      },
+      (xhr, status, message) => {
+        // eslint-disable-next-line
+        reject({ xhr, status, message });
+      },
+      dataType
+    );
+  });
+}
+Object.assign(Request, {
+  get: (...args) => RequestShortcut('get', ...args),
+  post: (...args) => RequestShortcut('post', ...args),
+  json: (...args) => RequestShortcut('json', ...args),
+  getJSON: (...args) => RequestShortcut('json', ...args),
+  postJSON: (...args) => RequestShortcut('postJSON', ...args),
+});
+
+Request.promise = function requestPromise(requestOptions) {
+  return new Promise((resolve, reject) => {
+    Request(Object.assign(requestOptions, {
+      success(data, status, xhr) {
+        resolve({ data, status, xhr });
+      },
+      error(xhr, status, message) {
+        // eslint-disable-next-line
+        reject({ xhr, status, message });
+      },
+    }));
+  });
 };
-Request.post = function post(...args) {
-  return RequestShortcut('post', ...args);
-};
-Request.json = function json(...args) {
-  return RequestShortcut('json', ...args);
-};
-Request.getJSON = Request.json;
-Request.postJSON = function postJSON(...args) {
-  return RequestShortcut('postJSON', ...args);
-};
+Object.assign(Request.promise, {
+  get: (...args) => RequestShortcutPromise('get', ...args),
+  post: (...args) => RequestShortcutPromise('post', ...args),
+  json: (...args) => RequestShortcutPromise('json', ...args),
+  getJSON: (...args) => RequestShortcutPromise('json', ...args),
+  postJSON: (...args) => RequestShortcutPromise('postJSON', ...args),
+});
+
 Request.setup = function setup(options) {
   if (options.type && !options.method) {
     Utils.extend(options, { method: options.type });

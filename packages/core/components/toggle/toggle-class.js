@@ -131,25 +131,21 @@ class Toggle extends Framework7Class {
       }
     }
     function handleInputChange() {
-      toggle.$el.trigger('toggle:change', toggle);
+      toggle.$el.trigger('toggle:change');
       toggle.emit('local::change toggleChange', toggle);
     }
     toggle.attachEvents = function attachEvents() {
-      if ("universal" !== 'desktop' && Support.touch) {
-        const passive = Support.passiveListener ? { passive: true } : false;
-        $el.on(app.touchEvents.start, handleTouchStart, passive);
-        app.on('touchmove', handleTouchMove);
-        app.on('touchend:passive', handleTouchEnd);
-      }
+      const passive = Support.passiveListener ? { passive: true } : false;
+      $el.on(app.touchEvents.start, handleTouchStart, passive);
+      app.on('touchmove', handleTouchMove);
+      app.on('touchend:passive', handleTouchEnd);
       toggle.$inputEl.on('change', handleInputChange);
     };
     toggle.detachEvents = function detachEvents() {
-      if (process.env.TARGET !== 'desktop' && Support.touch) {
-        const passive = Support.passiveListener ? { passive: true } : false;
-        $el.off(app.touchEvents.start, handleTouchStart, passive);
-        app.off('touchmove', handleTouchMove);
-        app.off('touchend:passive', handleTouchEnd);
-      }
+      const passive = Support.passiveListener ? { passive: true } : false;
+      $el.off(app.touchEvents.start, handleTouchStart, passive);
+      app.off('touchmove', handleTouchMove);
+      app.off('touchend:passive', handleTouchEnd);
       toggle.$inputEl.off('change', handleInputChange);
     };
 
@@ -172,7 +168,7 @@ class Toggle extends Framework7Class {
 
   destroy() {
     let toggle = this;
-    toggle.$el.trigger('toggle:beforedestroy', toggle);
+    toggle.$el.trigger('toggle:beforedestroy');
     toggle.emit('local::beforeDestroy toggleBeforeDestroy', toggle);
     delete toggle.$el[0].f7Toggle;
     toggle.detachEvents();

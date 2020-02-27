@@ -12,9 +12,6 @@ var app = new Framework7({
   id: 'io.framework7.testapp',
   root: '#app',
   theme: theme,
-  actions: {
-    backdrop: false,
-  },
   data: function () {
     return {
       user: {
@@ -29,6 +26,18 @@ var app = new Framework7({
     },
   },
   routes: routes,
+  popup: {
+    closeOnEscape: true,
+  },
+  sheet: {
+    closeOnEscape: true,
+  },
+  popover: {
+    closeOnEscape: true,
+  },
+  actions: {
+    closeOnEscape: true,
+  },
   vi: {
     placementId: 'pltd4o7ibb9rc653x14',
   },

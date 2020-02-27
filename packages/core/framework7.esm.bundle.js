@@ -1,13 +1,13 @@
 /**
- * Framework7 3.4.0
+ * Framework7 5.4.5
  * Full featured mobile HTML framework for building iOS & Android apps
- * http://framework7.io/
+ * https://framework7.io/
  *
- * Copyright 2014-2018 Vladimir Kharlampidi
+ * Copyright 2014-2020 Vladimir Kharlampidi
  *
  * Released under the MIT License
  *
- * Released on: September 28, 2018
+ * Released on: February 21, 2020
  */
 
 import Template7 from 'template7';
@@ -31,9 +31,11 @@ import RequestModule from './modules/request/request';
 import TouchModule from './modules/touch/touch';
 import ClicksModule from './modules/clicks/clicks';
 import RouterModule from './modules/router/router';
+import RouterTemplateLoaderModule from './modules/router/template-loader'; //NO_LITE
+import RouterComponentLoaderModule from './modules/router/component-loader'; //NO_LITE
+import ComponentModule, { Component } from './modules/component/component'; //NO_LITE
 import HistoryModule from './modules/history/history';
-import StorageModule from './modules/storage/storage';
-import ComponentModule from './modules/component/component';
+import ServiceWorkerModule from './modules/service-worker/service-worker';
 
 // Core Components
 import Statusbar from './components/statusbar/statusbar';
@@ -43,7 +45,9 @@ import Toolbar from './components/toolbar/toolbar';
 import Subnavbar from './components/subnavbar/subnavbar';
 import TouchRipple from './components/touch-ripple/touch-ripple';
 import Modal from './components/modal/modal';
+import Router from './modules/router/router-class';//NO_LITE
 
+import Appbar from './components/appbar/appbar';
 import Dialog from './components/dialog/dialog';
 import Popup from './components/popup/popup';
 import LoginScreen from './components/login-screen/login-screen';
@@ -89,9 +93,14 @@ import Notification from './components/notification/notification';
 import Autocomplete from './components/autocomplete/autocomplete';
 import Tooltip from './components/tooltip/tooltip';
 import Gauge from './components/gauge/gauge';
-import Vi from './components/vi/vi';
+import Skeleton from './components/skeleton/skeleton';
+import Menu from './components/menu/menu';
+import ColorPicker from './components/color-picker/color-picker';
+import Treeview from './components/treeview/treeview';
+import TextEditor from './components/text-editor/text-editor';
 import Elevation from './components/elevation/elevation';
 import Typography from './components/typography/typography';
+import Vi from './components/vi/vi';
 
 if ("es" !== 'es') {
   if (typeof window !== 'undefined') {
@@ -104,6 +113,11 @@ if ("es" !== 'es') {
 }
 
 // Install Core Modules & Components
+Router.use([ //NO_LITE
+  RouterTemplateLoaderModule, //NO_LITE
+  RouterComponentLoaderModule, //NO_LITE
+]); //NO_LITE
+
 Framework7.use([
   DeviceModule,
   SupportModule,
@@ -114,8 +128,8 @@ Framework7.use([
   ClicksModule,
   RouterModule,
   HistoryModule,
-  StorageModule,
-  ComponentModule,
+  ComponentModule, //NO_LITE
+  ServiceWorkerModule,
   Statusbar,
   View,
   Navbar,
@@ -123,6 +137,7 @@ Framework7.use([
   Subnavbar,
   TouchRipple,
   Modal,
+  Appbar,
   Dialog,
   Popup,
   LoginScreen,
@@ -168,10 +183,15 @@ Framework7.use([
   Autocomplete,
   Tooltip,
   Gauge,
-  Vi,
+  Skeleton,
+  Menu,
+  ColorPicker,
+  Treeview,
+  TextEditor,
   Elevation,
-  Typography
+  Typography,
+  Vi
 ]);
 
-export { Template7, $ as Dom7, Request, Utils, Device, Support };
+export { Template7, $ as Dom7, Request, Utils, Device, Support, Component };
 export default Framework7;

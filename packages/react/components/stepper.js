@@ -10,9 +10,7 @@ class F7Stepper extends React.Component {
     this.__reactRefs = {};
 
     (() => {
-      this.onInputBound = this.onInput.bind(this);
-      this.onMinusClickBound = this.onMinusClick.bind(this);
-      this.onPlusClickBound = this.onPlusClick.bind(this);
+      Utils.bindMethods(this, ['onInput', 'onMinusClick', 'onPlusClick']);
     })();
   }
 
@@ -46,6 +44,11 @@ class F7Stepper extends React.Component {
     this.dispatchEvent('input', event, stepper);
   }
 
+  onChange(event) {
+    const stepper = this.f7Stepper;
+    this.dispatchEvent('change', event, stepper);
+  }
+
   onMinusClick(event) {
     const stepper = this.f7Stepper;
     this.dispatchEvent('stepper:minusclick stepperMinusClick', event, stepper);
@@ -63,16 +66,23 @@ class F7Stepper extends React.Component {
       round,
       roundIos,
       roundMd,
+      roundAurora,
       fill,
       fillIos,
       fillMd,
-      big,
-      bigIos,
-      bigMd,
+      fillAurora,
+      large,
+      largeIos,
+      largeMd,
+      largeAurora,
       small,
       smallIos,
       smallMd,
+      smallAurora,
       raised,
+      raisedMd,
+      raisedIos,
+      raisedAurora,
       disabled
     } = props;
     return Utils.classNames(self.props.className, 'stepper', {
@@ -80,16 +90,23 @@ class F7Stepper extends React.Component {
       'stepper-round': round,
       'stepper-round-ios': roundIos,
       'stepper-round-md': roundMd,
+      'stepper-round-aurora': roundAurora,
       'stepper-fill': fill,
       'stepper-fill-ios': fillIos,
       'stepper-fill-md': fillMd,
-      'stepper-big': big,
-      'stepper-big-ios': bigIos,
-      'stepper-big-md': bigMd,
+      'stepper-fill-aurora': fillAurora,
+      'stepper-large': large,
+      'stepper-large-ios': largeIos,
+      'stepper-large-md': largeMd,
+      'stepper-large-aurora': largeAurora,
       'stepper-small': small,
       'stepper-small-ios': smallIos,
       'stepper-small-md': smallMd,
-      'stepper-raised': raised
+      'stepper-small-aurora': smallAurora,
+      'stepper-raised': raised,
+      'stepper-raised-ios': raisedIos,
+      'stepper-raised-md': raisedMd,
+      'stepper-raised-aurora': raisedAurora
     }, Mixins.colorClasses(props));
   }
 
@@ -106,7 +123,9 @@ class F7Stepper extends React.Component {
       max,
       step,
       id,
-      style
+      style,
+      name,
+      inputId
     } = props;
     let inputWrapEl;
     let valueEl;
@@ -115,13 +134,19 @@ class F7Stepper extends React.Component {
       let inputEl;
       {
         inputEl = React.createElement('input', {
+          ref: __reactNode => {
+            this.__reactRefs['inputEl'] = __reactNode;
+          },
+          name: name,
+          id: inputId,
           type: inputType,
           min: inputType === 'number' ? min : undefined,
           max: inputType === 'number' ? max : undefined,
           step: inputType === 'number' ? step : undefined,
+          onInput: self.onInput,
+          onChange: self.onChange,
           value: value,
-          readOnly: inputReadonly,
-          onInput: self.onInput.bind(self)
+          readOnly: inputReadonly
         });
       }
       inputWrapEl = React.createElement('div', {
@@ -143,24 +168,55 @@ class F7Stepper extends React.Component {
       style: style,
       className: self.classes
     }, React.createElement('div', {
-      className: 'stepper-button-minus',
-      onClick: self.onMinusClickBound
+      ref: __reactNode => {
+        this.__reactRefs['minusEl'] = __reactNode;
+      },
+      className: 'stepper-button-minus'
     }), inputWrapEl, valueEl, React.createElement('div', {
-      className: 'stepper-button-plus',
-      onClick: self.onPlusClickBound
+      ref: __reactNode => {
+        this.__reactRefs['plusEl'] = __reactNode;
+      },
+      className: 'stepper-button-plus'
     }));
   }
 
   componentWillUnmount() {
-    if (!this.props.init) return;
+    const self = this;
+    const {
+      minusEl,
+      plusEl
+    } = self.refs;
 
-    if (this.f7Stepper && this.f7Stepper.destroy) {
-      this.f7Stepper.destroy();
+    if (minusEl) {
+      minusEl.removeEventListener('click', self.onMinusClick);
+    }
+
+    if (plusEl) {
+      plusEl.removeEventListener('click', self.onPlusClick);
+    }
+
+    if (!self.props.init) return;
+
+    if (self.f7Stepper && self.f7Stepper.destroy) {
+      self.f7Stepper.destroy();
     }
   }
 
   componentDidMount() {
     const self = this;
+    const {
+      minusEl,
+      plusEl
+    } = self.refs;
+
+    if (minusEl) {
+      minusEl.addEventListener('click', self.onMinusClick);
+    }
+
+    if (plusEl) {
+      plusEl.addEventListener('click', self.onPlusClick);
+    }
+
     if (!self.props.init) return;
     self.$f7ready(f7 => {
       const {
@@ -238,6 +294,8 @@ __reactComponentSetProps(F7Stepper, Object.assign({
     default: 1
   },
   formatValue: Function,
+  name: String,
+  inputId: String,
   input: {
     type: Boolean,
     default: true
@@ -279,16 +337,23 @@ __reactComponentSetProps(F7Stepper, Object.assign({
   round: Boolean,
   roundMd: Boolean,
   roundIos: Boolean,
+  roundAurora: Boolean,
   fill: Boolean,
   fillMd: Boolean,
   fillIos: Boolean,
-  big: Boolean,
-  bigMd: Boolean,
-  bigIos: Boolean,
+  fillAurora: Boolean,
+  large: Boolean,
+  largeMd: Boolean,
+  largeIos: Boolean,
+  largeAurora: Boolean,
   small: Boolean,
   smallMd: Boolean,
   smallIos: Boolean,
-  raised: Boolean
+  smallAurora: Boolean,
+  raised: Boolean,
+  raisedMd: Boolean,
+  raisedIos: Boolean,
+  raisedAurora: Boolean
 }, Mixins.colorProps));
 
 F7Stepper.displayName = 'f7-stepper';

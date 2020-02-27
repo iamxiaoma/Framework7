@@ -7,16 +7,16 @@ export default {
   name: 'f7-list-button',
   props: Object.assign({
     id: [String, Number],
-    noFastclick: Boolean,
-    noFastClick: Boolean,
     title: [String, Number],
     text: [String, Number],
     tabLink: [Boolean, String],
     tabLinkActive: Boolean,
     link: [Boolean, String],
     href: [Boolean, String],
-    target: String
-  }, Mixins.colorProps, Mixins.linkRouterProps, Mixins.linkActionsProps),
+    target: String,
+    tooltip: String,
+    tooltipTrigger: String
+  }, Mixins.colorProps, {}, Mixins.linkRouterProps, {}, Mixins.linkActionsProps),
 
   render() {
     const _h = this.$createElement;
@@ -38,9 +38,7 @@ export default {
     }, [_h('a', __vueComponentTransformJSXProps(Object.assign({
       class: self.classes
     }, self.attrs, {
-      on: {
-        click: self.onClick.bind(self)
-      }
+      ref: 'linkEl'
     })), [this.$slots['default'] || [title || text]])]);
   },
 
@@ -65,17 +63,13 @@ export default {
       const self = this;
       const props = self.props;
       const {
-        noFastclick,
-        noFastClick,
         tabLink,
         tabLinkActive
       } = props;
       return Utils.classNames({
-        'item-link': true,
         'list-button': true,
         'tab-link': tabLink || tabLink === '',
-        'tab-link-active': tabLinkActive,
-        'no-fastclick': noFastclick || noFastClick
+        'tab-link-active': tabLinkActive
       }, Mixins.colorClasses(props), Mixins.linkRouterClasses(props), Mixins.linkActionsClasses(props));
     },
 
@@ -84,6 +78,85 @@ export default {
     }
 
   },
+  watch: {
+    'props.tooltip': function watchTooltip(newText) {
+      const self = this;
+
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.$refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger
+        });
+        return;
+      }
+
+      if (!newText || !self.f7Tooltip) return;
+      self.f7Tooltip.setText(newText);
+    }
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onClick']);
+  },
+
+  mounted() {
+    const self = this;
+    const linkEl = self.$refs.linkEl;
+    const {
+      routeProps,
+      tooltip,
+      tooltipTrigger
+    } = self.props;
+
+    if (routeProps) {
+      linkEl.f7RouteProps = routeProps;
+    }
+
+    linkEl.addEventListener('click', self.onClick);
+    self.$f7ready(f7 => {
+      if (tooltip) {
+        self.f7Tooltip = f7.tooltip.create({
+          targetEl: linkEl,
+          text: tooltip,
+          trigger: tooltipTrigger
+        });
+      }
+    });
+  },
+
+  updated() {
+    const self = this;
+    const linkEl = self.$refs.linkEl;
+    const {
+      routeProps
+    } = self.props;
+
+    if (routeProps) {
+      linkEl.f7RouteProps = routeProps;
+    }
+  },
+
+  beforeDestroy() {
+    const self = this;
+    const linkEl = self.$refs.linkEl;
+    linkEl.removeEventListener('click', this.onClick);
+    delete linkEl.f7RouteProps;
+
+    if (self.f7Tooltip && self.f7Tooltip.destroy) {
+      self.f7Tooltip.destroy();
+      self.f7Tooltip = null;
+      delete self.f7Tooltip;
+    }
+  },
+
   methods: {
     onClick(event) {
       this.dispatchEvent('click', event);

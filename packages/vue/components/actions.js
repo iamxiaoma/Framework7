@@ -11,8 +11,11 @@ export default {
     convertToPopover: Boolean,
     forceToPopover: Boolean,
     target: [String, Object],
+    backdrop: Boolean,
+    backdropEl: [String, Object, window.HTMLElement],
     closeByBackdropClick: Boolean,
-    closeByOutsideClick: Boolean
+    closeByOutsideClick: Boolean,
+    closeOnEscape: Boolean
   }, Mixins.colorProps),
 
   render() {
@@ -51,18 +54,14 @@ export default {
     }
   },
 
+  created() {
+    Utils.bindMethods(this, ['onOpen', 'onOpened', 'onClose', 'onClosed']);
+  },
+
   mounted() {
     const self = this;
     const el = self.$refs.el;
     if (!el) return;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    el.addEventListener('actions:open', self.onOpenBound);
-    el.addEventListener('actions:opened', self.onOpenedBound);
-    el.addEventListener('actions:close', self.onCloseBound);
-    el.addEventListener('actions:closed', self.onClosedBound);
     const props = self.props;
     const {
       grid,
@@ -71,18 +70,31 @@ export default {
       forceToPopover,
       opened,
       closeByBackdropClick,
-      closeByOutsideClick
+      closeByOutsideClick,
+      closeOnEscape,
+      backdrop,
+      backdropEl
     } = props;
     const actionsParams = {
-      el: self.$refs.el,
-      grid
+      el,
+      grid,
+      on: {
+        open: self.onOpen,
+        opened: self.onOpened,
+        close: self.onClose,
+        closed: self.onClosed
+      }
     };
     if (target) actionsParams.targetEl = target;
     {
-      if (typeof self.$options.propsData.convertToPopover !== 'undefined') actionsParams.convertToPopover = convertToPopover;
-      if (typeof self.$options.propsData.forceToPopover !== 'undefined') actionsParams.forceToPopover = forceToPopover;
-      if (typeof self.$options.propsData.closeByBackdropClick !== 'undefined') actionsParams.closeByBackdropClick = closeByBackdropClick;
-      if (typeof self.$options.propsData.closeByOutsideClick !== 'undefined') actionsParams.closeByOutsideClick = closeByOutsideClick;
+      const propsData = self.$options.propsData;
+      if (typeof propsData.convertToPopover !== 'undefined') actionsParams.convertToPopover = convertToPopover;
+      if (typeof propsData.forceToPopover !== 'undefined') actionsParams.forceToPopover = forceToPopover;
+      if (typeof propsData.backdrop !== 'undefined') actionsParams.backdrop = backdrop;
+      if (typeof propsData.backdropEl !== 'undefined') actionsParams.backdropEl = backdropEl;
+      if (typeof propsData.closeByBackdropClick !== 'undefined') actionsParams.closeByBackdropClick = closeByBackdropClick;
+      if (typeof propsData.closeByOutsideClick !== 'undefined') actionsParams.closeByOutsideClick = closeByOutsideClick;
+      if (typeof propsData.closeOnEscape !== 'undefined') actionsParams.closeOnEscape = closeOnEscape;
     }
     self.$f7ready(() => {
       self.f7Actions = self.$f7.actions.create(actionsParams);
@@ -96,41 +108,36 @@ export default {
   beforeDestroy() {
     const self = this;
     if (self.f7Actions) self.f7Actions.destroy();
-    const el = self.$el;
-    if (!el) return;
-    el.removeEventListener('actions:open', self.onOpenBound);
-    el.removeEventListener('actions:opened', self.onOpenedBound);
-    el.removeEventListener('actions:close', self.onCloseBound);
-    el.removeEventListener('actions:closed', self.onClosedBound);
+    delete self.f7Actions;
   },
 
   methods: {
-    onOpen(event) {
-      this.dispatchEvent('actions:open actionsOpen', event);
+    onOpen(instance) {
+      this.dispatchEvent('actions:open actionsOpen', instance);
     },
 
-    onOpened(event) {
-      this.dispatchEvent('actions:opened actionsOpened', event);
+    onOpened(instance) {
+      this.dispatchEvent('actions:opened actionsOpened', instance);
     },
 
-    onClose(event) {
-      this.dispatchEvent('actions:close actionsClose', event);
+    onClose(instance) {
+      this.dispatchEvent('actions:close actionsClose', instance);
     },
 
-    onClosed(event) {
-      this.dispatchEvent('actions:closed actionsClosed', event);
+    onClosed(instance) {
+      this.dispatchEvent('actions:closed actionsClosed', instance);
     },
 
     open(animate) {
       const self = this;
-      if (!self.$f7) return undefined;
-      return self.$f7.actions.open(self.$refs.el, animate);
+      if (!self.f7Actions) return undefined;
+      return self.f7Actions.open(animate);
     },
 
     close(animate) {
       const self = this;
-      if (!self.$f7) return undefined;
-      return self.$f7.actions.close(self.$refs.el, animate);
+      if (!self.f7Actions) return undefined;
+      return self.f7Actions.close(animate);
     },
 
     dispatchEvent(events, ...args) {

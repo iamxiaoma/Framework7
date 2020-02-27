@@ -14,6 +14,15 @@ declare namespace F7Panel {
     left? : boolean
     right? : boolean
     opened? : boolean
+    resizable? : boolean
+    backdrop? : boolean
+    backdropEl? : string
+    visibleBreakpoint? : number
+    collapsedBreakpoint? : number
+    swipe? : boolean
+    swipeOnlyClose? : boolean
+    swipeActiveArea? : number
+    swipeThreshold? : number
     color? : string
     colorTheme? : string
     textColor? : string
@@ -29,6 +38,8 @@ declare namespace F7Panel {
     onPanelSwipe? : (event?: any) => void
     onPanelSwipeOpen? : (event?: any) => void
     onPanelBreakpoint? : (event?: any) => void
+    onPanelCollapsedBreakpoint? : (event?: any) => void
+    onPanelResize? : (event?: any) => void
   }
 }
 declare class F7Panel extends React.Component<F7Panel.Props, {}> {
@@ -37,11 +48,14 @@ declare class F7Panel extends React.Component<F7Panel.Props, {}> {
   onClose(event? : any) : unknown
   onClosed(event? : any) : unknown
   onBackdropClick(event? : any) : unknown
-  onPanelSwipe(event? : any) : unknown
-  onPanelSwipeOpen(event? : any) : unknown
+  onSwipe(event? : any) : unknown
+  onSwipeOpen(event? : any) : unknown
   onBreakpoint(event? : any) : unknown
+  onCollapsedBreakpoint(event? : any) : unknown
+  onResize(event? : any) : unknown
   open(animate? : any) : unknown
   close(animate? : any) : unknown
+  toggle(animate? : any) : unknown
   f7Panel: PanelNamespace.Panel
 }
 export default F7Panel;

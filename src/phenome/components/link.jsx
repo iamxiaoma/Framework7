@@ -22,8 +22,6 @@ export default {
     className: String, // phenome-react-line
     style: Object, // phenome-react-line
     noLinkClass: Boolean,
-    noFastClick: Boolean,
-    noFastclick: Boolean,
     text: String,
     tabLink: [Boolean, String],
     tabLinkActive: Boolean,
@@ -38,6 +36,7 @@ export default {
     },
     target: String,
     tooltip: String,
+    tooltipTrigger: String,
 
     // Smart Select
     smartSelect: Boolean,
@@ -66,13 +65,10 @@ export default {
       iconColor,
       iconSize,
       iconMaterial,
-      iconIon,
-      iconFa,
       iconF7,
-      iconIfMd,
-      iconIfIos,
       iconMd,
       iconIos,
+      iconAurora,
       id,
       style,
     } = props;
@@ -93,9 +89,7 @@ export default {
         </span>
       );
     }
-    const mdThemeIcon = iconIfMd || iconMd;
-    const iosThemeIcon = iconIfIos || iconIos;
-    if (icon || iconMaterial || iconIon || iconFa || iconF7 || mdThemeIcon || iosThemeIcon) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
       if (iconBadge) {
         iconBadgeEl = <F7Badge color={badgeColor}>{iconBadge}</F7Badge>;
       }
@@ -103,20 +97,19 @@ export default {
         <F7Icon
           material={iconMaterial}
           f7={iconF7}
-          fa={iconFa}
-          ion={iconIon}
           icon={icon}
-          md={mdThemeIcon}
-          ios={iosThemeIcon}
+          md={iconMd}
+          ios={iconIos}
+          aurora={iconAurora}
           color={iconColor}
           size={iconSize}
         >{iconBadgeEl}</F7Icon>
       );
     }
     if (
-      iconOnly ||
-      (!text && defaultSlots && defaultSlots.length === 0) ||
-      (!text && !defaultSlots)
+      iconOnly
+      || (!text && defaultSlots && defaultSlots.length === 0)
+      || (!text && !defaultSlots)
     ) {
       self.iconOnlyComputed = true;
     } else {
@@ -129,7 +122,6 @@ export default {
         id={id}
         style={style}
         className={self.classes}
-        onClick={self.onClick.bind(self)}
         {...self.attrs}
       >
         {iconEl}
@@ -141,24 +133,44 @@ export default {
   watch: {
     'props.tooltip': function watchTooltip(newText) {
       const self = this;
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger,
+        });
+        return;
+      }
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     },
   },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick']);
+  },
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
-    const { tabbarLabel, tabLink, tooltip, smartSelect, smartSelectParams } = self.props;
+    el.addEventListener('click', self.onClick);
+    const { tabbarLabel, tabLink, tooltip, tooltipTrigger, smartSelect, smartSelectParams, routeProps } = self.props;
     let isTabbarLabel = false;
-    if (tabbarLabel ||
-      (
-        (tabLink || tabLink === '') &&
-        self.$$(el).parents('.tabbar-labels').length
+    if (tabbarLabel
+      || (
+        (tabLink || tabLink === '')
+        && self.$$(el).parents('.tabbar-labels').length
       )
     ) {
       isTabbarLabel = true;
     }
     self.setState({ isTabbarLabel });
+
+    if (routeProps) el.f7RouteProps = routeProps;
 
     self.$f7ready((f7) => {
       if (smartSelect) {
@@ -172,12 +184,24 @@ export default {
         self.f7Tooltip = f7.tooltip.create({
           targetEl: el,
           text: tooltip,
+          trigger: tooltipTrigger,
         });
       }
     });
   },
+  componentDidUpdate() {
+    const self = this;
+    const el = self.refs.el;
+    const { routeProps } = self.props;
+    if (routeProps) {
+      el.f7RouteProps = routeProps;
+    }
+  },
   componentWillUnmount() {
     const self = this;
+    const el = self.refs.el;
+    el.removeEventListener('click', self.onClick);
+    delete el.f7RouteProps;
     if (self.f7SmartSelect && self.f7SmartSelect.destroy) {
       self.f7SmartSelect.destroy();
     }
@@ -209,8 +233,6 @@ export default {
       const self = this;
       const props = self.props;
       const {
-        noFastclick,
-        noFastClick,
         tabLink,
         tabLinkActive,
         noLinkClass,
@@ -225,7 +247,6 @@ export default {
           'icon-only': self.iconOnlyComputed,
           'tab-link': tabLink || tabLink === '',
           'tab-link-active': tabLinkActive,
-          'no-fastclick': noFastclick || noFastClick,
           'smart-select': smartSelect,
         },
         Mixins.colorClasses(props),

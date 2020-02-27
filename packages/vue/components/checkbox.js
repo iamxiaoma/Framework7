@@ -7,6 +7,7 @@ export default {
   props: Object.assign({
     id: [String, Number],
     checked: Boolean,
+    indeterminate: Boolean,
     name: [Number, String],
     value: [Number, String, Boolean],
     disabled: Boolean,
@@ -31,6 +32,7 @@ export default {
     let inputEl;
     {
       inputEl = _h('input', {
+        ref: 'inputEl',
         domProps: {
           value,
           disabled,
@@ -38,7 +40,7 @@ export default {
           checked
         },
         on: {
-          change: self.onChange.bind(self)
+          change: self.onChange
         },
         attrs: {
           type: 'checkbox',
@@ -79,6 +81,39 @@ export default {
     }
 
   },
+
+  created() {
+    Utils.bindMethods(this, ['onChange']);
+  },
+
+  mounted() {
+    const self = this;
+    const {
+      inputEl
+    } = self.$refs;
+    const {
+      indeterminate
+    } = self.props;
+
+    if (indeterminate && inputEl) {
+      inputEl.indeterminate = true;
+    }
+  },
+
+  updated() {
+    const self = this;
+    const {
+      inputEl
+    } = self.$refs;
+    const {
+      indeterminate
+    } = self.props;
+
+    if (inputEl) {
+      inputEl.indeterminate = indeterminate;
+    }
+  },
+
   methods: {
     onChange(event) {
       this.dispatchEvent('change', event);

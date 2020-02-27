@@ -1,6 +1,5 @@
 import { document } from 'ssr-window';
 import $ from 'dom7';
-import Template7 from 'template7';
 import Utils from '../../utils/utils';
 import Framework7Class from '../../utils/class';
 import Device from '../../utils/device';
@@ -10,9 +9,18 @@ class VirtualList extends Framework7Class {
     super(params, [app]);
     const vl = this;
 
+    let defaultHeight;
+    if (app.theme === 'md') {
+      defaultHeight = 48;
+    } else if (app.theme === 'ios') {
+      defaultHeight = 44;
+    } else if (app.theme === 'aurora') {
+      defaultHeight = 38;
+    }
+
     const defaults = {
       cols: 1,
-      height: app.theme === 'md' ? 48 : 44,
+      height: defaultHeight,
       cache: true,
       dynamicHeightBufferSize: 1,
       showFilteredItemsOnly: false,
@@ -23,6 +31,7 @@ class VirtualList extends Framework7Class {
       itemTemplate: undefined,
       ul: null,
       createUl: true,
+      scrollableParentEl: undefined,
       renderItem(item) {
         return `
           <li>
@@ -42,7 +51,7 @@ class VirtualList extends Framework7Class {
 
     vl.params = Utils.extend(defaults, params);
     if (vl.params.height === undefined || !vl.params.height) {
-      vl.params.height = app.theme === 'md' ? 48 : 44;
+      vl.params.height = defaultHeight;
     }
 
     vl.$el = $(params.el);
@@ -56,13 +65,19 @@ class VirtualList extends Framework7Class {
       vl.filteredItems = [];
     }
     if (vl.params.itemTemplate) {
-      if (typeof vl.params.itemTemplate === 'string') vl.renderItem = Template7.compile(vl.params.itemTemplate);
+      if (typeof vl.params.itemTemplate === 'string') vl.renderItem = app.t7.compile(vl.params.itemTemplate);
       else if (typeof vl.params.itemTemplate === 'function') vl.renderItem = vl.params.itemTemplate;
     } else if (vl.params.renderItem) {
       vl.renderItem = vl.params.renderItem;
     }
     vl.$pageContentEl = vl.$el.parents('.page-content');
     vl.pageContentEl = vl.$pageContentEl[0];
+
+    vl.$scrollableParentEl = vl.params.scrollableParentEl ? $(vl.params.scrollableParentEl).eq(0) : vl.$pageContentEl;
+    if (!vl.$scrollableParentEl.length && vl.$pageContentEl.length) {
+      vl.$scrollableParentEl = vl.$pageContentEl;
+    }
+    vl.scrollableParentEl = vl.$scrollableParentEl[0];
 
     // Bad scroll
     if (typeof vl.params.updatableScroll !== 'undefined') {
@@ -126,7 +141,7 @@ class VirtualList extends Framework7Class {
       $panelEl = vl.$el.parents('.panel').eq(0);
       $popupEl = vl.$el.parents('.popup').eq(0);
 
-      vl.$pageContentEl.on('scroll', handleScrollBound);
+      vl.$scrollableParentEl.on('scroll', handleScrollBound);
       if ($pageEl) $pageEl.on('page:reinit', handleResizeBound);
       if ($tabEl) $tabEl.on('tab:show', handleResizeBound);
       if ($panelEl) $panelEl.on('panel:open', handleResizeBound);
@@ -134,7 +149,7 @@ class VirtualList extends Framework7Class {
       app.on('resize', handleResizeBound);
     };
     vl.detachEvents = function attachEvents() {
-      vl.$pageContentEl.off('scroll', handleScrollBound);
+      vl.$scrollableParentEl.off('scroll', handleScrollBound);
       if ($pageEl) $pageEl.off('page:reinit', handleResizeBound);
       if ($tabEl) $tabEl.off('tab:show', handleResizeBound);
       if ($panelEl) $panelEl.off('panel:open', handleResizeBound);
@@ -150,7 +165,7 @@ class VirtualList extends Framework7Class {
   setListSize() {
     const vl = this;
     const items = vl.filteredItems || vl.items;
-    vl.pageHeight = vl.$pageContentEl[0].offsetHeight;
+    vl.pageHeight = vl.$scrollableParentEl[0].offsetHeight;
     if (vl.dynamicHeight) {
       vl.listHeight = 0;
       vl.heights = [];
@@ -177,10 +192,10 @@ class VirtualList extends Framework7Class {
     const vl = this;
     if (force) vl.lastRepaintY = null;
 
-    let scrollTop = -(vl.$el[0].getBoundingClientRect().top - vl.$pageContentEl[0].getBoundingClientRect().top);
+    let scrollTop = -(vl.$el[0].getBoundingClientRect().top - vl.$scrollableParentEl[0].getBoundingClientRect().top);
 
     if (typeof forceScrollTop !== 'undefined') scrollTop = forceScrollTop;
-    if (vl.lastRepaintY === null || Math.abs(scrollTop - vl.lastRepaintY) > vl.maxBufferHeight || (!vl.updatableScroll && (vl.$pageContentEl[0].scrollTop + vl.pageHeight >= vl.$pageContentEl[0].scrollHeight))) {
+    if (vl.lastRepaintY === null || Math.abs(scrollTop - vl.lastRepaintY) > vl.maxBufferHeight || (!vl.updatableScroll && (vl.$scrollableParentEl[0].scrollTop + vl.pageHeight >= vl.$scrollableParentEl[0].scrollHeight))) {
       vl.lastRepaintY = scrollTop;
     } else {
       return;
@@ -300,7 +315,7 @@ class VirtualList extends Framework7Class {
     }
 
     if (typeof forceScrollTop !== 'undefined' && force) {
-      vl.$pageContentEl.scrollTop(forceScrollTop, 0);
+      vl.$scrollableParentEl.scrollTop(forceScrollTop, 0);
     }
     if (vl.params.renderExternal) {
       vl.params.renderExternal(vl, {
@@ -321,7 +336,7 @@ class VirtualList extends Framework7Class {
       vl.filteredItems.push(vl.items[indexes[i]]);
     }
     if (resetScrollTop) {
-      vl.$pageContentEl[0].scrollTop = 0;
+      vl.$scrollableParentEl[0].scrollTop = 0;
     }
     vl.update();
   }
@@ -349,7 +364,7 @@ class VirtualList extends Framework7Class {
       itemTop = index * vl.params.height;
     }
     const listTop = vl.$el[0].offsetTop;
-    vl.render(true, (listTop + itemTop) - parseInt(vl.$pageContentEl.css('padding-top'), 10));
+    vl.render(true, (listTop + itemTop) - parseInt(vl.$scrollableParentEl.css('padding-top'), 10));
     return true;
   }
 

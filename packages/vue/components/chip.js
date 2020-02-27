@@ -1,5 +1,6 @@
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
+import F7Icon from './icon';
 import __vueComponentDispatchEvent from '../runtime-helpers/vue-component-dispatch-event.js';
 import __vueComponentProps from '../runtime-helpers/vue-component-props.js';
 export default {
@@ -12,7 +13,7 @@ export default {
     mediaBgColor: String,
     mediaTextColor: String,
     outline: Boolean
-  }, Mixins.colorProps),
+  }, Mixins.colorProps, {}, Mixins.linkIconProps),
 
   render() {
     const _h = this.$createElement;
@@ -27,17 +28,41 @@ export default {
       style,
       mediaTextColor,
       mediaBgColor,
-      outline
+      outline,
+      icon,
+      iconMaterial,
+      iconF7,
+      iconMd,
+      iconIos,
+      iconAurora,
+      iconColor,
+      iconSize
     } = props;
+    let iconEl;
     let mediaEl;
     let labelEl;
     let deleteEl;
 
-    if (media || self.$slots && self.$slots.media) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
+      iconEl = _h(F7Icon, {
+        attrs: {
+          material: iconMaterial,
+          f7: iconF7,
+          icon: icon,
+          md: iconMd,
+          ios: iconIos,
+          aurora: iconAurora,
+          color: iconColor,
+          size: iconSize
+        }
+      });
+    }
+
+    if (media || iconEl || self.$slots && self.$slots.media) {
       const mediaClasses = Utils.classNames('chip-media', mediaTextColor && `text-color-${mediaTextColor}`, mediaBgColor && `bg-color-${mediaBgColor}`);
       mediaEl = _h('div', {
         class: mediaClasses
-      }, [media || this.$slots['media']]);
+      }, [iconEl, media, this.$slots['media']]);
     }
 
     if (text || self.$slots && self.$slots.text) {
@@ -48,13 +73,8 @@ export default {
 
     if (deleteable) {
       deleteEl = _h('a', {
-        class: 'chip-delete',
-        on: {
-          click: self.onDeleteClick.bind(self)
-        },
-        attrs: {
-          href: '#'
-        }
+        ref: 'deleteEl',
+        class: 'chip-delete'
       });
     }
 
@@ -62,15 +82,33 @@ export default {
       'chip-outline': outline
     }, Mixins.colorClasses(props));
     return _h('div', {
+      ref: 'el',
       style: style,
       class: classes,
-      on: {
-        click: self.onClick.bind(self)
-      },
       attrs: {
         id: id
       }
     }, [mediaEl, labelEl, deleteEl]);
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onClick', 'onDeleteClick']);
+  },
+
+  mounted() {
+    this.$refs.el.addEventListener('click', this.onClick);
+
+    if (this.$refs.deleteEl) {
+      this.$refs.deleteEl.addEventListener('click', this.onDeleteClick);
+    }
+  },
+
+  beforeDestroy() {
+    this.$refs.el.removeEventListener('click', this.onClick);
+
+    if (this.$refs.deleteEl) {
+      this.$refs.deleteEl.removeEventListener('click', this.onDeleteClick);
+    }
   },
 
   methods: {

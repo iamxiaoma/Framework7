@@ -7,12 +7,8 @@ export interface Device {
   androidChrome: boolean
   /** true for desktop browser */
   desktop: boolean
-  /** true for Windows Phone device */
-  windowsPhone: boolean
   /** true for iPhone */
   iphone: boolean
-  /** true for iPhone X */
-  iphoneX: boolean
   /** true for iPod */
   ipod: boolean
   /** true for iPad */
@@ -41,10 +37,8 @@ export interface Device {
   osVersion: string
   /** Device pixel ratio */
   pixelRatio: number
-  /** true if app running in full-screen mode and requires Status Bar overlay */
-  statusbar: boolean
-  /** Returns true if app running in full-screen mode and requires Status Bar overlay */
-  needsStatusbarOverlay() : boolean
+  /** Returns 'dark' or 'light if (prefers-color-theme) media supported, otherwise returns undefined */
+  prefersColorScheme() : string
 }
 
 declare const Device : Device;

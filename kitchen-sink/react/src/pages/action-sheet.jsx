@@ -18,13 +18,13 @@ export default class extends React.Component {
         <Block strong>
           <p className="row">
             {/* One group, open by direct accessing instance .open() method */}
-            <Button className="col" raised onClick={() => this.refs.actionsOneGroup.open()}>One group</Button>
+            <Button className="col" fill onClick={() => this.refs.actionsOneGroup.open()}>One group</Button>
             {/*  Two groups, open by "actionsOpen" attribute */}
-            <Button className="col" raised actionsOpen="#actions-two-groups">Two groups</Button>
+            <Button className="col" fill actionsOpen="#actions-two-groups">Two groups</Button>
           </p>
           <p>
             {/* Actions Grid, open by changing actionGridOpened state property */}
-            <Button raised onClick={() => this.setActionsGridOpened(true)}>Action Grid</Button>
+            <Button fill onClick={() => this.setActionsGridOpened(true)}>Action Grid</Button>
           </p>
         </Block>
 
@@ -67,29 +67,29 @@ export default class extends React.Component {
         <Actions grid={true} opened={this.state.actionGridOpened} onActionsClosed={() => this.setActionsGridOpened(false)}>
           <ActionsGroup>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/people/1" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/people-96x96-1.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 1</span>
             </ActionsButton>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/people/2" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/people-96x96-2.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 2</span>
             </ActionsButton>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/people/3" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/people-96x96-3.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 3</span>
             </ActionsButton>
           </ActionsGroup>
           <ActionsGroup>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/fashion/4" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/fashion-96x96-4.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 4</span>
             </ActionsButton>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/fashion/5" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/fashion-96x96-5.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 5</span>
             </ActionsButton>
             <ActionsButton>
-              <img slot="media" src="http://lorempixel.com/96/96/fashion/6" width="48"/>
+              <img slot="media" src="https://cdn.framework7.io/placeholder/fashion-96x96-6.jpg" width="48" style={{maxWidth: '100%'}}/>
               <span>Button 6</span>
             </ActionsButton>
           </ActionsGroup>

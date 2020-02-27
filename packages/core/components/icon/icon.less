@@ -1,4 +1,9 @@
 /* === Icon === */
+.f7-icons,
+.material-icons {
+  width: 1em;
+  height: 1em;
+}
 i.icon {
   display: inline-block;
   vertical-align: middle;
@@ -8,10 +13,24 @@ i.icon {
   font-style: normal;
   position: relative;
 }
+.icon-back,
+.icon-prev,
+.icon-forward,
+.icon-next {
+  &:after {
+    .core-icons-font();
+  }
+}
+.icon[class*="color-"] {
+  color: var(--f7-theme-color);
+}
 
-& when (@includeIosTheme) {
+.if-ios-theme({
   @import url('./icon-ios.less');
-}
-& when (@includeMdTheme) {
+});
+.if-md-theme({
   @import url('./icon-md.less');
-}
+});
+.if-aurora-theme({
+  @import url('./icon-aurora.less');
+});

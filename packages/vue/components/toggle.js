@@ -39,6 +39,7 @@ export default {
     let inputEl;
     {
       inputEl = _h('input', {
+        ref: 'inputEl',
         domProps: {
           disabled,
           readOnly: readonly,
@@ -46,7 +47,7 @@ export default {
           checked
         },
         on: {
-          change: self.onChange.bind(self)
+          change: self.onChange
         },
         attrs: {
           type: 'checkbox',
@@ -74,6 +75,10 @@ export default {
     }
   },
 
+  created() {
+    Utils.bindMethods(this, ['onChange']);
+  },
+
   mounted() {
     const self = this;
     if (!self.props.init) return;
@@ -82,8 +87,7 @@ export default {
         el: self.$refs.el,
         on: {
           change(toggle) {
-            const checked = toggle.checked;
-            self.dispatchEvent('toggle:change toggleChange', checked);
+            self.dispatchEvent('toggle:change toggleChange', toggle.checked);
           }
 
         }

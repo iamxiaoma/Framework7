@@ -8,30 +8,42 @@ export default {
     className: String, // phenome-react-line
     style: Object, // phenome-react-line
     inset: Boolean,
-    tabletInset: Boolean,
+    xsmallInset: Boolean,
+    smallInset: Boolean,
+    mediumInset: Boolean,
+    largeInset: Boolean,
+    xlargeInset: Boolean,
     strong: Boolean,
     tabs: Boolean,
     tab: Boolean,
     tabActive: Boolean,
     accordionList: Boolean,
+    accordionOpposite: Boolean,
     noHairlines: Boolean,
     noHairlinesMd: Boolean,
     noHairlinesIos: Boolean,
+    noHairlinesAurora: Boolean,
     ...Mixins.colorProps,
   },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onTabShow', 'onTabHide']);
+  },
   componentDidMount() {
-    const el = this.el;
+    const self = this;
+    const el = self.refs.el;
     if (!el) return;
-    this.onTabShowBound = this.onTabShow.bind(this);
-    this.onTabHideBound = this.onTabHide.bind(this);
-    el.addEventListener('tab:show', this.onTabShowBound);
-    el.addEventListener('tab:hide', this.onTabHideBound);
+    self.eventTargetEl = el;
+    self.$f7ready((f7) => {
+      f7.on('tabShow', self.onTabShow);
+      f7.on('tabHide', self.onTabHide);
+    });
   },
   componentWillUnmount() {
-    const el = this.el;
-    if (!el) return;
-    el.removeEventListener('tab:show', this.onTabShowBound);
-    el.removeEventListener('tab:hide', this.onTabHideBound);
+    const el = this.refs.el;
+    if (!el || !this.$f7) return;
+    this.$f7.off('tabShow', this.onTabShow);
+    this.$f7.off('tabHide', this.onTabHide);
+    delete this.eventTargetEl;
   },
   render() {
     const self = this;
@@ -39,15 +51,22 @@ export default {
     const {
       className,
       inset,
+      xsmallInset,
+      smallInset,
+      mediumInset,
+      largeInset,
+      xlargeInset,
       strong,
       accordionList,
-      tabletInset,
+      accordionOpposite,
+
       tabs,
       tab,
       tabActive,
       noHairlines,
       noHairlinesIos,
       noHairlinesMd,
+      noHairlinesAurora,
       id,
       style,
     } = props;
@@ -56,15 +75,21 @@ export default {
       'block',
       {
         inset,
+        'xsmall-inset': xsmallInset,
+        'small-inset': smallInset,
+        'medium-inset': mediumInset,
+        'large-inset': largeInset,
+        'xlarge-inset': xlargeInset,
         'block-strong': strong,
         'accordion-list': accordionList,
-        'tablet-inset': tabletInset,
+        'accordion-opposite': accordionOpposite,
         tabs,
         tab,
         'tab-active': tabActive,
         'no-hairlines': noHairlines,
         'no-hairlines-md': noHairlinesMd,
         'no-hairlines-ios': noHairlinesIos,
+        'no-hairlines-aurora': noHairlinesAurora,
       },
       Mixins.colorClasses(props),
     );
@@ -73,17 +98,20 @@ export default {
         id={id}
         style={style}
         className={classes}
+        ref="el"
       >
         <slot />
       </div>
     );
   },
   methods: {
-    onTabShow(event) {
-      this.dispatchEvent('tabShow tab:show', event);
+    onTabShow(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('tabShow tab:show', el);
     },
-    onTabHide(event) {
-      this.dispatchEvent('tabHide tab:hide', event);
+    onTabHide(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('tabHide tab:hide', el);
     },
   },
 };

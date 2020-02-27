@@ -34,14 +34,40 @@ export default {
       type: Boolean,
       default: false
     },
-    name: String,
-    inputId: String,
-    input: Boolean,
-    disabled: Boolean,
+    vertical: {
+      type: Boolean,
+      default: false
+    },
+    verticalReversed: {
+      type: Boolean,
+      default: false
+    },
     draggableBar: {
       type: Boolean,
       default: true
-    }
+    },
+    formatLabel: Function,
+    scale: {
+      type: Boolean,
+      default: false
+    },
+    scaleSteps: {
+      type: Number,
+      default: 5
+    },
+    scaleSubSteps: {
+      type: Number,
+      default: 0
+    },
+    formatScaleLabel: Function,
+    limitKnobPosition: {
+      type: Boolean,
+      default: undefined
+    },
+    name: String,
+    input: Boolean,
+    inputId: String,
+    disabled: Boolean
   }, Mixins.colorProps),
 
   render() {
@@ -55,9 +81,14 @@ export default {
       style,
       input,
       inputId,
-      name
+      name,
+      vertical,
+      verticalReversed
     } = self.props;
     const classes = Utils.classNames(className, 'range-slider', {
+      'range-slider-horizontal': !vertical,
+      'range-slider-vertical': vertical,
+      'range-slider-vertical-reversed': vertical && verticalReversed,
       disabled
     }, Mixins.colorClasses(props));
     return _h('div', {
@@ -96,7 +127,15 @@ export default {
         step,
         label,
         dual,
-        draggableBar
+        draggableBar,
+        vertical,
+        verticalReversed,
+        formatLabel,
+        scale,
+        scaleSteps,
+        scaleSubSteps,
+        formatScaleLabel,
+        limitKnobPosition
       } = props;
       self.f7Range = f7.range.create(Utils.noUndefinedProps({
         el: self.$refs.el,
@@ -107,6 +146,14 @@ export default {
         label,
         dual,
         draggableBar,
+        vertical,
+        verticalReversed,
+        formatLabel,
+        scale,
+        scaleSteps,
+        scaleSubSteps,
+        formatScaleLabel,
+        limitKnobPosition,
         on: {
           change(range, val) {
             self.dispatchEvent('range:change rangeChange', val);

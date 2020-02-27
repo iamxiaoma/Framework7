@@ -14,10 +14,15 @@ declare namespace F7Searchbar {
     disableButton? : boolean
     disableButtonText? : string
     clearButton? : boolean
+    value? : string | number | Array<any>
+    inputEvents? : string
     expandable? : boolean
+    inline? : boolean
     searchContainer? : string | Object
     searchIn? : string
     searchItem? : string
+    searchGroup? : string
+    searchGroupTitle? : string
     foundEl? : string | Object
     notFoundEl? : string | Object
     backdrop? : boolean

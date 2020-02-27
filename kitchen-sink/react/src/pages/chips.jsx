@@ -29,25 +29,25 @@ export default class extends React.Component {
         <BlockTitle>Icon Chips</BlockTitle>
         <Block strong>
           <Chip text="Add Contact" mediaBgColor="blue">
-            <Icon slot="media" ios="f7:add_round" md="material:add_circle"></Icon>
+            <Icon slot="media" ios="f7:plus_circle" aurora="f7:plus_circle" md="material:add_circle"></Icon>
           </Chip>
           <Chip text="London" mediaBgColor="green">
-            <Icon slot="media" ios="f7:compass" md="material:location_on"></Icon>
+            <Icon slot="media" ios="f7:compass" aurora="f7:compass" md="material:location_on"></Icon>
           </Chip>
           <Chip text="John Doe" mediaBgColor="red">
-            <Icon slot="media" ios="f7:person" md="material:person"></Icon>
+            <Icon slot="media" ios="f7:person" aurora="f7:person" md="material:person"></Icon>
           </Chip>
         </Block>
         <BlockTitle>Contact Chips</BlockTitle>
         <Block strong>
           <Chip text="Jane Doe">
-            <img slot="media" src="http://lorempixel.com/100/100/people/9/" />
+            <img slot="media" src="https://cdn.framework7.io/placeholder/people-100x100-9.jpg" />
           </Chip>
           <Chip text="John Doe">
-            <img slot="media" src="http://lorempixel.com/100/100/people/3/" />
+            <img slot="media" src="https://cdn.framework7.io/placeholder/people-100x100-3.jpg" />
           </Chip>
           <Chip text="Adam Smith">
-            <img slot="media" src="http://lorempixel.com/100/100/people/7/" />
+            <img slot="media" src="https://cdn.framework7.io/placeholder/people-100x100-7.jpg" />
           </Chip>
           <Chip text="Jennifer" mediaBgColor="pink" media="J" />
           <Chip text="Chris" mediaBgColor="yellow" mediaTextColor="black" media="C" />
@@ -55,15 +55,15 @@ export default class extends React.Component {
         </Block>
         <BlockTitle>Deletable Chips / Tags</BlockTitle>
         <Block strong>
-          <Chip text="Example Chip" deleteable onClick={ this.deleteChipBound } />
-          <Chip text="Chris" media="C" mediaBgColor="orange" textColor="black" deleteable onClick={ this.deleteChipBound } />
-          <Chip text="Jane Doe" deleteable onClick={ this.deleteChipBound }>
-            <img slot="media" src="http://lorempixel.com/100/100/people/9/"/>
+          <Chip text="Example Chip" deleteable onDelete={ this.deleteChipBound } />
+          <Chip text="Chris" media="C" mediaBgColor="orange" textColor="black" deleteable onDelete={ this.deleteChipBound } />
+          <Chip text="Jane Doe" deleteable onDelete={ this.deleteChipBound }>
+            <img slot="media" src="https://cdn.framework7.io/placeholder/people-100x100-9.jpg"/>
           </Chip>
-          <Chip text="One More Chip" deleteable onClick={ this.deleteChipBound } />
-          <Chip text="Jennifer" mediaBgColor="pink" media="J" deleteable onClick={ this.deleteChipBound } />
-          <Chip text="Adam Smith" deleteable onClick={ this.deleteChipBound }>
-            <img slot="media" src="http://lorempixel.com/100/100/people/7/"/>
+          <Chip text="One More Chip" deleteable onDelete={ this.deleteChipBound } />
+          <Chip text="Jennifer" mediaBgColor="pink" media="J" deleteable onDelete={ this.deleteChipBound } />
+          <Chip text="Adam Smith" deleteable onDelete={ this.deleteChipBound }>
+            <img slot="media" src="https://cdn.framework7.io/placeholder/people-100x100-7.jpg"/>
           </Chip>
         </Block>
         <BlockTitle>Color Chips</BlockTitle>

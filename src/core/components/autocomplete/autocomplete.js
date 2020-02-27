@@ -33,6 +33,10 @@ export default {
       pageTitle: undefined,
       searchbarPlaceholder: 'Search...',
       searchbarDisableText: 'Cancel',
+      searchbarDisableButton: undefined,
+
+      popupPush: false,
+      popupSwipeToClose: undefined,
 
       animate: true,
 

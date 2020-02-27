@@ -3,28 +3,28 @@ import Utils from '../../utils/utils';
 import View from './view-class';
 
 function getCurrentView(app) {
-  const popoverView = $('.popover.modal-in .view');
-  const popupView = $('.popup.modal-in .view');
-  const panelView = $('.panel.panel-active .view');
-  let appViews = $('.views');
-  if (appViews.length === 0) appViews = app.root;
+  const $popoverView = $('.popover.modal-in .view');
+  const $popupView = $('.popup.modal-in .view');
+  const $panelView = $('.panel.panel-in .view');
+  let $viewsEl = $('.views');
+  if ($viewsEl.length === 0) $viewsEl = app.root;
   // Find active view as tab
-  let appView = appViews.children('.view');
+  let $viewEl = $viewsEl.children('.view');
   // Propably in tabs or split view
-  if (appView.length > 1) {
-    if (appView.hasClass('tab')) {
+  if ($viewEl.length > 1) {
+    if ($viewEl.hasClass('tab')) {
       // Tabs
-      appView = appViews.children('.view.tab-active');
+      $viewEl = $viewsEl.children('.view.tab-active');
     } else {
       // Split View, leave appView intact
     }
   }
-  if (popoverView.length > 0 && popoverView[0].f7View) return popoverView[0].f7View;
-  if (popupView.length > 0 && popupView[0].f7View) return popupView[0].f7View;
-  if (panelView.length > 0 && panelView[0].f7View) return panelView[0].f7View;
-  if (appView.length > 0) {
-    if (appView.length === 1 && appView[0].f7View) return appView[0].f7View;
-    if (appView.length > 1) {
+  if ($popoverView.length > 0 && $popoverView[0].f7View) return $popoverView[0].f7View;
+  if ($popupView.length > 0 && $popupView[0].f7View) return $popupView[0].f7View;
+  if ($panelView.length > 0 && $panelView[0].f7View) return $panelView[0].f7View;
+  if ($viewEl.length > 0) {
+    if ($viewEl.length === 1 && $viewEl[0].f7View) return $viewEl[0].f7View;
+    if ($viewEl.length > 1) {
       return app.views.main;
     }
   }
@@ -44,9 +44,12 @@ export default {
       xhrCacheIgnore: [],
       xhrCacheIgnoreGetParameters: false,
       xhrCacheDuration: 1000 * 60 * 10, // Ten minutes
+      componentCache: true,
       preloadPreviousPage: true,
       allowDuplicateUrls: false,
       reloadPages: false,
+      reloadDetail: false,
+      masterDetailBreakpoint: 0,
       removeElements: true,
       removeElementsWithTimeout: false,
       removeElementsTimeout: 0,
@@ -54,6 +57,7 @@ export default {
       unloadTabContent: true,
       passRouteQueryToRequest: true,
       passRouteParamsToRequest: false,
+      loadInitialPage: true,
       // Swipe Back
       iosSwipeBack: true,
       iosSwipeBackAnimateShadow: true,
@@ -65,6 +69,11 @@ export default {
       mdSwipeBackAnimateOpacity: false,
       mdSwipeBackActiveArea: 30,
       mdSwipeBackThreshold: 0,
+      auroraSwipeBack: false,
+      auroraSwipeBackAnimateShadow: false,
+      auroraSwipeBackAnimateOpacity: true,
+      auroraSwipeBackActiveArea: 30,
+      auroraSwipeBackThreshold: 0,
       // Push State
       pushState: false,
       pushStateRoot: undefined,
@@ -74,15 +83,14 @@ export default {
       pushStateOnLoad: true,
       // Animate Pages
       animate: true,
-      animateWithJS: false,
       // iOS Dynamic Navbar
       iosDynamicNavbar: true,
-      iosSeparateDynamicNavbar: true,
       // Animate iOS Navbar Back Icon
       iosAnimateNavbarBackIcon: true,
       // Delays
       iosPageLoadDelay: 0,
-      materialPageLoadDelay: 0,
+      mdPageLoadDelay: 0,
+      auroraPageLoadDelay: 0,
       // Routes hooks
       routesBeforeEnter: null,
       routesBeforeLeave: null,
@@ -139,6 +147,23 @@ export default {
         if (!view) return;
         view.destroy();
       });
+    },
+  },
+  vnode: {
+    'view-init': {
+      insert(vnode) {
+        const app = this;
+        const viewEl = vnode.elm;
+        if (viewEl.f7View) return;
+        const viewParams = $(viewEl).dataset();
+        app.views.create(viewEl, viewParams);
+      },
+      destroy(vnode) {
+        const viewEl = vnode.elm;
+        const view = viewEl.f7View;
+        if (!view) return;
+        view.destroy();
+      },
     },
   },
 };

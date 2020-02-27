@@ -19,6 +19,14 @@ declare namespace F7Chip {
     borderColor? : string
     rippleColor? : string
     themeDark? : boolean
+    icon? : string
+    iconMaterial? : string
+    iconF7? : string
+    iconIos? : string
+    iconMd? : string
+    iconAurora? : string
+    iconColor? : string
+    iconSize? : string | number
     onClick? : (event?: any) => void
     onDelete? : (event?: any) => void
   }

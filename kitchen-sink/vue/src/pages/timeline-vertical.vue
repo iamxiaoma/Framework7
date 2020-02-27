@@ -64,7 +64,7 @@
       </div>
     </div>
     <f7-block-title>Only Tablet Side By Side</f7-block-title>
-    <div class="timeline tablet-sides">
+    <div class="timeline medium-sides">
       <div class="timeline-item">
         <div class="timeline-item-date">21 <small>DEC</small></div>
         <div class="timeline-item-divider"></div>
@@ -164,7 +164,7 @@
       <div class="timeline-item">
         <div class="timeline-item-date">23 <small>DEC</small></div>
         <div class="timeline-item-divider"></div>
-        <div class="timeline-item-content card no-ios-edges">
+        <div class="timeline-item-content card no-safe-areas">
           <div class="card-header">Card Header</div>
           <div class="card-content card-content-padding">Card Content</div>
           <div class="card-footer">Card Footer</div>
@@ -173,7 +173,7 @@
       <div class="timeline-item">
         <div class="timeline-item-date">24 <small>DEC</small></div>
         <div class="timeline-item-divider"></div>
-        <div class="timeline-item-content list links-list inset no-ios-edges">
+        <div class="timeline-item-content list links-list inset no-safe-areas">
           <ul>
             <li><a href="#">Item 1</a></li>
             <li><a href="#">Item 2</a></li>

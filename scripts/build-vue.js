@@ -3,27 +3,26 @@
 /* eslint global-require: "off" */
 /* eslint no-param-reassign: ["error", { "props": false }] */
 
-const gulp = require('gulp');
-const fs = require('fs');
 
 const rollup = require('rollup');
 const buble = require('rollup-plugin-buble');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 
-const header = require('gulp-header');
-const uglify = require('gulp-uglify');
-const sourcemaps = require('gulp-sourcemaps');
-const rename = require('gulp-rename');
-const bannerVue = require('./banner-vue');
+const Terser = require('terser');
+const bannerVue = require('./banners/vue');
+const getOutput = require('./get-output');
+const fs = require('./utils/fs-extra');
 
 function esm({ banner, componentImports, componentExports }) {
   return `
 ${banner}
 
 ${componentImports.join('\n')}
-import Framework7Vue from './utils/plugin';
+import Framework7Vue, { f7, f7ready, theme } from './utils/plugin';
 
 export {\n${componentExports.join(',\n')}\n};
+
+export { f7, f7ready, theme };
 
 export default Framework7Vue;
   `.trim();
@@ -31,8 +30,8 @@ export default Framework7Vue;
 
 function buildVue(cb) {
   const env = process.env.NODE_ENV || 'development';
-  const buildPath = env === 'development' ? './build' : './packages';
-  const pluginContent = fs.readFileSync(`./${buildPath}/vue/utils/plugin.js`, 'utf-8');
+  const buildPath = getOutput();
+  const pluginContent = fs.readFileSync(`${buildPath}/vue/utils/plugin.js`);
 
   /* Replace plugin vars: utils/plugin.js */
   const newPluginContent = pluginContent
@@ -96,6 +95,7 @@ function buildVue(cb) {
     external: ['vue'],
     plugins: [
       replace({
+        'export { f7ready, f7Instance as f7, f7Theme as theme };': '',
         delimiters: ['', ''],
         'process.env.NODE_ENV': JSON.stringify(env), // or 'production'
       }),
@@ -108,30 +108,30 @@ function buildVue(cb) {
       vue: 'Vue',
     },
     strict: true,
-    file: `${buildPath}/vue/framework7-vue.js`,
+    file: `${buildPath}/vue/framework7-vue.bundle.js`,
     format: 'umd',
     name: 'Framework7Vue',
     sourcemap: env === 'development',
-    sourcemapFile: `${buildPath}/vue/framework7-vue.js.map`,
+    sourcemapFile: `${buildPath}/vue/framework7-vue.bundle.js.map`,
     banner: bannerVue,
-  })).then(() => {
+  })).then((bundle) => {
     if (env === 'development') {
       if (cb) cb();
       return;
     }
-    // Minified version
-    gulp.src(`${buildPath}/vue/framework7-vue.js`)
-      .pipe(sourcemaps.init())
-      .pipe(uglify())
-      .pipe(header(bannerVue))
-      .pipe(rename((filePath) => {
-        filePath.basename += '.min';
-      }))
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest(`${buildPath}/vue/`))
-      .on('end', () => {
-        if (cb) cb();
-      });
+    const result = bundle.output[0];
+    const minified = Terser.minify(result.code, {
+      sourceMap: {
+        filename: 'framework7-vue.bundle.min.js',
+        url: 'framework7-vue.bundle.min.js.map',
+      },
+      output: {
+        preamble: bannerVue,
+      },
+    });
+    fs.writeFileSync(`${buildPath}/vue/framework7-vue.bundle.min.js`, minified.code);
+    fs.writeFileSync(`${buildPath}/vue/framework7-vue.bundle.min.js.map`, minified.map);
+    if (cb) cb();
   }).catch((err) => {
     if (cb) cb();
     console.log(err);

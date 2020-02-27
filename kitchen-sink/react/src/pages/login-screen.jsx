@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Page, Link, LoginScreen, Input, List, ListItem, Block, Button, LoginScreenTitle, BlockFooter, Label, ListButton } from 'framework7-react';
+import { Navbar, Page, LoginScreen, ListInput, List, ListItem, Block, Button, LoginScreenTitle, BlockFooter, ListButton } from 'framework7-react';
 
 export default class extends React.Component {
   constructor(props) {
@@ -24,29 +24,35 @@ export default class extends React.Component {
         </List>
 
         <Block>
-          <Button raised big fill loginScreenOpen=".demo-login-screen">As Overlay</Button>
+          <Button raised large fill loginScreenOpen=".demo-login-screen">As Overlay</Button>
         </Block>
 
         <Block>
-          <Button raised big fill onClick={() => {this.setState({loginScreenOpened : true})}}>Open Via Prop Change</Button>
+          <Button raised large fill onClick={() => {this.setState({loginScreenOpened : true})}}>Open Via Prop Change</Button>
         </Block>
 
         <LoginScreen className="demo-login-screen" opened={this.state.loginScreenOpened} onLoginScreenClosed={() => {this.setState({loginScreenOpened : false})}}>
           <Page loginScreen>
             <LoginScreenTitle>Framework7</LoginScreenTitle>
             <List form>
-              <ListItem>
-                <Label>Username</Label>
-                <Input type="text" placeholder="Your username" onInput={(e) => {
+              <ListInput
+                label="Username"
+                type="text"
+                placeholder="Your username"
+                value={this.state.username}
+                onInput={(e) => {
                   this.setState({ username: e.target.value});
-                }}></Input>
-              </ListItem>
-              <ListItem>
-                <Label>Password</Label>
-                <Input type="password" placeholder="Your password" onInput={(e) => {
+                }}
+              />
+              <ListInput
+                label="Password"
+                type="password"
+                placeholder="Your password"
+                value={this.state.password}
+                onInput={(e) => {
                   this.setState({ password: e.target.value});
-                }}></Input>
-              </ListItem>
+                }}
+              />
             </List>
             <List>
               <ListButton onClick={this.signIn.bind(this)}>Sign In</ListButton>

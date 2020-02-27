@@ -21,7 +21,7 @@ declare namespace F7Toggle {
     borderColor? : string
     rippleColor? : string
     themeDark? : boolean
-    onToggleChange? : (checked?: any) => void
+    onToggleChange? : (...args: any[]) => void
     onChange? : (event?: any) => void
   }
 }

@@ -8,6 +8,11 @@ import __reactComponentSetProps from '../runtime-helpers/react-component-set-pro
 class F7SwipeoutButton extends React.Component {
   constructor(props, context) {
     super(props, context);
+    this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onClick']);
+    })();
   }
 
   onClick(event) {
@@ -24,6 +29,7 @@ class F7SwipeoutButton extends React.Component {
       delete: deleteProp,
       close,
       href,
+      confirmTitle,
       confirmText,
       text
     } = props;
@@ -33,13 +39,24 @@ class F7SwipeoutButton extends React.Component {
       'swipeout-close': close
     }, Mixins.colorClasses(props));
     return React.createElement('a', {
+      ref: __reactNode => {
+        this.__reactRefs['el'] = __reactNode;
+      },
       href: href || '#',
       id: id,
       style: style,
       'data-confirm': confirmText || undefined,
-      className: classes,
-      onClick: this.onClick.bind(this)
+      'data-confirm-title': confirmTitle || undefined,
+      className: classes
     }, this.slots['default'], !this.slots.default && text);
+  }
+
+  componentWillUnmount() {
+    this.refs.el.removeEventListener('click', this.onClick);
+  }
+
+  componentDidMount() {
+    this.refs.el.addEventListener('click', this.onClick);
   }
 
   get slots() {
@@ -50,6 +67,12 @@ class F7SwipeoutButton extends React.Component {
     return __reactComponentDispatchEvent(this, events, ...args);
   }
 
+  get refs() {
+    return this.__reactRefs;
+  }
+
+  set refs(refs) {}
+
 }
 
 __reactComponentSetProps(F7SwipeoutButton, Object.assign({
@@ -57,6 +80,7 @@ __reactComponentSetProps(F7SwipeoutButton, Object.assign({
   className: String,
   style: Object,
   text: String,
+  confirmTitle: String,
   confirmText: String,
   overswipe: Boolean,
   close: Boolean,

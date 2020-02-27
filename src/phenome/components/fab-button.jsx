@@ -19,6 +19,7 @@ export default {
     label: String,
     target: String,
     tooltip: String,
+    tooltipTrigger: String,
     ...Mixins.colorProps,
   },
   render() {
@@ -50,16 +51,41 @@ export default {
 
     return (
       <a
+        ref="el"
         id={id}
         style={style}
         target={target}
         className={classes}
-        onClick={this.onClick.bind(this)}
       >
         <slot />
         {labelEl}
       </a>
     );
+  },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick']);
+  },
+  componentDidMount() {
+    const self = this;
+    self.refs.el.addEventListener('click', self.onClick);
+    const { tooltip, tooltipTrigger } = self.props;
+    if (!tooltip) return;
+    self.$f7ready((f7) => {
+      self.f7Tooltip = f7.tooltip.create({
+        targetEl: self.refs.el,
+        text: tooltip,
+        trigger: tooltipTrigger,
+      });
+    });
+  },
+  componentWillUnmount() {
+    const self = this;
+    self.refs.el.removeEventListener('click', self.onClick);
+    if (self.f7Tooltip && self.f7Tooltip.destroy) {
+      self.f7Tooltip.destroy();
+      self.f7Tooltip = null;
+      delete self.f7Tooltip;
+    }
   },
   methods: {
     onClick(event) {
@@ -69,27 +95,22 @@ export default {
   watch: {
     'props.tooltip': function watchTooltip(newText) {
       const self = this;
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger,
+        });
+        return;
+      }
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     },
-  },
-  componentDidMount() {
-    const self = this;
-    const { tooltip } = self.props;
-    if (!tooltip) return;
-    self.$f7ready((f7) => {
-      self.f7Tooltip = f7.tooltip.create({
-        targetEl: self.refs.el,
-        text: tooltip,
-      });
-    });
-  },
-  componentWillUnmount() {
-    const self = this;
-    if (self.f7Tooltip && self.f7Tooltip.destroy) {
-      self.f7Tooltip.destroy();
-      self.f7Tooltip = null;
-      delete self.f7Tooltip;
-    }
   },
 };

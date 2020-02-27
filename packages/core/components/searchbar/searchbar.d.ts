@@ -17,6 +17,10 @@ export namespace Searchbar {
     searchIn?: CSSSelector
     /** CSS selector of single search item. If we do a search in List View, then it must be a single list element li (default "li") */
     searchItem?: CSSSelector
+    /** CSS selector of group element. Used when hideGroups enabled to hide groups. If we do a search in List View, then it usually a list group (default "list-group") */
+    searchGroup?: CSSSelector
+    /** CSS selector of group titles and dividers. Used when hideDividers enabled to hide group titles and dividers. If we do a search in List View, then it usually a list group title or list item divider (default ".item-divider, .list-group-title") */
+    searchGroupTitle?: CSSSelector
     /** CSS selector or HTMLElement of searchbar "found" element to make it hidden when there is no search results (default ".searchbar-found") */
     foundEl?: HTMLElement | CSSSelector
     /** CSS selector or HTMLElement of searchbar "not-found" element to make it visible when there is no search results (default ".searchbar-not-found") */
@@ -25,7 +29,7 @@ export namespace Searchbar {
     hideOnEnableEl?: HTMLElement | CSSSelector
     /** CSS selector or HTMLElement of elements to be hidden on searchbar search (default ".searchbar-hide-on-search") */
     hideOnSearchEl?: HTMLElement | CSSSelector
-    /** Enables searchbar backdrop element (default true) */
+    /** Enables searchbar backdrop element. By default disabled for Aurora theme */
     backdrop?: boolean
     /** CSS selector or HTMLElement of searchbar backdrop element. If not passed and backdrop parameter is true then it will look for .searchbar-backdrop element. In case none found it will create one automatically */
     backdropEl?: HTMLElement | CSSSelector
@@ -43,6 +47,8 @@ export namespace Searchbar {
     disableOnBackdropClick?: boolean
     /** Enables expandable searchbar */
     expandable?: boolean
+    /** Input events used to track search event */
+    inputEvents?: string
     /** Object with events handlers.. */
     on?: {
       [event in keyof Events]? : Events[event]

@@ -46,6 +46,8 @@ export default {
       text: null,
       cssClass: null,
       render: null,
+      offset: 0,
+      trigger: 'hover',
     },
   },
   on: {
@@ -69,11 +71,24 @@ export default {
         if (!text) return;
         app.tooltip.create({ targetEl: el, text });
       });
+      if (app.theme === 'ios' && page.view && page.view.router.dynamicNavbar && page.$navbarEl && page.$navbarEl.length > 0) {
+        page.$navbarEl.find('.tooltip-init').each((index, el) => {
+          const text = $(el).attr('data-tooltip');
+          if (!text) return;
+          app.tooltip.create({ targetEl: el, text });
+        });
+      }
     },
     pageBeforeRemove(page) {
+      const app = this;
       page.$el.find('.tooltip-init').each((index, el) => {
         if (el.f7Tooltip) el.f7Tooltip.destroy();
       });
+      if (app.theme === 'ios' && page.view && page.view.router.dynamicNavbar && page.$navbarEl && page.$navbarEl.length > 0) {
+        page.$navbarEl.find('.tooltip-init').each((index, el) => {
+          if (el.f7Tooltip) el.f7Tooltip.destroy();
+        });
+      }
     },
   },
   vnode: {
@@ -84,6 +99,13 @@ export default {
         const text = $(el).attr('data-tooltip');
         if (!text) return;
         app.tooltip.create({ targetEl: el, text });
+      },
+      update(vnode) {
+        const el = vnode.elm;
+        if (!el.f7Tooltip) return;
+        if (vnode && vnode.data && vnode.data.attrs && vnode.data.attrs['data-tooltip']) {
+          el.f7Tooltip.setText(vnode.data.attrs['data-tooltip']);
+        }
       },
       destroy(vnode) {
         const el = vnode.elm;

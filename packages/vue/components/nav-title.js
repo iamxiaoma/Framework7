@@ -24,7 +24,7 @@ export default {
     } = props;
     let subtitleEl;
 
-    if (self.subtitle) {
+    if (subtitle) {
       subtitleEl = _h('span', {
         class: 'subtitle'
       }, [subtitle]);
@@ -33,13 +33,23 @@ export default {
     const classes = Utils.classNames(className, 'title', {
       sliding
     }, Mixins.colorClasses(props));
+    let children;
+    const slots = self.$slots;
+
+    if (slots && Object.keys(slots).length) {
+      children = [];
+      Object.keys(slots).forEach(key => {
+        children.push(...slots[key]);
+      });
+    }
+
     return _h('div', {
       style: style,
       class: classes,
       attrs: {
         id: id
       }
-    }, [this.$slots['default'] || [title, subtitleEl]]);
+    }, [children, !children && title, !children && subtitleEl]);
   },
 
   computed: {

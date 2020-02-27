@@ -28,6 +28,7 @@ export default class extends React.Component {
               searchContainer=".virtual-list"
               searchItem="li"
               searchIn=".item-title"
+              disableButton={!this.$theme.aurora}
             ></Searchbar>
           </Subnavbar>
         </Navbar>
@@ -42,7 +43,7 @@ export default class extends React.Component {
           className="searchbar-found"
           medialList
           virtualList
-          virtualListParams={{ items: this.state.items, searchAll: this.searchAll, renderExternal: this.renderExternal.bind(this), height: this.$theme.ios ? 63 : 73}}
+          virtualListParams={{ items: this.state.items, searchAll: this.searchAll, renderExternal: this.renderExternal.bind(this), height: this.$theme.ios ? 63 : (this.$theme.md ? 73 : 46)}}
         >
           <ul>
             {this.state.vlData.items.map((item, index) => (
@@ -53,6 +54,7 @@ export default class extends React.Component {
                 title={item.title}
                 subtitle={item.subtitle}
                 style={{top: `${this.state.vlData.topPosition}px`}}
+                virtualListIndex={this.state.items.indexOf(item)}
               ></ListItem>
             ))}
           </ul>

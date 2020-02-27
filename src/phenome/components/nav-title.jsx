@@ -17,7 +17,7 @@ export default {
     const props = self.props;
     const { title, subtitle, id, style, sliding, className } = props;
     let subtitleEl;
-    if (self.subtitle) {
+    if (subtitle) {
       subtitleEl = (<span className="subtitle">{subtitle}</span>);
     }
 
@@ -29,9 +29,20 @@ export default {
       },
       Mixins.colorClasses(props),
     );
+
+    let children;
+    const slots = self.slots;
+    if (slots && Object.keys(slots).length) {
+      children = [];
+      Object.keys(slots).forEach((key) => {
+        children.push(...slots[key]);
+      });
+    }
     return (
       <div id={id} style={style} className={classes}>
-        <slot>{title}{subtitleEl}</slot>
+        {children}
+        {!children && title}
+        {!children && subtitleEl}
       </div>
     );
   },

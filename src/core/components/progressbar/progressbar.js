@@ -128,12 +128,33 @@ export default {
     });
   },
   on: {
+    tabMounted(tabEl) {
+      const app = this;
+      $(tabEl).find('.progressbar').each((index, progressbarEl) => {
+        const $progressbarEl = $(progressbarEl);
+        app.progressbar.set($progressbarEl, $progressbarEl.attr('data-progress'));
+      });
+    },
     pageInit(page) {
       const app = this;
       page.$el.find('.progressbar').each((index, progressbarEl) => {
         const $progressbarEl = $(progressbarEl);
         app.progressbar.set($progressbarEl, $progressbarEl.attr('data-progress'));
       });
+    },
+  },
+  vnode: {
+    progressbar: {
+      insert(vnode) {
+        const app = this;
+        const el = vnode.elm;
+        app.progressbar.set(el, el.getAttribute('data-progress'));
+      },
+      update(vnode) {
+        const app = this;
+        const el = vnode.elm;
+        app.progressbar.set(el, el.getAttribute('data-progress'));
+      },
     },
   },
 };

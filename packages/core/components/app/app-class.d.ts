@@ -5,6 +5,7 @@ import { Device } from '../../utils/device';
 import { Request } from '../../utils/request';
 import { Support } from '../../utils/support';
 import { Utils } from '../../utils/utils';
+import { ComponentClass, ComponentOptions } from '../../modules/component/component';
 
 // Css Selector string is an option on many F7 methods
 // Giving this alias makes the typename show in the intellisense
@@ -56,15 +57,21 @@ export interface Framework7Params {
   data? : () => any
   /** App root methods. Object with methods.  Note, that this inside of each method points to app Framework7 instance.. (default {}) */
   methods? : { [name : string] : () => any }
+  /** Enables auto dark theme */
+  autoDarkTheme?: boolean
   /** Lazy modules path */
   lazyModulesPath?: string
   /** By default Framework7 will be initialized automatically when you call new Framework7(). If you want to prevent this behavior you can disable it with this option and then initialize it manually with init() when you need it.. (default true) */
   init? : boolean
   /** If automatic initialization is enabled with init: true parameter and app is running under cordova environment then it will be initialized on deviceready event.. (default true) */
   initOnDeviceReady? : boolean
+  /** Enable translucent effect (blur background) on navigation bars for iOS theme (on iOS devices) (by default enabled) */
+  iosTranslucentBars? : boolean
+  /** Enable translucent effect (blur background) on modals (Dialog, Popover, Actions) for iOS theme (on iOS devices) (by default enabled) */
+  iosTranslucentModals? : boolean
   /** Object with events handlers.. (default {}) */
   on?: {
-    [event in keyof Framework7Events] : Framework7Events[event]
+    [event in keyof Framework7Events]? : Framework7Events[event]
   }
 
 }
@@ -141,22 +148,34 @@ interface Framework7 extends Framework7Class<Framework7Events> {
   t7 : Template7
   /** App parameters */
   params : Framework7Params
+  /** Enables auto dark theme detection */
+  enableAutoDarkTheme() : void
+  /** Disables auto dark theme detection */
+  disableAutoDarkTheme() : void
   /** Initialize app. In case you disabled auto initialization with init: false parameter */
   init() : void
   /** Load module */
-  loadModule(module: string | Function | Framework7Plugin) : Promise
+  loadModule(module: string | Function | Framework7Plugin) : Promise<any>
   /** Load modules */
-  loadModules(modules: any[]) : Promise
+  loadModules(modules: any[]) : Promise<any>
 }
+interface Events extends Framework7EventsClass<Framework7Events> {}
 
 declare class Framework7 implements Framework7 {
   constructor(parameters?: Framework7Params);
 
   static use(plugin : Framework7Plugin) : void;
+  static use(plugins : Framework7Plugin[]) : void;
   static device: Device;
   static request: Request;
   static support: Support;
   static utils: Utils;
+  static Events: Events;
+  static Component: ComponentClass;
+  /** Regiter custom component */
+  static registerComponent(tagName: string, component: ComponentOptions | ComponentClass): void;
+  /** Register component mixin */
+  static registerComponentMixin(mixinName: string, mixin: ComponentOptions): void
 }
 
 export default Framework7;

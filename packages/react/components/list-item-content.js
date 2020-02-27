@@ -11,70 +11,9 @@ class F7ListItemContent extends React.Component {
     super(props, context);
     this.__reactRefs = {};
 
-    this.state = (() => {
-      return {
-        hasInput: false,
-        hasInlineLabel: false,
-        hasInputInfo: false,
-        hasInputErrorMessage: false
-      };
-    })();
-
     (() => {
-      const self = this;
-      self.onClickBound = self.onClick.bind(self);
-      self.onChangeBound = self.onChange.bind(self);
+      Utils.bindMethods(this, 'onClick onChange'.split(' '));
     })();
-  }
-
-  checkHasInputState() {
-    const self = this;
-    const props = self.props;
-    const {
-      itemInput,
-      inlineLabel,
-      itemInputWithInfo
-    } = props;
-    const hasInput = itemInput || self.state.hasInput;
-    const hasInlineLabel = inlineLabel || self.state.hasInlineLabel;
-    const hasInputInfo = itemInputWithInfo || self.state.hasInputInfo;
-    const hasInputErrorMessage = self.state.hasInputErrorMessage;
-
-    if (hasInput && !self.state.hasInput) {
-      self.hasInputSet = true;
-      self.setState({
-        hasInput
-      });
-    } else if (!hasInput) {
-      self.hasInputSet = false;
-    }
-
-    if (hasInputInfo && !self.state.hasInputInfo) {
-      self.hasInputInfoSet = true;
-      self.setState({
-        hasInputInfo
-      });
-    } else if (!hasInputInfo) {
-      self.hasInputInfoSet = false;
-    }
-
-    if (hasInputErrorMessage && !self.state.hasInputErrorMessage) {
-      self.hasInputErrorMessageSet = true;
-      self.setState({
-        hasInputErrorMessage
-      });
-    } else if (!hasInputInfo) {
-      self.hasInputErrorMessageSet = false;
-    }
-
-    if (hasInlineLabel && !self.state.hasInlineLabel) {
-      self.hasInlineLabelSet = true;
-      self.setState({
-        hasInlineLabel
-      });
-    } else if (!hasInlineLabel) {
-      self.hasInlineLabelSet = false;
-    }
   }
 
   onClick(event) {
@@ -111,15 +50,8 @@ class F7ListItemContent extends React.Component {
       badge,
       mediaList,
       mediaItem,
-      badgeColor,
-      itemInput,
-      inlineLabel,
-      itemInputWithInfo
+      badgeColor
     } = props;
-    let hasInput = itemInput || self.state.hasInput;
-    let hasInlineLabel = inlineLabel || self.state.hasInlineLabel;
-    let hasInputInfo = itemInputWithInfo || self.state.hasInputInfo;
-    let hasInputErrorMessage = self.state.hasInputErrorMessage;
     const slotsContentStart = [];
     const slotsContent = [];
     const slotsContentEnd = [];
@@ -150,30 +82,23 @@ class F7ListItemContent extends React.Component {
     let inputIconEl;
     let headerEl;
     let footerEl;
-    const slots = self.slots.default;
+    const slotsDefault = self.slots.default;
     const flattenSlots = [];
 
-    if (slots && slots.length) {
-      slots.forEach(slot => {
+    if (slotsDefault && slotsDefault.length) {
+      slotsDefault.forEach(slot => {
         if (Array.isArray(slot)) flattenSlots.push(...slot);else flattenSlots.push(slot);
       });
     }
 
+    const passedSlotsContentStart = self.slots['content-start'];
+
+    if (passedSlotsContentStart && passedSlotsContentStart.length) {
+      slotsContentStart.push(...passedSlotsContentStart);
+    }
+
     flattenSlots.forEach(child => {
       if (typeof child === 'undefined') return;
-      {
-        const tag = child.type && (child.type.displayName || child.type.name);
-
-        if (tag === 'F7Input' || tag === 'f7-input') {
-          hasInput = true;
-          if (child.props && child.props.info) hasInputInfo = true;
-          if (child.props && child.props.errorMessage && child.props.errorMessageForce) hasInputErrorMessage = true;
-        }
-
-        if (tag === 'F7Label' || tag === 'f7-label') {
-          if (child.props && child.props.inline) hasInlineLabel = true;
-        }
-      }
       let slotName;
       slotName = child.props ? child.props.slot : undefined;
       if (!slotName || slotName === 'inner') slotsInner.push(child);
@@ -208,7 +133,8 @@ class F7ListItemContent extends React.Component {
           readOnly: readonly,
           disabled: disabled,
           required: required,
-          type: radio ? 'radio' : 'checkbox'
+          type: radio ? 'radio' : 'checkbox',
+          onChange: this.onChange
         });
       }
       inputIconEl = React.createElement('i', {
@@ -300,12 +226,7 @@ class F7ListItemContent extends React.Component {
     const ItemContentTag = checkbox || radio ? 'label' : 'div';
     const classes = Utils.classNames(className, 'item-content', {
       'item-checkbox': checkbox,
-      'item-radio': radio,
-      'item-input': hasInput,
-      'inline-label': hasInlineLabel,
-      'item-input-with-info': hasInputInfo,
-      'item-input-with-error-message': hasInputErrorMessage,
-      'item-input-invalid': hasInputErrorMessage
+      'item-radio': radio
     }, Mixins.colorClasses(props));
     return React.createElement(ItemContentTag, {
       ref: __reactNode => {
@@ -313,110 +234,47 @@ class F7ListItemContent extends React.Component {
       },
       id: id,
       style: style,
-      className: classes,
-      onClick: self.onClickBound
+      className: classes
     }, slotsContentStart, inputEl, inputIconEl, mediaEl, innerEl, slotsContent, slotsContentEnd);
   }
 
   componentWillUnmount() {
     const self = this;
     const {
-      inputEl
+      el
     } = self.refs;
-
-    if (inputEl) {
-      inputEl.removeEventListener('change', self.onChangeBound);
-    }
+    el.removeEventListener('click', self.onClick);
   }
 
   componentDidUpdate() {
     const self = this;
-    const innerEl = self.refs.innerEl;
-    if (!innerEl) return;
-    const $innerEl = self.$$(innerEl);
-    const $labelEl = $innerEl.children('.item-title.item-label');
-    const $inputWrapEl = $innerEl.children('.item-input-wrap');
-    const hasInlineLabel = $labelEl.hasClass('item-label-inline');
-    const hasInput = $inputWrapEl.length > 0;
-    const hasInputInfo = $inputWrapEl.children('.item-input-info').length > 0;
-    const hasInputErrorMessage = $inputWrapEl.children('.item-input-error-message').length > 0;
+    const {
+      inputEl
+    } = self.refs;
+    const {
+      indeterminate
+    } = self.props;
 
-    if (hasInlineLabel !== self.state.hasInlineLabel) {
-      self.setState({
-        hasInlineLabel
-      });
-    }
-
-    if (hasInput !== self.state.hasInput) {
-      self.setState({
-        hasInput
-      });
-    }
-
-    if (hasInputInfo !== self.state.hasInputInfo) {
-      self.setState({
-        hasInputInfo
-      });
-    }
-
-    if (!self.hasInputErrorMessageSet && hasInputErrorMessage !== self.state.hasInputErrorMessage) {
-      self.setState({
-        hasInputErrorMessage
-      });
+    if (inputEl) {
+      inputEl.indeterminate = indeterminate;
     }
   }
 
   componentDidMount() {
     const self = this;
     const {
-      innerEl,
+      el,
       inputEl
     } = self.refs;
+    const {
+      indeterminate
+    } = self.props;
 
-    if (inputEl) {
-      inputEl.addEventListener('change', self.onChangeBound);
+    if (indeterminate && inputEl) {
+      inputEl.indeterminate = true;
     }
 
-    if (!innerEl) return;
-    const $innerEl = self.$$(innerEl);
-    const $labelEl = $innerEl.children('.item-title.item-label');
-    const $inputWrapEl = $innerEl.children('.item-input-wrap');
-    const hasInlineLabel = $labelEl.hasClass('item-label-inline');
-    const hasInput = $inputWrapEl.length > 0;
-    const hasInputInfo = $inputWrapEl.children('.item-input-info').length > 0;
-    const hasInputErrorMessage = $inputWrapEl.children('.item-input-error-message').length > 0;
-
-    if (!self.hasInlineLabelSet && hasInlineLabel !== self.state.hasInlineLabel) {
-      self.setState({
-        hasInlineLabel
-      });
-    }
-
-    if (!self.hasInputSet && hasInput !== self.state.hasInput) {
-      self.setState({
-        hasInput
-      });
-    }
-
-    if (!self.hasInputInfoSet && hasInputInfo !== self.state.hasInputInfo) {
-      self.setState({
-        hasInputInfo
-      });
-    }
-
-    if (!self.hasInputErrorMessageSet && hasInputErrorMessage !== self.state.hasInputErrorMessage) {
-      self.setState({
-        hasInputErrorMessage
-      });
-    }
-  }
-
-  componentWillUpdate() {
-    this.checkHasInputState();
-  }
-
-  componentWillMount() {
-    this.checkHasInputState();
+    el.addEventListener('click', self.onClick);
   }
 
   get slots() {
@@ -450,12 +308,10 @@ __reactComponentSetProps(F7ListItemContent, Object.assign({
   badgeColor: String,
   mediaList: Boolean,
   mediaItem: Boolean,
-  itemInput: Boolean,
-  itemInputWithInfo: Boolean,
-  inlineLabel: Boolean,
   checkbox: Boolean,
   checked: Boolean,
   defaultChecked: Boolean,
+  indeterminate: Boolean,
   radio: Boolean,
   name: String,
   value: [String, Number, Array],

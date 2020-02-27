@@ -16,6 +16,7 @@ import f7ActionsGroup from './components/actions-group';
 import f7ActionsLabel from './components/actions-label';
 import f7Actions from './components/actions';
 import f7App from './components/app';
+import f7Appbar from './components/appbar';
 import f7Badge from './components/badge';
 import f7BlockFooter from './components/block-footer';
 import f7BlockHeader from './components/block-header';
@@ -29,17 +30,18 @@ import f7Card from './components/card';
 import f7Checkbox from './components/checkbox';
 import f7Chip from './components/chip';
 import f7Col from './components/col';
+import f7FabBackdrop from './components/fab-backdrop';
 import f7FabButton from './components/fab-button';
 import f7FabButtons from './components/fab-buttons';
 import f7Fab from './components/fab';
 import f7Gauge from './components/gauge';
 import f7Icon from './components/icon';
 import f7Input from './components/input';
-import f7Label from './components/label';
 import f7Link from './components/link';
 import f7ListButton from './components/list-button';
 import f7ListGroup from './components/list-group';
 import f7ListIndex from './components/list-index';
+import f7ListInput from './components/list-input';
 import f7ListItemCell from './components/list-item-cell';
 import f7ListItemContent from './components/list-item-content';
 import f7ListItemRow from './components/list-item-row';
@@ -47,6 +49,10 @@ import f7ListItem from './components/list-item';
 import f7List from './components/list';
 import f7LoginScreenTitle from './components/login-screen-title';
 import f7LoginScreen from './components/login-screen';
+import f7MenuDropdownItem from './components/menu-dropdown-item';
+import f7MenuDropdown from './components/menu-dropdown';
+import f7MenuItem from './components/menu-item';
+import f7Menu from './components/menu';
 import f7Message from './components/message';
 import f7MessagebarAttachment from './components/messagebar-attachment';
 import f7MessagebarAttachments from './components/messagebar-attachments';
@@ -58,6 +64,7 @@ import f7MessagesTitle from './components/messages-title';
 import f7Messages from './components/messages';
 import f7NavLeft from './components/nav-left';
 import f7NavRight from './components/nav-right';
+import f7NavTitleLarge from './components/nav-title-large';
 import f7NavTitle from './components/nav-title';
 import f7Navbar from './components/navbar';
 import f7PageContent from './components/page-content';
@@ -75,7 +82,8 @@ import f7Row from './components/row';
 import f7Searchbar from './components/searchbar';
 import f7Segmented from './components/segmented';
 import f7Sheet from './components/sheet';
-import f7Statusbar from './components/statusbar';
+import f7SkeletonBlock from './components/skeleton-block';
+import f7SkeletonText from './components/skeleton-text';
 import f7Stepper from './components/stepper';
 import f7Subnavbar from './components/subnavbar';
 import f7SwipeoutActions from './components/swipeout-actions';
@@ -84,12 +92,21 @@ import f7SwiperSlide from './components/swiper-slide';
 import f7Swiper from './components/swiper';
 import f7Tab from './components/tab';
 import f7Tabs from './components/tabs';
+import f7TextEditor from './components/text-editor';
 import f7Toggle from './components/toggle';
 import f7Toolbar from './components/toolbar';
+import f7TreeviewItem from './components/treeview-item';
+import f7Treeview from './components/treeview';
 import f7View from './components/view';
 import f7Views from './components/views';
 
-declare interface Framework7Extensions {
+export interface Framework7Theme {
+  ios: boolean
+  md: boolean
+  aurora: boolean
+}
+
+export interface Framework7Extensions {
   /** Main Framework7's initialized instance. It allows you to use any of Framework7 APIs */
   $f7: Framework7
   /** Callback function that will be executed when Framework7 fully intialized. Useful to use in components when you need to access Framework7 API and to be sure it is ready. So it is safe to put all Framework7 related logic into this callback. As an argument it receives initialized Framework7 instance */
@@ -109,14 +126,18 @@ declare interface Framework7Extensions {
   /** Access to Utils object with few useful utilities */
   $utils: Utils
   /** Object with boolean properties with information about currently used theme (iOS or MD) */
-  $theme: {
-    ios: boolean
-    md: boolean
-  }
+  $theme: Framework7Theme
 }
 
+/** Object with boolean properties with information about currently used theme (iOS or MD) */
+declare const theme : Framework7Theme;
+/** Main Framework7's initialized instance. It allows you to use any of Framework7 APIs */
+declare const f7 : Framework7;
+/** Callback function that will be executed when Framework7 fully intialized. Useful to use in components when you need to access Framework7 API and to be sure it is ready. So it is safe to put all Framework7 related logic into this callback. As an argument it receives initialized Framework7 instance */
+declare const f7ready: (onF7Ready: (f7: Framework7) => void) => void;
+
 declare module 'vue/types/vue' {
-  interface Vue extends Framework7Extensions {}
+  interface Vue extends Partial<Framework7Extensions> {}
 }
 
 export {
@@ -129,6 +150,7 @@ export {
   f7ActionsLabel,
   f7Actions,
   f7App,
+  f7Appbar,
   f7Badge,
   f7BlockFooter,
   f7BlockHeader,
@@ -142,17 +164,18 @@ export {
   f7Checkbox,
   f7Chip,
   f7Col,
+  f7FabBackdrop,
   f7FabButton,
   f7FabButtons,
   f7Fab,
   f7Gauge,
   f7Icon,
   f7Input,
-  f7Label,
   f7Link,
   f7ListButton,
   f7ListGroup,
   f7ListIndex,
+  f7ListInput,
   f7ListItemCell,
   f7ListItemContent,
   f7ListItemRow,
@@ -160,6 +183,10 @@ export {
   f7List,
   f7LoginScreenTitle,
   f7LoginScreen,
+  f7MenuDropdownItem,
+  f7MenuDropdown,
+  f7MenuItem,
+  f7Menu,
   f7Message,
   f7MessagebarAttachment,
   f7MessagebarAttachments,
@@ -171,6 +198,7 @@ export {
   f7Messages,
   f7NavLeft,
   f7NavRight,
+  f7NavTitleLarge,
   f7NavTitle,
   f7Navbar,
   f7PageContent,
@@ -188,7 +216,8 @@ export {
   f7Searchbar,
   f7Segmented,
   f7Sheet,
-  f7Statusbar,
+  f7SkeletonBlock,
+  f7SkeletonText,
   f7Stepper,
   f7Subnavbar,
   f7SwipeoutActions,
@@ -197,10 +226,22 @@ export {
   f7Swiper,
   f7Tab,
   f7Tabs,
+  f7TextEditor,
   f7Toggle,
   f7Toolbar,
+  f7TreeviewItem,
+  f7Treeview,
   f7View,
   f7Views
+}
+
+export {
+  theme,
+  theme as $theme,
+  f7,
+  f7 as $f7,
+  f7ready,
+  f7ready as $f7ready,
 }
 
 declare const Framework7Vue: Framework7Plugin;

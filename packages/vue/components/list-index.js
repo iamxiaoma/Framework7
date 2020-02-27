@@ -30,6 +30,10 @@ export default {
     mdItemHeight: {
       type: Number,
       default: 14
+    },
+    auroraItemHeight: {
+      type: Number,
+      default: 14
     }
   }, Mixins.colorProps),
 
@@ -70,6 +74,7 @@ export default {
         indexes,
         iosItemHeight,
         mdItemHeight,
+        auroraItemHeight,
         scrollList,
         label
       } = self.props;
@@ -79,6 +84,7 @@ export default {
         indexes,
         iosItemHeight,
         mdItemHeight,
+        auroraItemHeight,
         scrollList,
         label,
         on: {
@@ -94,7 +100,7 @@ export default {
   watch: {
     'props.indexes': function watchIndexes() {
       if (!this.f7ListIndex) return;
-      this.f7ListIndex.params.indexes = this.indexes;
+      this.f7ListIndex.params.indexes = this.props.indexes;
       this.update();
     }
   },

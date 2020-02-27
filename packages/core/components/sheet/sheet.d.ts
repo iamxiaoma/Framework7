@@ -29,6 +29,14 @@ export namespace Sheet {
     closeByOutsideClick?: boolean
     /** Whether the Sheet Modal should be opened/closed with animation or not. Can be overwritten in .open() and .close() methods. (default true) */
     animate?: boolean
+    /** When enabled it will be possible to close sheet with swipe, can be false or true (default false) */
+    swipeToClose?: boolean
+    /** When enabled it will be possible to split opened sheet into two states: partially opened and fully opened that can be controlled with swipe (default false) */
+    swipeToStep?: boolean
+    /** When enabled it will be possible to close sheet with swipe only on specified handler element (default null) */
+    swipeHandler?: HTMLElement | CSSSelector
+    /** When enabled it will push view behind on open. Works only when top safe area is in place. It can also be enabled by adding `sheet-modal-push` class to Sheet element. (default false) */
+    push?: boolean
 
     /** Object with events handlers.. */
     on?: {
@@ -52,9 +60,9 @@ export namespace Sheet {
     opened : boolean
 
     /** Open sheet. */
-    open(animate: boolean) : Sheet
+    open(animate?: boolean) : Sheet
     /** Close sheet. */
-    close(animate: boolean) : Sheet
+    close(animate?: boolean) : Sheet
     /** Destroy sheet */
     destroy() : void
   }
@@ -76,11 +84,11 @@ export namespace Sheet {
       /** destroy Sheet Modal instance */
       destroy(el : HTMLElement | CSSSelector | Sheet) : void
       /** get Sheet Modal instance by HTML element */
-      get(el : HTMLElement | CSSSelector) : Sheet
+      get(el? : HTMLElement | CSSSelector) : Sheet
       /** open Sheet Modal */
-      open(el : HTMLElement | CSSSelector, animate?: boolean) : Sheet
+      open(el? : HTMLElement | CSSSelector, animate?: boolean) : Sheet
       /** closes Sheet Modal */
-      close(el : HTMLElement | CSSSelector, animate?: boolean) : Sheet
+      close(el? : HTMLElement | CSSSelector, animate?: boolean) : Sheet
     }
   }
   interface AppParams {

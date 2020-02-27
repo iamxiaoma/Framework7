@@ -18,15 +18,13 @@ class F7Link extends React.Component {
         isTabbarLabel: props.tabbarLabel
       };
     })();
+
+    (() => {
+      Utils.bindMethods(this, ['onClick']);
+    })();
   }
 
   onClick(event) {
-    const self = this;
-
-    if (self.props.smartSelect && self.f7SmartSelect) {
-      self.f7SmartSelect.open();
-    }
-
     this.dispatchEvent('click', event);
   }
 
@@ -52,8 +50,6 @@ class F7Link extends React.Component {
     const self = this;
     const props = self.props;
     const {
-      noFastclick,
-      noFastClick,
       tabLink,
       tabLinkActive,
       noLinkClass,
@@ -65,7 +61,6 @@ class F7Link extends React.Component {
       'icon-only': self.iconOnlyComputed,
       'tab-link': tabLink || tabLink === '',
       'tab-link-active': tabLinkActive,
-      'no-fastclick': noFastclick || noFastClick,
       'smart-select': smartSelect
     }, Mixins.colorClasses(props), Mixins.linkRouterClasses(props), Mixins.linkActionsClasses(props));
   }
@@ -83,13 +78,10 @@ class F7Link extends React.Component {
       iconColor,
       iconSize,
       iconMaterial,
-      iconIon,
-      iconFa,
       iconF7,
-      iconIfMd,
-      iconIfIos,
       iconMd,
       iconIos,
+      iconAurora,
       id,
       style
     } = props;
@@ -108,10 +100,7 @@ class F7Link extends React.Component {
       }, text, badgeEl);
     }
 
-    const mdThemeIcon = iconIfMd || iconMd;
-    const iosThemeIcon = iconIfIos || iconIos;
-
-    if (icon || iconMaterial || iconIon || iconFa || iconF7 || mdThemeIcon || iosThemeIcon) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
       if (iconBadge) {
         iconBadgeEl = React.createElement(F7Badge, {
           color: badgeColor
@@ -121,11 +110,10 @@ class F7Link extends React.Component {
       iconEl = React.createElement(F7Icon, {
         material: iconMaterial,
         f7: iconF7,
-        fa: iconFa,
-        ion: iconIon,
         icon: icon,
-        md: mdThemeIcon,
-        ios: iosThemeIcon,
+        md: iconMd,
+        ios: iconIos,
+        aurora: iconAurora,
         color: iconColor,
         size: iconSize
       }, iconBadgeEl);
@@ -143,13 +131,15 @@ class F7Link extends React.Component {
       },
       id: id,
       style: style,
-      className: self.classes,
-      onClick: self.onClick.bind(self)
+      className: self.classes
     }, self.attrs), iconEl, textEl, defaultSlots);
   }
 
   componentWillUnmount() {
     const self = this;
+    const el = self.refs.el;
+    el.removeEventListener('click', self.onClick);
+    delete el.f7RouteProps;
 
     if (self.f7SmartSelect && self.f7SmartSelect.destroy) {
       self.f7SmartSelect.destroy();
@@ -162,15 +152,53 @@ class F7Link extends React.Component {
     }
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    __reactComponentWatch(this, 'props.tooltip', prevProps, prevState, newText => {
+      const self = this;
+
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger
+        });
+        return;
+      }
+
+      if (!newText || !self.f7Tooltip) return;
+      self.f7Tooltip.setText(newText);
+    });
+
+    const self = this;
+    const el = self.refs.el;
+    const {
+      routeProps
+    } = self.props;
+
+    if (routeProps) {
+      el.f7RouteProps = routeProps;
+    }
+  }
+
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
+    el.addEventListener('click', self.onClick);
     const {
       tabbarLabel,
       tabLink,
       tooltip,
+      tooltipTrigger,
       smartSelect,
-      smartSelectParams
+      smartSelectParams,
+      routeProps
     } = self.props;
     let isTabbarLabel = false;
 
@@ -181,6 +209,7 @@ class F7Link extends React.Component {
     self.setState({
       isTabbarLabel
     });
+    if (routeProps) el.f7RouteProps = routeProps;
     self.$f7ready(f7 => {
       if (smartSelect) {
         const ssParams = Utils.extend({
@@ -192,7 +221,8 @@ class F7Link extends React.Component {
       if (tooltip) {
         self.f7Tooltip = f7.tooltip.create({
           targetEl: el,
-          text: tooltip
+          text: tooltip,
+          trigger: tooltipTrigger
         });
       }
     });
@@ -212,14 +242,6 @@ class F7Link extends React.Component {
 
   set refs(refs) {}
 
-  componentDidUpdate(prevProps, prevState) {
-    __reactComponentWatch(this, 'props.tooltip', prevProps, prevState, newText => {
-      const self = this;
-      if (!newText || !self.f7Tooltip) return;
-      self.f7Tooltip.setText(newText);
-    });
-  }
-
 }
 
 __reactComponentSetProps(F7Link, Object.assign({
@@ -227,8 +249,6 @@ __reactComponentSetProps(F7Link, Object.assign({
   className: String,
   style: Object,
   noLinkClass: Boolean,
-  noFastClick: Boolean,
-  noFastclick: Boolean,
   text: String,
   tabLink: [Boolean, String],
   tabLinkActive: Boolean,
@@ -243,9 +263,10 @@ __reactComponentSetProps(F7Link, Object.assign({
   },
   target: String,
   tooltip: String,
+  tooltipTrigger: String,
   smartSelect: Boolean,
   smartSelectParams: Object
-}, Mixins.colorProps, Mixins.linkIconProps, Mixins.linkRouterProps, Mixins.linkActionsProps));
+}, Mixins.colorProps, {}, Mixins.linkIconProps, {}, Mixins.linkRouterProps, {}, Mixins.linkActionsProps));
 
 F7Link.displayName = 'f7-link';
 export default F7Link;

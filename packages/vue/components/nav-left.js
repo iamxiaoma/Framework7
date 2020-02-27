@@ -10,6 +10,10 @@ export default {
     backLink: [Boolean, String],
     backLinkUrl: String,
     backLinkForce: Boolean,
+    backLinkShowText: {
+      type: Boolean,
+      default: undefined
+    },
     sliding: Boolean
   }, Mixins.colorProps),
 
@@ -20,25 +24,29 @@ export default {
       backLink,
       backLinkUrl,
       backLinkForce,
+      backLinkShowText,
       sliding,
       className,
       style,
       id
     } = props;
     let linkEl;
+    let needBackLinkText = backLinkShowText;
+    if (typeof needBackLinkText === 'undefined') needBackLinkText = !this.$theme.md;
 
     if (backLink) {
+      const text = backLink !== true && needBackLinkText ? backLink : undefined;
       linkEl = _h(F7Link, {
-        class: backLink === true || backLink && this.$theme.md ? 'icon-only' : undefined,
+        class: !text ? 'icon-only' : undefined,
         on: {
-          click: this.onBackClick.bind(this)
+          click: this.onBackClick
         },
         attrs: {
           href: backLinkUrl || '#',
           back: true,
           icon: 'icon-back',
           force: backLinkForce || undefined,
-          text: backLink !== true && !this.$theme.md ? backLink : undefined
+          text: text
         }
       });
     }
@@ -46,13 +54,26 @@ export default {
     const classes = Utils.classNames(className, 'left', {
       sliding
     }, Mixins.colorClasses(props));
+    const children = [];
+    const slots = this.$slots;
+
+    if (slots && Object.keys(slots).length) {
+      Object.keys(slots).forEach(key => {
+        children.push(...slots[key]);
+      });
+    }
+
     return _h('div', {
       style: style,
       class: classes,
       attrs: {
         id: id
       }
-    }, [linkEl, this.$slots['default']]);
+    }, [linkEl, children]);
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onBackClick']);
   },
 
   methods: {

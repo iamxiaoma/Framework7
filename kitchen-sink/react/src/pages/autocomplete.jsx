@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Page, BlockTitle, Subnavbar, Searchbar, Block, List, BlockHeader, ListItem, Input, Label } from 'framework7-react';
+import { Navbar, Page, BlockTitle, Subnavbar, Searchbar, Block, List, BlockHeader, ListItem, ListInput } from 'framework7-react';
 
 export default class extends React.Component {
   constructor(props) {
@@ -13,7 +13,7 @@ export default class extends React.Component {
       <Page onPageInit={this.onPageInit.bind(this)} onPageBeforeRemove={this.onPageBeforeRemove.bind(this)}>
         <Navbar title="Autocomplete" backLink="Back">
           <Subnavbar inner={false}>
-            <Searchbar init={false} id="searchbar-autocomplete"></Searchbar>
+            <Searchbar init={false} id="searchbar-autocomplete" disableButton={!this.$theme.aurora}></Searchbar>
           </Subnavbar>
         </Navbar>
 
@@ -23,53 +23,69 @@ export default class extends React.Component {
         </Block>
         <List noHairlinesMd>
           <BlockHeader>Simple Dropdown Autocomplete</BlockHeader>
-          <ListItem>
-            <Label inline>Fruit</Label>
-            <Input type="text" placeholder="Fruit" id="autocomplete-dropdown" />
-          </ListItem>
+          <ListInput
+            label="Fruit"
+            inlineLabel
+            type="text"
+            placeholder="Fruit"
+            inputId="autocomplete-dropdown"
+          />
         </List>
 
         <List noHairlinesMd>
           <BlockHeader>Dropdown With Input Expand</BlockHeader>
-          <ListItem>
-            <Label inline>Fruit</Label>
-            <Input type="text" placeholder="Fruit" id="autocomplete-dropdown-expand" />
-          </ListItem>
+          <ListInput
+            label="Fruit"
+            inlineLabel
+            type="text"
+            placeholder="Fruit"
+            inputId="autocomplete-dropdown-expand"
+          />
         </List>
         <List noHairlinesMd>
           <BlockHeader>Dropdown With All Values</BlockHeader>
-          <ListItem>
-            <Label>Fruit</Label>
-            <Input type="text" placeholder="Fruit" id="autocomplete-dropdown-all" />
-          </ListItem>
+          <ListInput
+            label="Fruit"
+            type="text"
+            placeholder="Fruit"
+            inputId="autocomplete-dropdown-all"
+          />
         </List>
         <List noHairlinesMd>
           <BlockHeader>Dropdown With Placeholder</BlockHeader>
-          <ListItem>
-            <Label>Fruit</Label>
-            <Input type="text" placeholder="Fruit" id="autocomplete-dropdown-placeholder" />
-          </ListItem>
+          <ListInput
+            label="Fruit"
+            type="text"
+            placeholder="Fruit"
+            inputId="autocomplete-dropdown-placeholder"
+          />
         </List>
         <List noHairlinesMd>
           <BlockHeader>Dropdown With Typeahead</BlockHeader>
-          <ListItem>
-            <Label>Fruit</Label>
-            <Input type="text" placeholder="Fruit" id="autocomplete-dropdown-typeahead" />
-          </ListItem>
+          <ListInput
+            label="Fruit"
+            type="text"
+            placeholder="Fruit"
+            inputId="autocomplete-dropdown-typeahead"
+          />
         </List>
         <List noHairlinesMd>
           <BlockHeader>Dropdown With Ajax-Data</BlockHeader>
-          <ListItem>
-            <Label>Language</Label>
-            <Input type="text" placeholder="Language" id="autocomplete-dropdown-ajax"/>
-          </ListItem>
+          <ListInput
+            label="Language"
+            type="text"
+            placeholder="Language"
+            inputId="autocomplete-dropdown-ajax"
+          />
         </List>
         <List noHairlinesMd>
           <BlockHeader>Dropdown With Ajax-Data + Typeahead</BlockHeader>
-          <ListItem>
-            <Label>Language</Label>
-            <Input type="text" placeholder="Language" id="autocomplete-dropdown-ajax-typeahead"/>
-          </ListItem>
+          <ListInput
+            label="Language"
+            type="text"
+            placeholder="Language"
+            inputId="autocomplete-dropdown-ajax-typeahead"
+          />
         </List>
         <BlockTitle>Standalone Autocomplete</BlockTitle>
         <Block>
@@ -125,7 +141,7 @@ export default class extends React.Component {
 
     // Simple Dropdown
     self.autocompleteDropdownSimple = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown input',
+      inputEl: '#autocomplete-dropdown',
       openIn: 'dropdown',
       source(query, render) {
         const results = [];
@@ -144,7 +160,7 @@ export default class extends React.Component {
 
     // Dropdown with input expand
     self.autocompleteDropdownExpand = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-expand input',
+      inputEl: '#autocomplete-dropdown-expand',
       openIn: 'dropdown',
       expandInput: true, // expand input
       source(query, render) {
@@ -164,7 +180,7 @@ export default class extends React.Component {
 
     // Dropdown with all values
     self.autocompleteDropdownAll = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-all input',
+      inputEl: '#autocomplete-dropdown-all',
       openIn: 'dropdown',
       source(query, render) {
         const results = [];
@@ -179,7 +195,7 @@ export default class extends React.Component {
 
     // Dropdown with placeholder
     self.autocompleteDropdownPlaceholder = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-placeholder input',
+      inputEl: '#autocomplete-dropdown-placeholder',
       openIn: 'dropdown',
       dropdownPlaceholderText: 'Try to type "Apple"',
       source(query, render) {
@@ -199,7 +215,7 @@ export default class extends React.Component {
 
     // Dropdown with typeahead
     self.autocompleteDropdownTypeahead = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-typeahead input',
+      inputEl: '#autocomplete-dropdown-typeahead',
       openIn: 'dropdown',
       dropdownPlaceholderText: 'Try to type "Pineapple"',
       typeahead: true,
@@ -220,7 +236,7 @@ export default class extends React.Component {
 
     // Dropdown with ajax data
     self.autocompleteDropdownAjax = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-ajax input',
+      inputEl: '#autocomplete-dropdown-ajax',
       openIn: 'dropdown',
       preloader: true, // enable preloader
       /* If we set valueProperty to "id" then input value on select will be set according to this property */
@@ -263,7 +279,7 @@ export default class extends React.Component {
 
     // Dropdown with ajax data
     self.autocompleteDropdownAjaxTypeahead = app.autocomplete.create({
-      inputEl: '#autocomplete-dropdown-ajax-typeahead input',
+      inputEl: '#autocomplete-dropdown-ajax-typeahead',
       openIn: 'dropdown',
       preloader: true, // enable preloader
       /* If we set valueProperty to "id" then input value on select will be set according to this property */

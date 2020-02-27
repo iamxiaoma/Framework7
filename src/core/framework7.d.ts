@@ -1,22 +1,21 @@
 import Template7 from 'template7';
 import Dom7 from 'dom7';
-import Framework7 from './components/app/app-class';
+// IMPORT_BASE
 
 // Helpers
-import Request from './utils/request';
-import Utils from './utils/utils';
-import Support from './utils/support';
-import Device from './utils/device';
+// IMPORT_HELPERS
 
 // Modules
 // IMPORT_MODULES
+import {ComponentClass as Component} from '{{basePath}}/modules/component/component';
 
 // Components
 // IMPORT_COMPONENTS
 
-declare module './components/app/app-class' {
+declare module '{{basePath}}/components/app/app-class' {
   // INSTALL
 }
 
-export { Request, Utils, Support, Device, Template7, Dom7 };
+// EXPORT_HELPERS
+export { Template7, Dom7, Component };
 export default Framework7;

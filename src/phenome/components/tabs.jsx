@@ -10,6 +10,10 @@ export default {
     animated: Boolean,
     swipeable: Boolean,
     routable: Boolean,
+    swiperParams: {
+      type: Object,
+      default: undefined,
+    },
     ...Mixins.colorProps,
   },
   render() {
@@ -19,18 +23,21 @@ export default {
 
     const classes = Utils.classNames(
       className,
-      {
-        'tabs-animated-wrap': animated,
-        'tabs-swipeable-wrap': swipeable,
-        'tabs-routable': routable,
-      },
       Mixins.colorClasses(props),
     );
+    const wrapClasses = Utils.classNames({
+      'tabs-animated-wrap': animated,
+      'tabs-swipeable-wrap': swipeable,
+    });
+    const tabsClasses = Utils.classNames({
+      tabs: true,
+      'tabs-routable': routable,
+    });
 
     if (animated || swipeable) {
       return (
-        <div id={id} style={style} className={classes}>
-          <div className="tabs">
+        <div id={id} style={style} className={Utils.classNames(wrapClasses, classes)} ref="wrapEl">
+          <div className={tabsClasses}>
             <slot />
           </div>
         </div>
@@ -38,9 +45,17 @@ export default {
     }
 
     return (
-      <div id={id} style={style} className={Utils.classNames('tabs', classes)}>
+      <div id={id} style={style} className={Utils.classNames(tabsClasses, classes)}>
         <slot />
       </div>
     );
+  },
+  componentDidMount() {
+    const self = this;
+    const { swipeable, swiperParams } = self.props;
+    if (!swipeable || !swiperParams) return;
+    const wrapEl = self.refs.wrapEl;
+    if (!wrapEl) return;
+    wrapEl.f7SwiperParams = swiperParams;
   },
 };

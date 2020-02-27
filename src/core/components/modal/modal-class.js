@@ -35,13 +35,13 @@ class Modal extends Framework7Class {
     modal.opened = true;
     openedModals.push(modal);
     $('html').addClass(`with-modal-${modal.type.toLowerCase()}`);
-    modal.$el.trigger(`modal:open ${modal.type.toLowerCase()}:open`, modal);
+    modal.$el.trigger(`modal:open ${modal.type.toLowerCase()}:open`);
     modal.emit(`local::open modalOpen ${modal.type}Open`, modal);
   }
 
   onOpened() {
     const modal = this;
-    modal.$el.trigger(`modal:opened ${modal.type.toLowerCase()}:opened`, modal);
+    modal.$el.trigger(`modal:opened ${modal.type.toLowerCase()}:opened`);
     modal.emit(`local::opened modalOpened ${modal.type}Opened`, modal);
   }
 
@@ -51,7 +51,7 @@ class Modal extends Framework7Class {
     if (!modal.type || !modal.$el) return;
     openedModals.splice(openedModals.indexOf(modal), 1);
     $('html').removeClass(`with-modal-${modal.type.toLowerCase()}`);
-    modal.$el.trigger(`modal:close ${modal.type.toLowerCase()}:close`, modal);
+    modal.$el.trigger(`modal:close ${modal.type.toLowerCase()}:close`);
     modal.emit(`local::close modalClose ${modal.type}Close`, modal);
   }
 
@@ -60,7 +60,7 @@ class Modal extends Framework7Class {
     if (!modal.type || !modal.$el) return;
     modal.$el.removeClass('modal-out');
     modal.$el.hide();
-    modal.$el.trigger(`modal:closed ${modal.type.toLowerCase()}:closed`, modal);
+    modal.$el.trigger(`modal:closed ${modal.type.toLowerCase()}:closed`);
     modal.emit(`local::closed modalClosed ${modal.type}Closed`, modal);
   }
 
@@ -110,16 +110,8 @@ class Modal extends Framework7Class {
     // Show Modal
     $el.show();
 
-    // Set Dialog offset
-    if (type === 'dialog') {
-      $el.css({
-        marginTop: `${-Math.round($el.outerHeight() / 2)}px`,
-      });
-    }
-
-
     /* eslint no-underscore-dangle: ["error", { "allow": ["_clientLeft"] }] */
-    // modal._clientLeft = $el[0].clientLeft;
+    modal._clientLeft = $el[0].clientLeft;
 
     // Modal
     function transitionEnd() {
@@ -130,24 +122,22 @@ class Modal extends Framework7Class {
       }
     }
     if (animate) {
-      Utils.nextFrame(() => {
-        if ($backdropEl) {
-          $backdropEl.removeClass('not-animated');
-          $backdropEl.addClass('backdrop-in');
-        }
-        $el
-          .animationEnd(() => {
-            transitionEnd();
-          });
-        $el
-          .transitionEnd(() => {
-            transitionEnd();
-          });
-        $el
-          .removeClass('modal-out not-animated')
-          .addClass('modal-in');
-        modal.onOpen();
-      });
+      if ($backdropEl) {
+        $backdropEl.removeClass('not-animated');
+        $backdropEl.addClass('backdrop-in');
+      }
+      $el
+        .animationEnd(() => {
+          transitionEnd();
+        });
+      $el
+        .transitionEnd(() => {
+          transitionEnd();
+        });
+      $el
+        .removeClass('modal-out not-animated')
+        .addClass('modal-in');
+      modal.onOpen();
     } else {
       if ($backdropEl) {
         $backdropEl.addClass('backdrop-in not-animated');
@@ -172,6 +162,9 @@ class Modal extends Framework7Class {
     }
 
     if (!$el || !$el.hasClass('modal-in')) {
+      if (dialogsQueue.indexOf(modal) >= 0) {
+        dialogsQueue.splice(dialogsQueue.indexOf(modal), 1);
+      }
       return modal;
     }
 
@@ -242,7 +235,7 @@ class Modal extends Framework7Class {
     if (modal.destroyed) return;
     modal.emit(`local::beforeDestroy modalBeforeDestroy ${modal.type}BeforeDestroy`, modal);
     if (modal.$el) {
-      modal.$el.trigger(`modal:beforedestroy ${modal.type.toLowerCase()}:beforedestroy`, modal);
+      modal.$el.trigger(`modal:beforedestroy ${modal.type.toLowerCase()}:beforedestroy`);
       if (modal.$el.length && modal.$el[0].f7Modal) {
         delete modal.$el[0].f7Modal;
       }

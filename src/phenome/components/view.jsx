@@ -1,7 +1,6 @@
 /* eslint array-callback-return: "off" */
 /* eslint consistent-return: "off" */
 import f7 from '../utils/f7';
-import events from '../utils/events';
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 
@@ -29,23 +28,36 @@ export default {
     url: String,
     main: Boolean,
     stackPages: Boolean,
-    xhrCache: String,
+    xhrCache: Boolean,
     xhrCacheIgnore: Array,
     xhrCacheIgnoreGetParameters: Boolean,
     xhrCacheDuration: Number,
     preloadPreviousPage: Boolean,
     allowDuplicateUrls: Boolean,
     reloadPages: Boolean,
+    reloadDetail: Boolean,
+    masterDetailBreakpoint: Number,
     removeElements: Boolean,
     removeElementsWithTimeout: Boolean,
     removeElementsTimeout: Number,
     restoreScrollTopOnBack: Boolean,
+    loadInitialPage: Boolean,
     // Swipe Back
     iosSwipeBack: Boolean,
     iosSwipeBackAnimateShadow: Boolean,
     iosSwipeBackAnimateOpacity: Boolean,
     iosSwipeBackActiveArea: Number,
     iosSwipeBackThreshold: Number,
+    mdSwipeBack: Boolean,
+    mdSwipeBackAnimateShadow: Boolean,
+    mdSwipeBackAnimateOpacity: Boolean,
+    mdSwipeBackActiveArea: Number,
+    mdSwipeBackThreshold: Number,
+    auroraSwipeBack: Boolean,
+    auroraSwipeBackAnimateShadow: Boolean,
+    auroraSwipeBackAnimateOpacity: Boolean,
+    auroraSwipeBackActiveArea: Number,
+    auroraSwipeBackThreshold: Number,
     // Push State
     pushState: Boolean,
     pushStateRoot: String,
@@ -55,9 +67,9 @@ export default {
     pushStateOnLoad: Boolean,
     // Animate Pages
     animate: Boolean,
+    transition: String,
     // iOS Dynamic Navbar
     iosDynamicNavbar: Boolean,
-    iosSeparateDynamicNavbar: Boolean,
     // Animate iOS Navbar Back Icon
     iosAnimateNavbarBackIcon: Boolean,
     // MD Theme delay
@@ -128,60 +140,69 @@ export default {
   },
   componentDidCreate() {
     const self = this;
-    self.onSwipeBackMoveBound = self.onSwipeBackMove.bind(self);
-    self.onSwipeBackBeforeChangeBound = self.onSwipeBackBeforeChange.bind(self);
-    self.onSwipeBackAfterChangeBound = self.onSwipeBackAfterChange.bind(self);
-    self.onSwipeBackBeforeResetBound = self.onSwipeBackBeforeReset.bind(self);
-    self.onSwipeBackAfterResetBound = self.onSwipeBackAfterReset.bind(self);
-    self.onTabShowBound = self.onTabShow.bind(self);
-    self.onTabHideBound = self.onTabHide.bind(self);
-    self.onViewInitBound = self.onViewInit.bind(self);
+    Utils.bindMethods(self, [
+      'onSwipeBackMove',
+      'onSwipeBackBeforeChange',
+      'onSwipeBackAfterChange',
+      'onSwipeBackBeforeReset',
+      'onSwipeBackAfterReset',
+      'onTabShow',
+      'onTabHide',
+      'onViewInit',
+    ]);
   },
   componentDidMount() {
     const self = this;
     const el = self.refs.el;
 
-    el.addEventListener('swipeback:move', self.onSwipeBackMoveBound);
-    el.addEventListener('swipeback:beforechange', self.onSwipeBackBeforeChangeBound);
-    el.addEventListener('swipeback:afterchange', self.onSwipeBackAfterChangeBound);
-    el.addEventListener('swipeback:beforereset', self.onSwipeBackBeforeResetBound);
-    el.addEventListener('swipeback:afterreset', self.onSwipeBackAfterResetBound);
-    el.addEventListener('tab:show', self.onTabShowBound);
-    el.addEventListener('tab:hide', self.onTabHideBound);
-    el.addEventListener('view:init', self.onViewInitBound);
-
-    self.setState({ pages: [] });
-
     self.$f7ready((f7Instance) => {
+      f7Instance.on('tabShow', self.onTabShow);
+      f7Instance.on('tabHide', self.onTabHide);
       self.routerData = {
         el,
         component: self,
+        pages: self.state.pages,
         instance: null,
+        setPages(pages) {
+          self.setState({ pages });
+        },
       };
       f7.routers.views.push(self.routerData);
       if (!self.props.init) return;
-      // phenome-vue-next-line
-      self.routerData.instance = f7Instance.views.create(el, Utils.noUndefinedProps(self.$options.propsData || {}));
-      // phenome-react-next-line
-      self.routerData.instance = f7Instance.views.create(el, Utils.noUndefinedProps(self.props));
+
+      self.routerData.instance = f7Instance.views.create(el, {
+        on: {
+          init: self.onViewInit,
+        },
+        // phenome-vue-next-line
+        ...Utils.noUndefinedProps(self.$options.propsData || {}),
+        // phenome-react-next-line
+        ...Utils.noUndefinedProps(self.props),
+      });
       self.f7View = self.routerData.instance;
+      self.f7View.on('swipebackMove', self.onSwipeBackMove);
+      self.f7View.on('swipebackBeforeChange', self.onSwipeBackBeforeChange);
+      self.f7View.on('swipebackAfterChange', self.onSwipeBackAfterChange);
+      self.f7View.on('swipebackBeforeReset', self.onSwipeBackBeforeReset);
+      self.f7View.on('swipebackAfterReset', self.onSwipeBackAfterReset);
     });
   },
   componentWillUnmount() {
     const self = this;
-    const el = self.refs.el;
 
-    el.removeEventListener('swipeback:move', self.onSwipeBackMoveBound);
-    el.removeEventListener('swipeback:beforechange', self.onSwipeBackBeforeChangeBound);
-    el.removeEventListener('swipeback:afterchange', self.onSwipeBackAfterChangeBound);
-    el.removeEventListener('swipeback:beforereset', self.onSwipeBackBeforeResetBound);
-    el.removeEventListener('swipeback:afterreset', self.onSwipeBackAfterResetBound);
-    el.removeEventListener('tab:show', self.onTabShowBound);
-    el.removeEventListener('tab:hide', self.onTabHideBound);
-    el.removeEventListener('view:init', self.onViewInitBound);
+    if (f7.instance) {
+      f7.instance.off('tabShow', self.onTabShow);
+      f7.instance.off('tabHide', self.onTabHide);
+    }
+    if (self.f7View) {
+      self.f7View.off('swipebackMove', self.onSwipeBackMove);
+      self.f7View.off('swipebackBeforeChange', self.onSwipeBackBeforeChange);
+      self.f7View.off('swipebackAfterChange', self.onSwipeBackAfterChange);
+      self.f7View.off('swipebackBeforeReset', self.onSwipeBackBeforeReset);
+      self.f7View.off('swipebackAfterReset', self.onSwipeBackAfterReset);
+      if (self.f7View.destroy) self.f7View.destroy();
+    }
 
-    if (!self.props.init) return;
-    if (self.f7View && self.f7View.destroy) self.f7View.destroy();
     f7.routers.views.splice(f7.routers.views.indexOf(self.routerData), 1);
     self.routerData = null;
     delete self.routerData;
@@ -189,43 +210,46 @@ export default {
   componentDidUpdate() {
     const self = this;
     if (!self.routerData) return;
-    events.emit('viewRouterDidUpdate', self.routerData);
+    f7.events.emit('viewRouterDidUpdate', self.routerData);
   },
   methods: {
-    onViewInit(event) {
+    onViewInit(view) {
       const self = this;
-      const view = event.detail;
-      self.dispatchEvent('view:init viewInit', event, view);
+      self.dispatchEvent('view:init viewInit', view);
       if (!self.props.init) {
         self.routerData.instance = view;
         self.f7View = self.routerData.instance;
       }
     },
-    onSwipeBackMove(event) {
-      const swipeBackData = event.detail;
-      this.dispatchEvent('swipeback:move swipeBackMove', event, swipeBackData);
+    onSwipeBackMove(data) {
+      const swipeBackData = data;
+      this.dispatchEvent('swipeback:move swipeBackMove', swipeBackData);
     },
-    onSwipeBackBeforeChange(event) {
-      const swipeBackData = event.detail;
-      this.dispatchEvent('swipeback:beforechange swipeBackBeforeChange', event, swipeBackData);
+    onSwipeBackBeforeChange(data) {
+      const swipeBackData = data;
+      this.dispatchEvent('swipeback:beforechange swipeBackBeforeChange', swipeBackData);
     },
-    onSwipeBackAfterChange(event) {
-      const swipeBackData = event.detail;
-      this.dispatchEvent('swipeback:afterchange swipeBackAfterChange', event, swipeBackData);
+    onSwipeBackAfterChange(data) {
+      const swipeBackData = data;
+      this.dispatchEvent('swipeback:afterchange swipeBackAfterChange', swipeBackData);
     },
-    onSwipeBackBeforeReset(event) {
-      const swipeBackData = event.detail;
-      this.dispatchEvent('swipeback:beforereset swipeBackBeforeReset', event, swipeBackData);
+    onSwipeBackBeforeReset(data) {
+      const swipeBackData = data;
+      this.dispatchEvent('swipeback:beforereset swipeBackBeforeReset', swipeBackData);
     },
-    onSwipeBackAfterReset(event) {
-      const swipeBackData = event.detail;
-      this.dispatchEvent('swipeback:afterreset swipeBackAfterReset', event, swipeBackData);
+    onSwipeBackAfterReset(data) {
+      const swipeBackData = data;
+      this.dispatchEvent('swipeback:afterreset swipeBackAfterReset', swipeBackData);
     },
-    onTabShow(event) {
-      this.dispatchEvent('tab:show tabShow', event);
+    onTabShow(el) {
+      if (el === this.refs.el) {
+        this.dispatchEvent('tab:show tabShow', el);
+      }
     },
-    onTabHide(event) {
-      this.dispatchEvent('tab:hide tabHide', event);
+    onTabHide(el) {
+      if (el === this.refs.el) {
+        this.dispatchEvent('tab:hide tabHide', el);
+      }
     },
   },
 };

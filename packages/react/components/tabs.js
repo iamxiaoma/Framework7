@@ -7,6 +7,7 @@ import __reactComponentSetProps from '../runtime-helpers/react-component-set-pro
 class F7Tabs extends React.Component {
   constructor(props, context) {
     super(props, context);
+    this.__reactRefs = {};
   }
 
   render() {
@@ -20,32 +21,57 @@ class F7Tabs extends React.Component {
       className,
       routable
     } = props;
-    const classes = Utils.classNames(className, {
+    const classes = Utils.classNames(className, Mixins.colorClasses(props));
+    const wrapClasses = Utils.classNames({
       'tabs-animated-wrap': animated,
-      'tabs-swipeable-wrap': swipeable,
+      'tabs-swipeable-wrap': swipeable
+    });
+    const tabsClasses = Utils.classNames({
+      tabs: true,
       'tabs-routable': routable
-    }, Mixins.colorClasses(props));
+    });
 
     if (animated || swipeable) {
       return React.createElement('div', {
         id: id,
         style: style,
-        className: classes
+        className: Utils.classNames(wrapClasses, classes),
+        ref: __reactNode => {
+          this.__reactRefs['wrapEl'] = __reactNode;
+        }
       }, React.createElement('div', {
-        className: 'tabs'
+        className: tabsClasses
       }, this.slots['default']));
     }
 
     return React.createElement('div', {
       id: id,
       style: style,
-      className: Utils.classNames('tabs', classes)
+      className: Utils.classNames(tabsClasses, classes)
     }, this.slots['default']);
+  }
+
+  componentDidMount() {
+    const self = this;
+    const {
+      swipeable,
+      swiperParams
+    } = self.props;
+    if (!swipeable || !swiperParams) return;
+    const wrapEl = self.refs.wrapEl;
+    if (!wrapEl) return;
+    wrapEl.f7SwiperParams = swiperParams;
   }
 
   get slots() {
     return __reactComponentSlots(this.props);
   }
+
+  get refs() {
+    return this.__reactRefs;
+  }
+
+  set refs(refs) {}
 
 }
 
@@ -55,7 +81,11 @@ __reactComponentSetProps(F7Tabs, Object.assign({
   style: Object,
   animated: Boolean,
   swipeable: Boolean,
-  routable: Boolean
+  routable: Boolean,
+  swiperParams: {
+    type: Object,
+    default: undefined
+  }
 }, Mixins.colorProps));
 
 F7Tabs.displayName = 'f7-tabs';

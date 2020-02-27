@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navbar, Page, Block, BlockTitle, List, ListItem, Input } from 'framework7-react';
+import { Navbar, Page, Block, BlockTitle, List, ListItem, ListInput } from 'framework7-react';
 
 export default class extends React.Component {
   constructor(props) {
@@ -17,37 +17,32 @@ export default class extends React.Component {
 
         <BlockTitle>Default setup</BlockTitle>
         <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Your birth date" readonly inputId="demo-calendar-default"/>
-          </ListItem>
+          <ListInput type="datepicker" placeholder="Your birth date" readonly />
         </List>
 
         <BlockTitle>Custom date format</BlockTitle>
         <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Select date" readonly inputId="demo-calendar-date-format"/>
-          </ListItem>
+          <ListInput type="datepicker" placeholder="Select date" readonly calendarParams={{dateFormat: { weekday: 'long', month: 'long', day: '2-digit', year: 'numeric' }}} />
+        </List>
+
+        <BlockTitle>Date + Time</BlockTitle>
+        <List noHairlinesMd>
+          <ListInput type="datepicker" placeholder="Select date and time" readonly calendarParams={{timePicker: true, dateFormat: { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }}} />
         </List>
 
         <BlockTitle>Multiple Values</BlockTitle>
         <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Select multiple dates" readonly inputId="demo-calendar-multiple"/>
-          </ListItem>
+          <ListInput type="datepicker" placeholder="Select multiple dates" readonly calendarParams={{ dateFormat: { month: 'short', day: 'numeric' }, multiple: true }}/>
         </List>
 
         <BlockTitle>Range Picker</BlockTitle>
         <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Select date range" readonly inputId="demo-calendar-range"/>
-          </ListItem>
+          <ListInput type="datepicker" placeholder="Select date range" readonly calendarParams={{ rangePicker: true }} />
         </List>
 
-        <BlockTitle>Open in Mondal</BlockTitle>
+        <BlockTitle>Open in Modal</BlockTitle>
         <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Select date" readonly inputId="demo-calendar-modal"/>
-          </ListItem>
+          <ListInput type="datepicker" placeholder="Select date" readonly calendarParams={{openIn: 'customModal', header: true, footer: true}} />
         </List>
 
         <BlockTitle>Calendar Page</BlockTitle>
@@ -59,15 +54,10 @@ export default class extends React.Component {
         </List>
 
         <BlockTitle>Inline with custom toolbar</BlockTitle>
-        <Block className="no-padding">
+        <Block strong className="no-padding">
           <div id="demo-calendar-inline-container"></div>
         </Block>
-        <BlockTitle>Jalali Calendar</BlockTitle>
-        <List noHairlinesMd>
-          <ListItem>
-            <Input type="text" placeholder="Your birth date in Jalali" readonly inputId="demo-jcalendar-default"/>
-          </ListItem>
-        </List>
+
       </Page>
     );
   }
@@ -75,40 +65,7 @@ export default class extends React.Component {
     const self = this;
     const app = self.$f7;
     const $ = self.$$;
-    // Default
-    self.calendarDefault = app.calendar.create({
-      inputEl: '#demo-calendar-default',
-    });
-    // Jalali
-    self.jcalendarDefault = app.calendar.create({
-      calendarType: 'jalali',
-      inputEl: '#demo-jcalendar-default',
-    });
-    // With custom date format
-    self.calendarDateFormat = app.calendar.create({
-      inputEl: '#demo-calendar-date-format',
-      dateFormat: 'DD, MM dd, yyyy',
-    });
-    // With multiple values
-    self.calendarMultiple = app.calendar.create({
-      inputEl: '#demo-calendar-multiple',
-      dateFormat: 'M dd yyyy',
-      multiple: true,
-    });
-    // Range Picker
-    self.calendarRange = app.calendar.create({
-      inputEl: '#demo-calendar-range',
-      dateFormat: 'M dd yyyy',
-      rangePicker: true,
-    });
-    // Custom modal
-    self.calendarModal = app.calendar.create({
-      inputEl: '#demo-calendar-modal',
-      openIn: 'customModal',
-      header: true,
-      footer: true,
-      dateFormat: 'MM dd yyyy',
-    });
+
     // Inline with custom toolbar
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     self.calendarInline = app.calendar.create({
@@ -119,11 +76,11 @@ export default class extends React.Component {
           <div class="toolbar calendar-custom-toolbar no-shadow">
             <div class="toolbar-inner">
               <div class="left">
-                <a href="#" class="link icon-only"><i class="icon icon-back ${self.$theme.md ? 'color-black' : ''}"></i></a>
+                <a href="#" class="link icon-only"><i class="icon icon-back"></i></a>
               </div>
               <div class="center"></div>
               <div class="right">
-                <a href="#" class="link icon-only"><i class="icon icon-forward ${self.$theme.md ? 'color-black' : ''}"></i></a>
+                <a href="#" class="link icon-only"><i class="icon icon-forward"></i></a>
               </div>
             </div>
           </div>
@@ -147,12 +104,6 @@ export default class extends React.Component {
   }
   onPageBeforeRemove() {
     const self = this;
-    self.calendarDefault.destroy();
-    self.jcalendarDefault.destroy();
-    self.calendarDateFormat.destroy();
-    self.calendarMultiple.destroy();
-    self.calendarRange.destroy();
-    self.calendarModal.destroy();
     self.calendarInline.destroy();
   }
 };

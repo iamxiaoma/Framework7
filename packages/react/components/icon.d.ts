@@ -9,14 +9,12 @@ declare namespace F7Icon {
     style? : React.CSSProperties
     material? : string
     f7? : string
-    ion? : string
-    fa? : string
     icon? : string
-    ifMd? : string
-    ifIos? : string
     ios? : string
+    aurora? : string
     md? : string
     tooltip? : string
+    tooltipTrigger? : string
     size? : string | number
     color? : string
     colorTheme? : string

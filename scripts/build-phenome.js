@@ -2,17 +2,21 @@
 /* eslint no-console: "off" */
 /* eslint global-require: "off" */
 /* eslint no-param-reassign: ["error", { "props": false }] */
-const fs = require('fs');
+const path = require('path');
 const { transformSync } = require('@babel/core');
 const phenome = require('phenome');
+const getOutput = require('./get-output');
+const fs = require('./utils/fs-extra');
 
 function transformRestSpread(buildPath) {
   const reactFiles = fs.readdirSync(`${buildPath}/react/components`).filter(f => f[0] !== '.' && f.indexOf('.d.ts') < 0);
   const vueFiles = fs.readdirSync(`${buildPath}/vue/components`).filter(f => f[0] !== '.' && f.indexOf('.d.ts') < 0);
 
   function transformFile(filePath) {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const fileContent = fs.readFileSync(filePath);
     const { code } = transformSync(fileContent, {
+      babelrc: false,
+      configFile: false,
       plugins: [
         ['@babel/plugin-proposal-object-rest-spread', { loose: true, useBuiltIns: true }],
       ],
@@ -29,9 +33,7 @@ function transformRestSpread(buildPath) {
 
 // Phenome
 function build(cb) {
-  const env = process.env.NODE_ENV || 'development';
-  const buildPath = env === 'development' ? './build' : './packages';
-
+  const buildPath = path.relative(process.cwd(), getOutput());
   phenome({
     paths: ['./src/phenome/**/*.js', './src/phenome/**/*.jsx'],
     react: {

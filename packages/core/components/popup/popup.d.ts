@@ -25,6 +25,12 @@ export namespace Popup {
     closeByBackdropClick?: boolean
     /** Whether the Popup should be opened/closed with animation or not. Can be overwritten in .open() and .close() methods. (default true) */
     animate?: boolean
+    /** When enabled it will be possible to close popup with swipe, can be false, true, 'to-bottom', 'to-top' (default false) */
+    swipeToClose?: boolean
+    /** When enabled it will be possible to close popup with swipe only on specified handler element (default null) */
+    swipeHandler?: HTMLElement | CSSSelector
+    /** When enabled it will push view behind on open. Works only when top safe area is in place. It can also be enabled by adding `popup-push` class to Popup element. (default false) */
+    push?: boolean
 
     /** Object with events handlers.. */
     on?: {
@@ -48,9 +54,9 @@ export namespace Popup {
     opened : boolean
 
     /** Open popup. */
-    open(animate: boolean) : Popup
+    open(animate?: boolean) : Popup
     /** Close popup. */
-    close(animate: boolean) : Popup
+    close(animate?: boolean) : Popup
     /** Destroy popup */
     destroy() : void
   }
@@ -72,11 +78,11 @@ export namespace Popup {
       /** destroy Popup instance */
       destroy(el : HTMLElement | CSSSelector | Popup) : void
       /** get Popup instance by HTML element */
-      get(el : HTMLElement | CSSSelector) : Popup
+      get(el? : HTMLElement | CSSSelector) : Popup
       /** open Popup */
-      open(el : HTMLElement | CSSSelector, animate?: boolean) : Popup
+      open(el? : HTMLElement | CSSSelector, animate?: boolean) : Popup
       /** closes Popup */
-      close(el : HTMLElement | CSSSelector, animate?: boolean) : Popup
+      close(el? : HTMLElement | CSSSelector, animate?: boolean) : Popup
     }
   }
   interface AppParams {

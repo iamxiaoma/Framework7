@@ -10,12 +10,6 @@ class F7App extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__reactRefs = {};
-
-    this.state = (() => {
-      return {
-        modals: []
-      };
-    })();
   }
 
   render() {
@@ -50,6 +44,7 @@ class F7App extends React.Component {
       parentEl.style.height = '100%';
     }
 
+    if (f7.instance) return;
     f7.init(el, params, routes);
   }
 

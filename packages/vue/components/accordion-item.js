@@ -9,28 +9,37 @@ export default {
     opened: Boolean
   }, Mixins.colorProps),
 
+  created() {
+    Utils.bindMethods(this, 'onBeforeOpen onOpen onOpened onBeforeClose onClose onClosed'.split(' '));
+  },
+
   mounted() {
     const self = this;
-    const el = self.$el;
+    const el = self.$refs.el;
     if (!el) return;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    el.addEventListener('accordion:open', self.onOpenBound);
-    el.addEventListener('accordion:opened', self.onOpenedBound);
-    el.addEventListener('accordion:close', self.onCloseBound);
-    el.addEventListener('accordion:closed', self.onClosedBound);
+    self.eventTargetEl = el;
+    self.$f7ready(f7 => {
+      f7.on('accordionBeforeOpen', self.onBeforeOpen);
+      f7.on('accordionOpen', self.onOpen);
+      f7.on('accordionOpened', self.onOpened);
+      f7.on('accordionBeforeClose', self.onBeforeClose);
+      f7.on('accordionClose', self.onClose);
+      f7.on('accordionClosed', self.onClosed);
+    });
   },
 
   beforeDestroy() {
     const self = this;
-    const el = self.$el;
-    if (!el) return;
-    el.removeEventListener('accordion:open', self.onOpenBound);
-    el.removeEventListener('accordion:opened', self.onOpenedBound);
-    el.removeEventListener('accordion:close', self.onCloseBound);
-    el.removeEventListener('accordion:closed', self.onClosedBound);
+    const el = self.$refs.el;
+    if (!el || !self.$f7) return;
+    const f7 = self.$f7;
+    f7.off('accordionBeforeOpen', self.onBeforeOpen);
+    f7.off('accordionOpen', self.onOpen);
+    f7.off('accordionOpened', self.onOpened);
+    f7.off('accordionBeforeClose', self.onBeforeClose);
+    f7.off('accordionClose', self.onClose);
+    f7.off('accordionClosed', self.onClosed);
+    delete this.eventTargetEl;
   },
 
   render() {
@@ -48,6 +57,7 @@ export default {
     return _h('div', {
       style: style,
       class: classes,
+      ref: 'el',
       attrs: {
         id: id
       }
@@ -55,20 +65,34 @@ export default {
   },
 
   methods: {
-    onOpen(event) {
-      this.dispatchEvent('accordionOpen accordion:open', event);
+    onBeforeOpen(el, prevent) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionBeforeOpen accordion:beforeopen', prevent);
     },
 
-    onOpened(event) {
-      this.dispatchEvent('accordionOpened accordion:opened', event);
+    onOpen(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionOpen accordion:open');
     },
 
-    onClose(event) {
-      this.dispatchEvent('accordionClose accordion:close', event);
+    onOpened(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionOpened accordion:opened');
     },
 
-    onClosed(event) {
-      this.dispatchEvent('accordionClosed accordion:closed', event);
+    onBeforeClose(el, prevent) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionBeforeClose accordion:beforeclose', prevent);
+    },
+
+    onClose(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionClose accordion:close');
+    },
+
+    onClosed(el) {
+      if (this.eventTargetEl !== el) return;
+      this.dispatchEvent('accordionClosed accordion:closed');
     },
 
     dispatchEvent(events, ...args) {

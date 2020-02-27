@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 
@@ -28,15 +29,6 @@ export default {
     sameAvatar: Boolean,
     typing: Boolean,
     ...Mixins.colorProps,
-  },
-  componentDidCreate() {
-    this.onClickBound = this.onClick.bind(this);
-    this.onNameClickBound = this.onNameClick.bind(this);
-    this.onTextClickBound = this.onTextClick.bind(this);
-    this.onAvatarClickBound = this.onAvatarClick.bind(this);
-    this.onHeaderClickBound = this.onHeaderClick.bind(this);
-    this.onFooterClickBound = this.onFooterClick.bind(this);
-    this.onBubbleClickBound = this.onBubbleClick.bind(this);
   },
   render() {
     const self = this;
@@ -74,28 +66,28 @@ export default {
     } = self.slots;
 
     return (
-      <div id={id} style={style} className={self.classes} onClick={self.onClickBound}>
+      <div ref="el" id={id} style={style} className={self.classes}>
         {slotsStart}
         {(avatar || slotsAvatar) &&
           <div
+            ref="avatarEl"
             className="message-avatar"
             style={{ backgroundImage: avatar && `url(${avatar})` }}
-            onClick={self.onAvatarClickBound}
           >{slotsAvatar}</div>
         }
         <div className="message-content">
           {slotsContentStart}
           {(slotsName || name) &&
-            <div className="message-name" onClick={self.onNameClickBound}>
+            <div ref="nameEl" className="message-name">
               {slotsName || name}
             </div>
           }
           {(slotsHeader || header) &&
-            <div className="message-header" onClick={self.onHeaderClickBound}>
+            <div ref="headerEl" className="message-header">
               {slotsHeader || header}
             </div>
           }
-          <div className="message-bubble" onClick={self.onBubbleClickBound}>
+          <div ref="bubbleEl" className="message-bubble">
             {slotsBubbleStart}
             {(slotsImage || image) &&
               <div className="message-image">
@@ -108,7 +100,7 @@ export default {
               </div>
             }
             {(slotsText || text || typing) &&
-              <div className="message-text" onClick={self.onTextClickBound}>
+              <div ref="textEl" className="message-text">
                 {slotsText || text}
                 {typing &&
                   <div className="message-typing-indicator">
@@ -128,7 +120,7 @@ export default {
             {slotsDefault}
           </div>
           {(slotsFooter || footer) &&
-            <div className="message-footer" onClick={self.onFooterClickBound}>
+            <div ref="footerEl" className="message-footer">
               {slotsFooter || footer}
             </div>
           }
@@ -173,6 +165,37 @@ export default {
         Mixins.colorClasses(props),
       );
     },
+  },
+  componentDidCreate() {
+    Utils.bindMethods(this, [
+      'onClick',
+      'onNameClick',
+      'onTextClick',
+      'onAvatarClick',
+      'onHeaderClick',
+      'onFooterClick',
+      'onBubbleClick',
+    ]);
+  },
+  componentDidMount() {
+    const { el, nameEl, textEl, avatarEl, headerEl, footerEl, bubbleEl } = this.refs;
+    el.addEventListener('click', this.onClick);
+    if (nameEl) nameEl.addEventListener('click', this.onNameClick);
+    if (textEl) textEl.addEventListener('click', this.onTextClick);
+    if (avatarEl) avatarEl.addEventListener('click', this.onAvatarClick);
+    if (headerEl) headerEl.addEventListener('click', this.onHeaderClick);
+    if (footerEl) footerEl.addEventListener('click', this.onFooterClick);
+    if (bubbleEl) bubbleEl.addEventListener('click', this.onBubbleClick);
+  },
+  componentWillUnmount() {
+    const { el, nameEl, textEl, avatarEl, headerEl, footerEl, bubbleEl } = this.refs;
+    el.removeEventListener('click', this.onClick);
+    if (nameEl) nameEl.removeEventListener('click', this.onNameClick);
+    if (textEl) textEl.removeEventListener('click', this.onTextClick);
+    if (avatarEl) avatarEl.removeEventListener('click', this.onAvatarClick);
+    if (headerEl) headerEl.removeEventListener('click', this.onHeaderClick);
+    if (footerEl) footerEl.removeEventListener('click', this.onFooterClick);
+    if (bubbleEl) bubbleEl.removeEventListener('click', this.onBubbleClick);
   },
   methods: {
     onClick(event) {

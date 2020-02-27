@@ -9,6 +9,10 @@ import __reactComponentSetProps from '../runtime-helpers/react-component-set-pro
 class F7NavLeft extends React.Component {
   constructor(props, context) {
     super(props, context);
+
+    (() => {
+      Utils.bindMethods(this, ['onBackClick']);
+    })();
   }
 
   onBackClick(event) {
@@ -21,33 +25,46 @@ class F7NavLeft extends React.Component {
       backLink,
       backLinkUrl,
       backLinkForce,
+      backLinkShowText,
       sliding,
       className,
       style,
       id
     } = props;
     let linkEl;
+    let needBackLinkText = backLinkShowText;
+    if (typeof needBackLinkText === 'undefined') needBackLinkText = !this.$theme.md;
 
     if (backLink) {
+      const text = backLink !== true && needBackLinkText ? backLink : undefined;
       linkEl = React.createElement(F7Link, {
         href: backLinkUrl || '#',
         back: true,
         icon: 'icon-back',
         force: backLinkForce || undefined,
-        className: backLink === true || backLink && this.$theme.md ? 'icon-only' : undefined,
-        text: backLink !== true && !this.$theme.md ? backLink : undefined,
-        onClick: this.onBackClick.bind(this)
+        className: !text ? 'icon-only' : undefined,
+        text: text,
+        onClick: this.onBackClick
       });
     }
 
     const classes = Utils.classNames(className, 'left', {
       sliding
     }, Mixins.colorClasses(props));
+    const children = [];
+    const slots = this.slots;
+
+    if (slots && Object.keys(slots).length) {
+      Object.keys(slots).forEach(key => {
+        children.push(...slots[key]);
+      });
+    }
+
     return React.createElement('div', {
       id: id,
       style: style,
       className: classes
-    }, linkEl, this.slots['default']);
+    }, linkEl, children);
   }
 
   get slots() {
@@ -67,6 +84,10 @@ __reactComponentSetProps(F7NavLeft, Object.assign({
   backLink: [Boolean, String],
   backLinkUrl: String,
   backLinkForce: Boolean,
+  backLinkShowText: {
+    type: Boolean,
+    default: undefined
+  },
   sliding: Boolean
 }, Mixins.colorProps));
 

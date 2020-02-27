@@ -36,6 +36,8 @@ export default {
       default: 1,
     },
     formatValue: Function,
+    name: String,
+    inputId: String,
     input: {
       type: Boolean,
       default: true,
@@ -78,23 +80,30 @@ export default {
     round: Boolean,
     roundMd: Boolean,
     roundIos: Boolean,
+    roundAurora: Boolean,
     fill: Boolean,
     fillMd: Boolean,
     fillIos: Boolean,
-    big: Boolean,
-    bigMd: Boolean,
-    bigIos: Boolean,
+    fillAurora: Boolean,
+    large: Boolean,
+    largeMd: Boolean,
+    largeIos: Boolean,
+    largeAurora: Boolean,
     small: Boolean,
     smallMd: Boolean,
     smallIos: Boolean,
+    smallAurora: Boolean,
     raised: Boolean,
+    raisedMd: Boolean,
+    raisedIos: Boolean,
+    raisedAurora: Boolean,
     ...Mixins.colorProps,
   },
   render() {
     const self = this;
     const props = self.props;
     const {
-      input, buttonsOnly, inputType, value, inputReadonly, min, max, step, id, style,
+      input, buttonsOnly, inputType, value, inputReadonly, min, max, step, id, style, name, inputId,
     } = props;
 
     let inputWrapEl;
@@ -104,24 +113,32 @@ export default {
       if (process.env.COMPILER === 'react') {
         inputEl = (
           <input
+            ref="inputEl"
+            name={name}
+            id={inputId}
             type={inputType}
             min={inputType === 'number' ? min : undefined}
             max={inputType === 'number' ? max : undefined}
             step={inputType === 'number' ? step : undefined}
+            onInput={self.onInput}
+            onChange={self.onChange}
             value={value}
             readOnly={inputReadonly}
-            onInput={self.onInput.bind(self)}
           />
         );
       }
       if (process.env.COMPILER === 'vue') {
         inputEl = (
           <input
+            ref="inputEl"
+            name={name}
+            id={inputId}
             type={inputType}
             min={inputType === 'number' ? min : undefined}
             max={inputType === 'number' ? max : undefined}
             step={inputType === 'number' ? step : undefined}
-            onInput={self.onInput.bind(self)}
+            onInput={self.onInput}
+            onChange={self.onChange}
             domProps={{
               readOnly: inputReadonly,
               value,
@@ -142,10 +159,10 @@ export default {
     }
     return (
       <div ref="el" id={id} style={style} className={self.classes}>
-        <div className="stepper-button-minus" onClick={self.onMinusClickBound} />
+        <div ref="minusEl" className="stepper-button-minus" />
         {inputWrapEl}
         {valueEl}
-        <div className="stepper-button-plus" onClick={self.onPlusClickBound} />
+        <div ref="plusEl" className="stepper-button-plus" />
       </div>
     );
   },
@@ -157,16 +174,23 @@ export default {
         round,
         roundIos,
         roundMd,
+        roundAurora,
         fill,
         fillIos,
         fillMd,
-        big,
-        bigIos,
-        bigMd,
+        fillAurora,
+        large,
+        largeIos,
+        largeMd,
+        largeAurora,
         small,
         smallIos,
         smallMd,
+        smallAurora,
         raised,
+        raisedMd,
+        raisedIos,
+        raisedAurora,
         disabled,
       } = props;
 
@@ -178,28 +202,44 @@ export default {
           'stepper-round': round,
           'stepper-round-ios': roundIos,
           'stepper-round-md': roundMd,
+          'stepper-round-aurora': roundAurora,
           'stepper-fill': fill,
           'stepper-fill-ios': fillIos,
           'stepper-fill-md': fillMd,
-          'stepper-big': big,
-          'stepper-big-ios': bigIos,
-          'stepper-big-md': bigMd,
+          'stepper-fill-aurora': fillAurora,
+          'stepper-large': large,
+          'stepper-large-ios': largeIos,
+          'stepper-large-md': largeMd,
+          'stepper-large-aurora': largeAurora,
           'stepper-small': small,
           'stepper-small-ios': smallIos,
           'stepper-small-md': smallMd,
+          'stepper-small-aurora': smallAurora,
           'stepper-raised': raised,
+          'stepper-raised-ios': raisedIos,
+          'stepper-raised-md': raisedMd,
+          'stepper-raised-aurora': raisedAurora,
         },
         Mixins.colorClasses(props),
       );
     },
   },
   componentDidCreate() {
-    this.onInputBound = this.onInput.bind(this);
-    this.onMinusClickBound = this.onMinusClick.bind(this);
-    this.onPlusClickBound = this.onPlusClick.bind(this);
+    Utils.bindMethods(this, [
+      'onInput',
+      'onMinusClick',
+      'onPlusClick',
+    ]);
   },
   componentDidMount() {
     const self = this;
+    const { minusEl, plusEl } = self.refs;
+    if (minusEl) {
+      minusEl.addEventListener('click', self.onMinusClick);
+    }
+    if (plusEl) {
+      plusEl.addEventListener('click', self.onPlusClick);
+    }
     if (!self.props.init) return;
     self.$f7ready((f7) => {
       const {
@@ -229,9 +269,17 @@ export default {
     });
   },
   componentWillUnmount() {
-    if (!this.props.init) return;
-    if (this.f7Stepper && this.f7Stepper.destroy) {
-      this.f7Stepper.destroy();
+    const self = this;
+    const { minusEl, plusEl } = self.refs;
+    if (minusEl) {
+      minusEl.removeEventListener('click', self.onMinusClick);
+    }
+    if (plusEl) {
+      plusEl.removeEventListener('click', self.onPlusClick);
+    }
+    if (!self.props.init) return;
+    if (self.f7Stepper && self.f7Stepper.destroy) {
+      self.f7Stepper.destroy();
     }
   },
   methods: {
@@ -257,6 +305,10 @@ export default {
     onInput(event) {
       const stepper = this.f7Stepper;
       this.dispatchEvent('input', event, stepper);
+    },
+    onChange(event) {
+      const stepper = this.f7Stepper;
+      this.dispatchEvent('change', event, stepper);
     },
     onMinusClick(event) {
       const stepper = this.f7Stepper;

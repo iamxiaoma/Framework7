@@ -1,6 +1,7 @@
 import React from 'react';
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
+import Preloader from './preloader';
 import __reactComponentDispatchEvent from '../runtime-helpers/react-component-dispatch-event.js';
 import __reactComponentSlots from '../runtime-helpers/react-component-slots.js';
 import __reactComponentSetProps from '../runtime-helpers/react-component-set-props.js';
@@ -9,39 +10,50 @@ class F7PageContent extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onPtrPullStart', 'onPtrPullMove', 'onPtrPullEnd', 'onPtrRefresh', 'onPtrDone', 'onInfinite', 'onTabShow', 'onTabHide']);
+    })();
   }
 
-  onPtrPullStart(event) {
-    this.dispatchEvent('ptr:pullstart ptrPullStart', event);
+  onPtrPullStart(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('ptr:pullstart ptrPullStart');
   }
 
-  onPtrPullMove(event) {
-    this.dispatchEvent('ptr:pullmove ptrPullMove', event);
+  onPtrPullMove(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('ptr:pullmove ptrPullMove');
   }
 
-  onPtrPullEnd(event) {
-    this.dispatchEvent('ptr:pullend ptrPullEnd', event);
+  onPtrPullEnd(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('ptr:pullend ptrPullEnd');
   }
 
-  onPtrRefresh(event) {
-    const done = event.detail;
-    this.dispatchEvent('ptr:refresh ptrRefresh', event, done);
+  onPtrRefresh(el, done) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('ptr:refresh ptrRefresh', done);
   }
 
-  onPtrDone(event) {
-    this.dispatchEvent('ptr:done ptrDone', event);
+  onPtrDone(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('ptr:done ptrDone');
   }
 
-  onInfinite(event) {
-    this.dispatchEvent('infinite', event);
+  onInfinite(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('infinite');
   }
 
-  onTabShow(event) {
-    this.dispatchEvent('tab:show tabShow', event);
+  onTabShow(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('tab:show tabShow', el);
   }
 
-  onTabHide(event) {
-    this.dispatchEvent('tab:hide tabHide', event);
+  onTabHide(el) {
+    if (this.eventTargetEl !== el) return;
+    this.dispatchEvent('tab:hide tabHide', el);
   }
 
   get classes() {
@@ -52,6 +64,7 @@ class F7PageContent extends React.Component {
       tab,
       tabActive,
       ptr,
+      ptrBottom,
       infinite,
       infiniteTop,
       hideBarsOnScroll,
@@ -64,6 +77,7 @@ class F7PageContent extends React.Component {
       tab,
       'tab-active': tabActive,
       'ptr-content': ptr,
+      'ptr-bottom': ptrBottom,
       'infinite-scroll-content': infinite,
       'infinite-scroll-top': infiniteTop,
       'hide-bars-on-scroll': hideBarsOnScroll,
@@ -80,11 +94,13 @@ class F7PageContent extends React.Component {
     const {
       ptr,
       ptrPreloader,
+      ptrDistance,
+      ptrBottom,
+      ptrMousewheel,
       infinite,
       infinitePreloader,
       id,
       style,
-      ptrDistance,
       infiniteDistance,
       infiniteTop
     } = props;
@@ -94,16 +110,14 @@ class F7PageContent extends React.Component {
     if (ptr && ptrPreloader) {
       ptrEl = React.createElement('div', {
         className: 'ptr-preloader'
-      }, React.createElement('div', {
-        className: 'preloader'
-      }), React.createElement('div', {
+      }, React.createElement(Preloader, null), React.createElement('div', {
         className: 'ptr-arrow'
       }));
     }
 
     if (infinite && infinitePreloader) {
-      infiniteEl = React.createElement('div', {
-        className: 'preloader infinite-scroll-preloader'
+      infiniteEl = React.createElement(Preloader, {
+        className: 'infinite-scroll-preloader'
       });
     }
 
@@ -112,24 +126,27 @@ class F7PageContent extends React.Component {
       style: style,
       className: self.classes,
       'data-ptr-distance': ptrDistance || undefined,
+      'data-ptr-mousewheel': ptrMousewheel || undefined,
       'data-infinite-distance': infiniteDistance || undefined,
       ref: __reactNode => {
         this.__reactRefs['el'] = __reactNode;
       }
-    }, ptrEl, infiniteTop ? infiniteEl : self.slots.default, infiniteTop ? self.slots.default : infiniteEl);
+    }, ptrBottom ? null : ptrEl, infiniteTop ? infiniteEl : null, self.slots.default, infiniteTop ? null : infiniteEl, ptrBottom ? ptrEl : null);
   }
 
   componentWillUnmount() {
     const self = this;
-    const el = self.refs.el;
-    el.removeEventListener('ptr:pullstart', self.onPtrPullStart);
-    el.removeEventListener('ptr:pullmove', self.onPtrPullMove);
-    el.removeEventListener('ptr:pullend', self.onPtrPullEnd);
-    el.removeEventListener('ptr:refresh', self.onPtrRefresh);
-    el.removeEventListener('ptr:done', self.onPtrDone);
-    el.removeEventListener('infinite', self.onInfinite);
-    el.removeEventListener('tab:show', self.onTabShow);
-    el.removeEventListener('tab:hide', self.onTabHide);
+    if (!self.$f7) return;
+    self.$f7.off('ptrPullStart', self.onPtrPullStart);
+    self.$f7.off('ptrPullMove', self.onPtrPullMove);
+    self.$f7.off('ptrPullEnd', self.onPtrPullEnd);
+    self.$f7.off('ptrRefresh', self.onPtrRefresh);
+    self.$f7.off('ptrDone', self.onPtrDone);
+    self.$f7.off('infinite', self.onInfinite);
+    self.$f7.off('tabShow', self.onTabShow);
+    self.$f7.off('tabHide', self.onTabHide);
+    self.eventTargetEl = null;
+    delete self.eventTargetEl;
   }
 
   componentDidMount() {
@@ -140,31 +157,26 @@ class F7PageContent extends React.Component {
       infinite,
       tab
     } = self.props;
-    self.onPtrPullStart = self.onPtrPullStart.bind(self);
-    self.onPtrPullMove = self.onPtrPullMove.bind(self);
-    self.onPtrPullEnd = self.onPtrPullEnd.bind(self);
-    self.onPtrRefresh = self.onPtrRefresh.bind(self);
-    self.onPtrDone = self.onPtrDone.bind(self);
-    self.onInfinite = self.onInfinite.bind(self);
-    self.onTabShow = self.onTabShow.bind(self);
-    self.onTabHide = self.onTabHide.bind(self);
+    self.$f7ready(f7 => {
+      self.eventTargetEl = el;
 
-    if (ptr) {
-      el.addEventListener('ptr:pullstart', self.onPtrPullStart);
-      el.addEventListener('ptr:pullmove', self.onPtrPullMove);
-      el.addEventListener('ptr:pullend', self.onPtrPullEnd);
-      el.addEventListener('ptr:refresh', self.onPtrRefresh);
-      el.addEventListener('ptr:done', self.onPtrDone);
-    }
+      if (ptr) {
+        f7.on('ptrPullStart', self.onPtrPullStart);
+        f7.on('ptrPullMove', self.onPtrPullMove);
+        f7.on('ptrPullEnd', self.onPtrPullEnd);
+        f7.on('ptrRefresh', self.onPtrRefresh);
+        f7.on('ptrDone', self.onPtrDone);
+      }
 
-    if (infinite) {
-      el.addEventListener('infinite', self.onInfinite);
-    }
+      if (infinite) {
+        f7.on('infinite', self.onInfinite);
+      }
 
-    if (tab) {
-      el.addEventListener('tab:show', self.onTabShow);
-      el.addEventListener('tab:hide', self.onTabHide);
-    }
+      if (tab) {
+        f7.on('tabShow', self.onTabShow);
+        f7.on('tabHide', self.onTabHide);
+      }
+    });
   }
 
   get slots() {
@@ -195,6 +207,8 @@ __reactComponentSetProps(F7PageContent, Object.assign({
     type: Boolean,
     default: true
   },
+  ptrBottom: Boolean,
+  ptrMousewheel: Boolean,
   infinite: Boolean,
   infiniteTop: Boolean,
   infiniteDistance: Number,

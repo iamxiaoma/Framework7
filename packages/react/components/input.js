@@ -3,6 +3,7 @@ import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 import F7Toggle from './toggle';
 import F7Range from './range';
+import F7TextEditor from './text-editor';
 import __reactComponentWatch from '../runtime-helpers/react-component-watch.js';
 import __reactComponentDispatchEvent from '../runtime-helpers/react-component-dispatch-event.js';
 import __reactComponentSlots from '../runtime-helpers/react-component-slots.js';
@@ -13,17 +14,60 @@ class F7Input extends React.Component {
     super(props, context);
     this.__reactRefs = {};
 
-    (() => {
-      const self = this;
-      self.onFocusBound = self.onFocus.bind(self);
-      self.onBlurBound = self.onBlur.bind(self);
-      self.onInputBound = self.onInput.bind(self);
-      self.onChangeBound = self.onChange.bind(self);
-      self.onTextareaResizeBound = self.onTextareaResize.bind(self);
-      self.onInputNotEmptyBound = self.onInputNotEmpty.bind(self);
-      self.onInputEmptyBound = self.onInputEmpty.bind(self);
-      self.onInputClearBound = self.onInputClear.bind(self);
+    this.state = (() => {
+      return {
+        inputFocused: false,
+        inputInvalid: false
+      };
     })();
+
+    (() => {
+      Utils.bindMethods(this, 'onFocus onBlur onInput onChange onTextareaResize onInputNotEmpty onInputEmpty onInputClear'.split(' '));
+    })();
+  }
+
+  domValue() {
+    const self = this;
+    const {
+      inputEl
+    } = self.refs;
+    if (!inputEl) return undefined;
+    return inputEl.value;
+  }
+
+  inputHasValue() {
+    const self = this;
+    const {
+      value,
+      type
+    } = self.props;
+
+    if (type === 'datepicker' && Array.isArray(value) && value.length === 0) {
+      return false;
+    }
+
+    const domValue = self.domValue();
+    return typeof value === 'undefined' ? domValue || domValue === 0 : value || value === 0;
+  }
+
+  validateInput(inputEl) {
+    const self = this;
+    const f7 = self.$f7;
+    if (!f7 || !inputEl) return;
+    const validity = inputEl.validity;
+    if (!validity) return;
+
+    if (!validity.valid) {
+      if (self.state.inputInvalid !== true) {
+        self.setState({
+          inputInvalid: true
+        });
+      }
+    } else if (self.state.inputInvalid !== false) {
+      self.setState({
+        inputInvalid: false
+      });
+    }
   }
 
   onTextareaResize(event) {
@@ -42,20 +86,49 @@ class F7Input extends React.Component {
     this.dispatchEvent('input:clear inputClear', event);
   }
 
-  onInput(event) {
-    this.dispatchEvent('input', event);
+  onInput(...args) {
+    const self = this;
+    const {
+      validate,
+      validateOnBlur
+    } = self.props;
+    self.dispatchEvent('input', ...args);
+
+    if (!(validateOnBlur || validateOnBlur === '') && (validate || validate === '') && self.refs && self.refs.inputEl) {
+      self.validateInput(self.refs.inputEl);
+    }
   }
 
-  onFocus(event) {
-    this.dispatchEvent('focus', event);
+  onFocus(...args) {
+    this.dispatchEvent('focus', ...args);
+    this.setState({
+      inputFocused: true
+    });
   }
 
-  onBlur(event) {
-    this.dispatchEvent('blur', event);
+  onBlur(...args) {
+    const self = this;
+    const {
+      validate,
+      validateOnBlur
+    } = self.props;
+    self.dispatchEvent('blur', ...args);
+
+    if ((validate || validate === '' || validateOnBlur || validateOnBlur === '') && self.refs && self.refs.inputEl) {
+      self.validateInput(self.refs.inputEl);
+    }
+
+    self.setState({
+      inputFocused: false
+    });
   }
 
-  onChange(event) {
-    this.dispatchEvent('change', event);
+  onChange(...args) {
+    this.dispatchEvent('change', ...args);
+
+    if (this.props.type === 'texteditor') {
+      this.dispatchEvent('texteditor:change textEditorChange', args[1]);
+    }
   }
 
   render() {
@@ -90,6 +163,7 @@ class F7Input extends React.Component {
       inputStyle,
       pattern,
       validate,
+      validateOnBlur,
       tabindex,
       resizable,
       clearButton,
@@ -97,32 +171,59 @@ class F7Input extends React.Component {
       errorMessageForce,
       info,
       wrap,
+      dropdown,
       style,
       className,
       noStoreData,
       noFormStoreData,
-      ignoreStoreData
+      ignoreStoreData,
+      outline,
+      textEditorParams
     } = props;
+    const domValue = self.domValue();
+    const inputHasValue = self.inputHasValue();
     let inputEl;
 
-    const createInput = (tag, children) => {
-      const InputTag = tag;
-      const needsValue = type !== 'file';
-      const needsType = tag === 'input';
-      const inputClassName = Utils.classNames(type === 'textarea' && resizable && 'resizable', !wrap && className, (noFormStoreData || noStoreData || ignoreStoreData) && 'no-store-data', errorMessage && errorMessageForce && 'input-invalid');
+    const createInput = (InputTag, children) => {
+      const needsValue = type !== 'file' && type !== 'datepicker' && type !== 'colorpicker';
+      const needsType = InputTag === 'input';
+      let inputType = type;
+
+      if (inputType === 'datepicker' || inputType === 'colorpicker') {
+        inputType = 'text';
+      }
+
+      const inputClassName = Utils.classNames(!wrap && className, {
+        resizable: inputType === 'textarea' && resizable,
+        'no-store-data': noFormStoreData || noStoreData || ignoreStoreData,
+        'input-invalid': errorMessage && errorMessageForce || self.state.inputInvalid,
+        'input-with-value': inputHasValue,
+        'input-focused': self.state.inputFocused
+      });
       let input;
+      let inputValue;
+
+      if (needsValue) {
+        if (typeof value !== 'undefined') inputValue = value;else inputValue = domValue;
+      }
+
+      const valueProps = {};
+
+      if (type !== 'datepicker' && type !== 'colorpicker') {
+        if ('value' in props) valueProps.value = inputValue;
+        if ('defaultValue' in props) valueProps.defaultValue = defaultValue;
+      }
+
       {
-        input = React.createElement(InputTag, {
+        input = React.createElement(InputTag, Object.assign({
           ref: __reactNode => {
             this.__reactRefs['inputEl'] = __reactNode;
           },
           style: inputStyle,
           name: name,
-          type: needsType ? type : undefined,
+          type: needsType ? inputType : undefined,
           placeholder: placeholder,
           id: inputId,
-          value: needsValue ? value : undefined,
-          defaultValue: defaultValue,
           size: size,
           accept: accept,
           autoComplete: autocomplete,
@@ -143,15 +244,16 @@ class F7Input extends React.Component {
           required: required,
           pattern: pattern,
           validate: typeof validate === 'string' && validate.length ? validate : undefined,
-          'data-validate': validate === true || validate === '' ? true : undefined,
+          'data-validate': validate === true || validate === '' || validateOnBlur === true || validateOnBlur === '' ? true : undefined,
+          'data-validate-on-blur': validateOnBlur === true || validateOnBlur === '' ? true : undefined,
           tabIndex: tabindex,
           'data-error-message': errorMessageForce ? undefined : errorMessage,
           className: inputClassName,
-          onFocus: self.onFocusBound,
-          onBlur: self.onBlurBound,
-          onInput: self.onInputBound,
-          onChange: self.onChangeBound
-        }, children);
+          onFocus: self.onFocus,
+          onBlur: self.onBlur,
+          onInput: self.onInput,
+          onChange: self.onChange
+        }, valueProps), children);
       }
       return input;
     };
@@ -179,7 +281,7 @@ class F7Input extends React.Component {
         value: value,
         disabled: disabled,
         id: inputId,
-        onChange: self.onChangeBound
+        onChange: self.onChange
       });
     } else if (type === 'range') {
       inputEl = React.createElement(F7Range, {
@@ -191,27 +293,37 @@ class F7Input extends React.Component {
         name: name,
         id: inputId,
         input: true,
-        onRangeChange: self.onChangeBound
+        onRangeChange: self.onChange
       });
+    } else if (type === 'texteditor') {
+      inputEl = React.createElement(F7TextEditor, Object.assign({
+        value: value,
+        resizable: resizable,
+        placeholder: placeholder,
+        onTextEditorFocus: self.onFocus,
+        onTextEditorBlur: self.onBlur,
+        onTextEditorInput: self.onInput,
+        onTextEditorChange: self.onChange
+      }, textEditorParams));
     } else {
       inputEl = createInput('input');
     }
 
     if (wrap) {
-      const wrapClasses = Utils.classNames(className, 'item-input-wrap', Mixins.colorClasses(props));
+      const wrapClasses = Utils.classNames(className, 'input', {
+        'input-outline': outline,
+        'input-dropdown': dropdown === 'auto' ? type === 'select' : dropdown
+      }, Mixins.colorClasses(props));
       return React.createElement('div', {
         id: id,
-        ref: __reactNode => {
-          this.__reactRefs['wrapEl'] = __reactNode;
-        },
         className: wrapClasses,
         style: style
       }, inputEl, errorMessage && errorMessageForce && React.createElement('div', {
-        className: 'item-input-error-message'
+        className: 'input-error-message'
       }, errorMessage), clearButton && React.createElement('span', {
         className: 'input-clear-button'
       }), (info || slotsInfo && slotsInfo.length) && React.createElement('div', {
-        className: 'item-input-info'
+        className: 'input-info'
       }, info, this.slots['info']));
     }
 
@@ -228,16 +340,27 @@ class F7Input extends React.Component {
     if (type === 'range' || type === 'toggle') return;
     const inputEl = self.refs.inputEl;
     if (!inputEl) return;
-    inputEl.removeEventListener('input:notempty', self.onInputNotEmptyBound, false);
+    inputEl.removeEventListener('input:notempty', self.onInputNotEmpty, false);
 
     if (type === 'textarea' && resizable) {
-      inputEl.removeEventListener('textarea:resze', self.onTextareaResizeBound, false);
+      inputEl.removeEventListener('textarea:resize', self.onTextareaResize, false);
     }
 
     if (clearButton) {
-      inputEl.removeEventListener('input:empty', self.onInputEmptyBound, false);
-      inputEl.removeEventListener('input:clear', self.onInputClearBound, false);
+      inputEl.removeEventListener('input:empty', self.onInputEmpty, false);
+      inputEl.removeEventListener('input:clear', self.onInputClear, false);
     }
+
+    if (self.f7Calendar && self.f7Calendar.destroy) {
+      self.f7Calendar.destroy();
+    }
+
+    if (self.f7ColorPicker && self.f7ColorPicker.destroy) {
+      self.f7ColorPicker.destroy();
+    }
+
+    delete self.f7Calendar;
+    delete self.f7ColorPicker;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -249,11 +372,20 @@ class F7Input extends React.Component {
       if (type === 'range' || type === 'toggle') return;
       if (!self.$f7) return;
       self.updateInputOnDidUpdate = true;
+
+      if (self.f7Calendar) {
+        self.f7Calendar.setValue(self.props.value);
+      }
+
+      if (self.f7ColorPicker) {
+        self.f7ColorPicker.setValue(self.props.value);
+      }
     });
 
     const self = this;
     const {
       validate,
+      validateOnBlur,
       resizable
     } = self.props;
     const f7 = self.$f7;
@@ -265,8 +397,8 @@ class F7Input extends React.Component {
       self.updateInputOnDidUpdate = false;
       f7.input.checkEmptyState(inputEl);
 
-      if (validate) {
-        f7.input.validate(inputEl);
+      if (validate && !validateOnBlur) {
+        self.validateInput(inputEl);
       }
 
       if (resizable) {
@@ -280,31 +412,60 @@ class F7Input extends React.Component {
     self.$f7ready(f7 => {
       const {
         validate,
+        validateOnBlur,
         resizable,
         type,
         clearButton,
         value,
-        defaultValue
+        defaultValue,
+        calendarParams,
+        colorPickerParams
       } = self.props;
       if (type === 'range' || type === 'toggle') return;
       const inputEl = self.refs.inputEl;
       if (!inputEl) return;
-      inputEl.addEventListener('input:notempty', self.onInputNotEmptyBound, false);
+      inputEl.addEventListener('input:notempty', self.onInputNotEmpty, false);
 
       if (type === 'textarea' && resizable) {
-        inputEl.addEventListener('textarea:resze', self.onTextareaResizeBound, false);
+        inputEl.addEventListener('textarea:resize', self.onTextareaResize, false);
       }
 
       if (clearButton) {
-        inputEl.addEventListener('input:empty', self.onInputEmptyBound, false);
-        inputEl.addEventListener('input:clear', self.onInputClearBound, false);
+        inputEl.addEventListener('input:empty', self.onInputEmpty, false);
+        inputEl.addEventListener('input:clear', self.onInputClear, false);
+      }
+
+      if (type === 'datepicker') {
+        self.f7Calendar = f7.calendar.create(Object.assign({
+          inputEl,
+          value,
+          on: {
+            change(calendar, calendarValue) {
+              self.dispatchEvent('calendar:change calendarChange', calendarValue);
+            }
+
+          }
+        }, calendarParams || {}));
+      }
+
+      if (type === 'colorpicker') {
+        self.f7ColorPicker = f7.colorPicker.create(Object.assign({
+          inputEl,
+          value,
+          on: {
+            change(colorPicker, colorPickerValue) {
+              self.dispatchEvent('colorpicker:change colorPickerChange', colorPickerValue);
+            }
+
+          }
+        }, colorPickerParams || {}));
       }
 
       f7.input.checkEmptyState(inputEl);
 
-      if ((validate || validate === '') && (typeof value !== 'undefined' && value !== null && value !== '' || typeof defaultValue !== 'undefined' && defaultValue !== null && defaultValue !== '')) {
+      if (!(validateOnBlur || validateOnBlur === '') && (validate || validate === '') && (typeof value !== 'undefined' && value !== null && value !== '' || typeof defaultValue !== 'undefined' && defaultValue !== null && defaultValue !== '')) {
         setTimeout(() => {
-          f7.input.validate(inputEl);
+          self.validateInput(inputEl);
         }, 0);
       }
 
@@ -333,7 +494,7 @@ class F7Input extends React.Component {
 __reactComponentSetProps(F7Input, Object.assign({
   type: String,
   name: String,
-  value: [String, Number, Array],
+  value: [String, Number, Array, Date, Object],
   defaultValue: [String, Number, Array],
   placeholder: String,
   id: [String, Number],
@@ -361,6 +522,7 @@ __reactComponentSetProps(F7Input, Object.assign({
   inputStyle: Object,
   pattern: String,
   validate: [Boolean, String],
+  validateOnBlur: Boolean,
   tabindex: [String, Number],
   resizable: Boolean,
   clearButton: Boolean,
@@ -370,10 +532,18 @@ __reactComponentSetProps(F7Input, Object.assign({
   errorMessage: String,
   errorMessageForce: Boolean,
   info: String,
+  outline: Boolean,
   wrap: {
     type: Boolean,
     default: true
-  }
+  },
+  dropdown: {
+    type: [String, Boolean],
+    default: 'auto'
+  },
+  calendarParams: Object,
+  colorPickerParams: Object,
+  textEditorParams: Object
 }, Mixins.colorProps));
 
 F7Input.displayName = 'f7-input';

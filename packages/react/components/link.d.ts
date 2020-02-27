@@ -9,8 +9,6 @@ declare namespace F7Link {
     className? : string
     style? : React.CSSProperties
     noLinkClass? : boolean
-    noFastClick? : boolean
-    noFastclick? : boolean
     text? : string
     tabLink? : boolean | string
     tabLinkActive? : boolean
@@ -22,6 +20,7 @@ declare namespace F7Link {
     href? : string | boolean
     target? : string
     tooltip? : string
+    tooltipTrigger? : string
     smartSelect? : boolean
     smartSelectParams? : Object
     color? : string
@@ -33,13 +32,10 @@ declare namespace F7Link {
     themeDark? : boolean
     icon? : string
     iconMaterial? : string
-    iconIon? : string
-    iconFa? : string
     iconF7? : string
-    iconIfMd? : string
-    iconIfIos? : string
     iconIos? : string
     iconMd? : string
+    iconAurora? : string
     iconColor? : string
     iconSize? : string | number
     back? : boolean
@@ -47,18 +43,22 @@ declare namespace F7Link {
     force? : boolean
     animate? : boolean
     ignoreCache? : boolean
-    pageName? : string
     reloadCurrent? : boolean
     reloadAll? : boolean
     reloadPrevious? : boolean
+    reloadDetail? : boolean
     routeTabId? : string
     view? : string
+    routeProps? : Object
+    preventRouter? : boolean
+    transition? : string
     searchbarEnable? : boolean | string
     searchbarDisable? : boolean | string
     searchbarClear? : boolean | string
     searchbarToggle? : boolean | string
     panelOpen? : boolean | string
     panelClose? : boolean | string
+    panelToggle? : boolean | string
     popupOpen? : boolean | string
     popupClose? : boolean | string
     actionsOpen? : boolean | string
@@ -72,6 +72,10 @@ declare namespace F7Link {
     sortableEnable? : boolean | string
     sortableDisable? : boolean | string
     sortableToggle? : boolean | string
+    cardOpen? : boolean | string
+    cardPreventOpen? : boolean | string
+    cardClose? : boolean | string
+    menuClose? : boolean | string
     onClick? : (event?: any) => void
   }
 }

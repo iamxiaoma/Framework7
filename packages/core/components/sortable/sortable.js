@@ -25,21 +25,28 @@ const Sortable = {
     let sortingElOffsetLocal;
     let sortingElOffsetTop;
     let initialScrollTop;
+    let wasTapHold;
 
-    function handleTouchStart(e) {
+    function handleTouchStart(e, isTapHold) {
       isMoved = false;
       isTouched = true;
+      wasTapHold = false;
       touchStartY = e.type === 'touchstart' ? e.targetTouches[0].pageY : e.pageY;
-      $sortingEl = $(this).parent('li');
+      $sortingEl = $(e.target).closest('li').eq(0);
       indexFrom = $sortingEl.index();
       $sortableContainer = $sortingEl.parents('.sortable');
       const $listGroup = $sortingEl.parents('.list-group');
       if ($listGroup.length && $listGroup.parents($sortableContainer).length) {
         $sortableContainer = $listGroup;
       }
-      $sortingItems = $sortableContainer.children('ul').children('li');
+      $sortingItems = $sortableContainer.children('ul').children('li:not(.disallow-sorting):not(.no-sorting)');
       if (app.panel) app.panel.allowOpen = false;
       if (app.swipeout) app.swipeout.allow = false;
+      if (isTapHold) {
+        $sortingEl.addClass('sorting');
+        $sortableContainer.addClass('sortable-sorting');
+        wasTapHold = true;
+      }
     }
     function handleTouchMove(e) {
       if (!isTouched || !$sortingEl) return;
@@ -120,12 +127,16 @@ const Sortable = {
     }
     function handleTouchEnd() {
       if (!isTouched || !isMoved) {
-        isTouched = false;
-        isMoved = false;
         if (isTouched && !isMoved) {
           if (app.panel) app.panel.allowOpen = true;
           if (app.swipeout) app.swipeout.allow = true;
+          if (wasTapHold) {
+            $sortingEl.removeClass('sorting');
+            $sortableContainer.removeClass('sortable-sorting');
+          }
         }
+        isTouched = false;
+        isMoved = false;
         return;
       }
       if (app.panel) app.panel.allowOpen = true;
@@ -139,7 +150,12 @@ const Sortable = {
       if ($insertAfterEl) indexTo = $insertAfterEl.index();
       else if ($insertBeforeEl) indexTo = $insertBeforeEl.index();
 
-      if (app.params.sortable.moveElements) {
+      let moveElements = $sortableContainer.dataset().sortableMoveElements;
+      if (typeof moveElements === 'undefined') {
+        moveElements = app.params.sortable.moveElements;
+      }
+
+      if (moveElements) {
         if ($insertAfterEl) {
           $sortingEl.insertAfter($insertAfterEl);
         }
@@ -152,13 +168,26 @@ const Sortable = {
          && $sortableContainer.hasClass('virtual-list')
       ) {
         indexFrom = $sortingEl[0].f7VirtualListIndex;
-        indexTo = $insertBeforeEl ? $insertBeforeEl[0].f7VirtualListIndex : $insertAfterEl[0].f7VirtualListIndex;
+        if (typeof indexFrom === 'undefined') indexFrom = $sortingEl.attr('data-virtual-list-index');
+        if ($insertBeforeEl) {
+          indexTo = $insertBeforeEl[0].f7VirtualListIndex;
+          if (typeof indexTo === 'undefined') indexTo = $insertBeforeEl.attr('data-virtual-list-index');
+        } else {
+          indexTo = $insertAfterEl[0].f7VirtualListIndex;
+          if (typeof indexTo === 'undefined') indexTo = $insertAfterEl.attr('data-virtual-list-index');
+        }
+        if (indexTo !== null) indexTo = parseInt(indexTo, 10);
+        else indexTo = undefined;
+
         const virtualList = $sortableContainer[0].f7VirtualList;
+
+        if (indexFrom) indexFrom = parseInt(indexFrom, 10);
+        if (indexTo) indexTo = parseInt(indexTo, 10);
         if (virtualList) virtualList.moveItem(indexFrom, indexTo);
       }
-      if (typeof indexTo !== 'undefined' && indexTo !== indexFrom) {
+      if (typeof indexTo !== 'undefined' && !Number.isNaN(indexTo) && indexTo !== indexFrom) {
         $sortingEl.trigger('sortable:sort', { from: indexFrom, to: indexTo });
-        app.emit('sortableSort', $sortingEl[0], { from: indexFrom, to: indexTo });
+        app.emit('sortableSort', $sortingEl[0], { from: indexFrom, to: indexTo, el: $sortingEl[0] }, $sortableContainer[0]);
       }
 
       $insertBeforeEl = undefined;
@@ -172,6 +201,10 @@ const Sortable = {
     $(document).on(app.touchEvents.start, '.list.sortable .sortable-handler', handleTouchStart, activeListener);
     app.on('touchmove:active', handleTouchMove);
     app.on('touchend:passive', handleTouchEnd);
+
+    $(document).on('taphold', '.sortable-tap-hold', (e, pointerEvent) => {
+      handleTouchStart(pointerEvent, true);
+    });
   },
   enable(el = '.list.sortable') {
     const app = this;

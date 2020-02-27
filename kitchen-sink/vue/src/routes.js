@@ -5,14 +5,17 @@ import About from './pages/about.vue';
 
 import Accordion from './pages/accordion.vue';
 import ActionSheet from './pages/action-sheet.vue';
+import Appbar from './pages/appbar.vue';
 import Autocomplete from './pages/autocomplete.vue';
 import Badge from './pages/badge.vue';
 import Buttons from './pages/buttons.vue';
 import Calendar from './pages/calendar.vue';
 import CalendarPage from './pages/calendar-page.vue';
 import Cards from './pages/cards.vue';
+import CardsExpandable from './pages/cards-expandable.vue';
 import Checkbox from './pages/checkbox.vue';
 import Chips from './pages/chips.vue';
+import ColorPicker from './pages/color-picker.vue';
 import ContactsList from './pages/contacts-list.vue';
 import ContentBlock from './pages/content-block.vue';
 import DataTable from './pages/data-table.vue';
@@ -31,6 +34,7 @@ import List from './pages/list.vue';
 import ListIndex from './pages/list-index.vue';
 import LoginScreen from './pages/login-screen.vue';
 import LoginScreenPage from './pages/login-screen-page.vue';
+import Menu from './pages/menu.vue';
 import Messages from './pages/messages.vue';
 import Navbar from './pages/navbar.vue';
 import NavbarHideScroll from './pages/navbar-hide-scroll.vue';
@@ -48,9 +52,9 @@ import Range from './pages/range.vue';
 import Searchbar from './pages/searchbar.vue';
 import SearchbarExpandable from './pages/searchbar-expandable.vue';
 import SheetModal from './pages/sheet-modal.vue';
+import Skeleton from './pages/skeleton.vue';
 import SmartSelect from './pages/smart-select.vue';
 import Sortable from './pages/sortable.vue';
-import Statusbar from './pages/statusbar.vue';
 import Stepper from './pages/stepper.vue';
 import Subnavbar from './pages/subnavbar.vue';
 import SubnavbarTitle from './pages/subnavbar-title.vue';
@@ -79,6 +83,7 @@ import TabsStatic from './pages/tabs-static.vue';
 import TabsAnimated from './pages/tabs-animated.vue';
 import TabsSwipeable from './pages/tabs-swipeable.vue';
 import TabsRoutable from './pages/tabs-routable.vue';
+import TextEditor from './pages/text-editor.vue';
 import Toast from './pages/toast.vue';
 import Toggle from './pages/toggle.vue';
 import ToolbarTabbar from './pages/toolbar-tabbar.vue';
@@ -91,12 +96,19 @@ import Timeline from './pages/timeline.vue';
 import TimelineVertical from './pages/timeline-vertical.vue';
 import TimelineHorizontal from './pages/timeline-horizontal.vue';
 import TimelineHorizontalCalendar from './pages/timeline-horizontal-calendar.vue';
+import Treeview from './pages/treeview.vue';
 import VirtualList from './pages/virtual-list.vue';
 import ColorThemes from './pages/color-themes.vue';
+
+import PageTransitions from './pages/page-transitions.vue';
+import PageTransitionsEffect from './pages/page-transitions-effect.vue';
 
 import RoutableModals from './pages/routable-modals.vue';
 import RoutablePopup from './pages/routable-popup.vue';
 import RoutableActions from './pages/routable-actions.vue';
+
+import MasterDetailMaster from './pages/master-detail-master.vue';
+import MasterDetailDetail from './pages/master-detail-detail.vue';
 
 import NotFound from './pages/404.vue';
 
@@ -128,11 +140,12 @@ export default [
     content: `
       <div class="page">
         <div class="navbar">
+          <div class="navbar-bg"></div>
           <div class="navbar-inner sliding">
             <div class="left">
               <a href="#" class="link back">
                 <i class="icon icon-back"></i>
-                <span class="ios-only">Back</span>
+                <span class="if-not-md">Back</span>
               </a>
             </div>
             <div class="title">Panel Page 1</div>
@@ -152,11 +165,12 @@ export default [
     content: `
       <div class="page">
         <div class="navbar">
+          <div class="navbar-bg"></div>
           <div class="navbar-inner sliding">
             <div class="left">
               <a href="#" class="link back">
                 <i class="icon icon-back"></i>
-                <span class="ios-only">Back</span>
+                <span class="if-not-md">Back</span>
               </a>
             </div>
             <div class="title">Panel Page 2</div>
@@ -180,6 +194,10 @@ export default [
   {
     path: '/action-sheet/',
     component: ActionSheet,
+  },
+  {
+    path: '/appbar/',
+    component: Appbar,
   },
   {
     path: '/autocomplete/',
@@ -206,12 +224,20 @@ export default [
     component: Cards,
   },
   {
+    path: '/cards-expandable/',
+    component: CardsExpandable,
+  },
+  {
     path: '/checkbox/',
     component: Checkbox,
   },
   {
     path: '/chips/',
     component: Chips,
+  },
+  {
+    path: '/color-picker/',
+    component: ColorPicker,
   },
   {
     path: '/contacts-list/',
@@ -286,6 +312,10 @@ export default [
     component: LoginScreenPage,
   },
   {
+    path: '/menu/',
+    component: Menu,
+  },
+  {
     path: '/messages/',
     component: Messages,
   },
@@ -354,16 +384,16 @@ export default [
     component: SheetModal,
   },
   {
+    path: '/skeleton/',
+    component: Skeleton,
+  },
+  {
     path: '/smart-select/',
     component: SmartSelect,
   },
   {
     path: '/sortable/',
     component: Sortable,
-  },
-  {
-    path: '/statusbar/',
-    component: Statusbar,
   },
   {
     path: '/stepper/',
@@ -518,6 +548,10 @@ export default [
     ],
   },
   {
+    path: '/text-editor/',
+    component: TextEditor,
+  },
+  {
     path: '/toast/',
     component: Toast,
   },
@@ -568,6 +602,10 @@ export default [
     component: TimelineHorizontalCalendar,
   },
   {
+    path: '/treeview/',
+    component: Treeview,
+  },
+  {
     path: '/virtual-list/',
     component: VirtualList,
   },
@@ -576,6 +614,16 @@ export default [
   {
     path: '/color-themes/',
     component: ColorThemes,
+  },
+
+  // Page Transitions
+  {
+    path: '/page-transitions/',
+    component: PageTransitions,
+  },
+  {
+    path: '/page-transitions/:effect/',
+    component: PageTransitionsEffect,
   },
 
   // Routable Modals
@@ -597,6 +645,18 @@ export default [
       },
     ],
   },
+  {
+    path: '/master-detail/',
+    component: MasterDetailMaster,
+    master: true,
+    detailRoutes: [
+      {
+        path: '/master-detail/:id/',
+        component: MasterDetailDetail,
+      },
+    ]
+  },
+
   // Default route (404 page). MUST BE THE LAST
   {
     path: '(.*)',

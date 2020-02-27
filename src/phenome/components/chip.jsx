@@ -1,6 +1,9 @@
 import Utils from '../utils/utils';
 import Mixins from '../utils/mixins';
 
+// eslint-disable-next-line
+import F7Icon from './icon';
+
 export default {
   name: 'f7-chip',
   props: {
@@ -14,6 +17,7 @@ export default {
     mediaTextColor: String,
     outline: Boolean,
     ...Mixins.colorProps,
+    ...Mixins.linkIconProps,
   },
   render() {
     const self = this;
@@ -28,12 +32,36 @@ export default {
       mediaTextColor,
       mediaBgColor,
       outline,
+      icon,
+      iconMaterial,
+      iconF7,
+      iconMd,
+      iconIos,
+      iconAurora,
+      iconColor,
+      iconSize,
     } = props;
 
+    let iconEl;
     let mediaEl;
     let labelEl;
     let deleteEl;
-    if (media || (self.slots && self.slots.media)) {
+
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
+      iconEl = (
+        <F7Icon
+          material={iconMaterial}
+          f7={iconF7}
+          icon={icon}
+          md={iconMd}
+          ios={iconIos}
+          aurora={iconAurora}
+          color={iconColor}
+          size={iconSize}
+        />
+      );
+    }
+    if (media || iconEl || (self.slots && self.slots.media)) {
       const mediaClasses = Utils.classNames(
         'chip-media',
         mediaTextColor && `text-color-${mediaTextColor}`,
@@ -41,7 +69,9 @@ export default {
       );
       mediaEl = (
         <div className={mediaClasses}>
-          {media || (<slot name="media" />)}
+          {iconEl}
+          {media}
+          <slot name="media" />
         </div>
       );
     }
@@ -55,7 +85,7 @@ export default {
     }
     if (deleteable) {
       deleteEl = (
-        <a href="#" className="chip-delete" onClick={self.onDeleteClick.bind(self)} />
+        <a ref="deleteEl" className="chip-delete" />
       );
     }
 
@@ -69,12 +99,27 @@ export default {
     );
 
     return (
-      <div id={id} style={style} className={classes} onClick={self.onClick.bind(self)}>
+      <div ref="el" id={id} style={style} className={classes}>
         {mediaEl}
         {labelEl}
         {deleteEl}
       </div>
     );
+  },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick', 'onDeleteClick']);
+  },
+  componentDidMount() {
+    this.refs.el.addEventListener('click', this.onClick);
+    if (this.refs.deleteEl) {
+      this.refs.deleteEl.addEventListener('click', this.onDeleteClick);
+    }
+  },
+  componentWillUnmount() {
+    this.refs.el.removeEventListener('click', this.onClick);
+    if (this.refs.deleteEl) {
+      this.refs.deleteEl.removeEventListener('click', this.onDeleteClick);
+    }
   },
   methods: {
     onClick(event) {

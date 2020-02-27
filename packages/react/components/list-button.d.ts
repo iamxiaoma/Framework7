@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Tooltip as TooltipNamespace } from 'framework7/components/tooltip/tooltip';
 
 declare namespace F7ListButton {
   interface Props {
@@ -6,8 +7,6 @@ declare namespace F7ListButton {
     id? : string | number
     className? : string
     style? : React.CSSProperties
-    noFastclick? : boolean
-    noFastClick? : boolean
     title? : string | number
     text? : string | number
     tabLink? : boolean | string
@@ -15,6 +14,8 @@ declare namespace F7ListButton {
     link? : boolean | string
     href? : boolean | string
     target? : string
+    tooltip? : string
+    tooltipTrigger? : string
     color? : string
     colorTheme? : string
     textColor? : string
@@ -27,18 +28,22 @@ declare namespace F7ListButton {
     force? : boolean
     animate? : boolean
     ignoreCache? : boolean
-    pageName? : string
     reloadCurrent? : boolean
     reloadAll? : boolean
     reloadPrevious? : boolean
+    reloadDetail? : boolean
     routeTabId? : string
     view? : string
+    routeProps? : Object
+    preventRouter? : boolean
+    transition? : string
     searchbarEnable? : boolean | string
     searchbarDisable? : boolean | string
     searchbarClear? : boolean | string
     searchbarToggle? : boolean | string
     panelOpen? : boolean | string
     panelClose? : boolean | string
+    panelToggle? : boolean | string
     popupOpen? : boolean | string
     popupClose? : boolean | string
     actionsOpen? : boolean | string
@@ -52,10 +57,15 @@ declare namespace F7ListButton {
     sortableEnable? : boolean | string
     sortableDisable? : boolean | string
     sortableToggle? : boolean | string
+    cardOpen? : boolean | string
+    cardPreventOpen? : boolean | string
+    cardClose? : boolean | string
+    menuClose? : boolean | string
     onClick? : (event?: any) => void
   }
 }
 declare class F7ListButton extends React.Component<F7ListButton.Props, {}> {
   onClick(event? : any) : unknown
+  f7Tooltip: TooltipNamespace.Tooltip
 }
 export default F7ListButton;

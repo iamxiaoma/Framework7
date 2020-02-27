@@ -18,11 +18,10 @@ export default {
     id: [String, Number],
     className: String, // phenome-react-line
     style: Object, // phenome-react-line
-    noFastclick: Boolean,
-    noFastClick: Boolean,
     text: String,
     tabLink: [Boolean, String],
     tabLinkActive: Boolean,
+    type: String,
     href: {
       type: [String, Boolean],
       default: '#',
@@ -31,20 +30,31 @@ export default {
     round: Boolean,
     roundMd: Boolean,
     roundIos: Boolean,
+    roundAurora: Boolean,
     fill: Boolean,
     fillMd: Boolean,
     fillIos: Boolean,
-    big: Boolean,
-    bigMd: Boolean,
-    bigIos: Boolean,
+    fillAurora: Boolean,
+    large: Boolean,
+    largeMd: Boolean,
+    largeIos: Boolean,
+    largeAurora: Boolean,
     small: Boolean,
     smallMd: Boolean,
     smallIos: Boolean,
+    smallAurora: Boolean,
     raised: Boolean,
+    raisedMd: Boolean,
+    raisedIos: Boolean,
+    raisedAurora: Boolean,
     outline: Boolean,
+    outlineMd: Boolean,
+    outlineIos: Boolean,
+    outlineAurora: Boolean,
     active: Boolean,
     disabled: Boolean,
     tooltip: String,
+    tooltipTrigger: String,
     ...Mixins.colorProps,
     ...Mixins.linkIconProps,
     ...Mixins.linkRouterProps,
@@ -60,59 +70,54 @@ export default {
       text,
       icon,
       iconMaterial,
-      iconIon,
-      iconFa,
       iconF7,
-      iconIfMd,
-      iconIfIos,
       iconMd,
       iconIos,
+      iconAurora,
       iconColor,
       iconSize,
       id,
       style,
+      type,
     } = props;
 
     if (text) {
       textEl = (<span>{text}</span>);
     }
-    const mdThemeIcon = iconIfMd || iconMd;
-    const iosThemeIcon = iconIfIos || iconIos;
-    if (icon || iconMaterial || iconIon || iconFa || iconF7 || mdThemeIcon || iosThemeIcon) {
+    if (icon || iconMaterial || iconF7 || iconMd || iconIos || iconAurora) {
       iconEl = (
         <F7Icon
           material={iconMaterial}
-          ion={iconIon}
-          fa={iconFa}
           f7={iconF7}
           icon={icon}
-          md={mdThemeIcon}
-          ios={iosThemeIcon}
+          md={iconMd}
+          ios={iconIos}
+          aurora={iconAurora}
           color={iconColor}
           size={iconSize}
         />
       );
     }
+    const ButtonTag = type === 'submit' || type === 'reset' || type === 'button' ? 'button' : 'a';
     return (
-      <a
+      <ButtonTag
         ref="el"
         id={id}
         style={style}
         className={self.classes}
-        onClick={self.onClick.bind(self)}
         {...self.attrs}
       >
         {iconEl}
         {textEl}
         <slot />
-      </a>
+      </ButtonTag>
     );
   },
   computed: {
     attrs() {
       const self = this;
       const props = self.props;
-      const { href, target, tabLink } = props;
+      const { href, target, tabLink, type } = props;
       let hrefComputed = href;
       if (href === true) hrefComputed = '#';
       if (href === false) hrefComputed = undefined; // no href attribute
@@ -120,6 +125,7 @@ export default {
         {
           href: hrefComputed,
           target,
+          type,
           'data-tab': (Utils.isStringProp(tabLink) && tabLink) || undefined,
         },
         Mixins.linkRouterAttrs(props),
@@ -130,25 +136,33 @@ export default {
       const self = this;
       const props = self.props;
       const {
-        noFastclick,
-        noFastClick,
         tabLink,
         tabLinkActive,
         round,
         roundIos,
+        roundAurora,
         roundMd,
         fill,
         fillIos,
+        fillAurora,
         fillMd,
-        big,
-        bigIos,
-        bigMd,
+        large,
+        largeIos,
+        largeAurora,
+        largeMd,
         small,
         smallIos,
+        smallAurora,
         smallMd,
         raised,
+        raisedIos,
+        raisedAurora,
+        raisedMd,
         active,
         outline,
+        outlineIos,
+        outlineAurora,
+        outlineMd,
         disabled,
         className,
       } = props;
@@ -159,23 +173,32 @@ export default {
         {
           'tab-link': tabLink || tabLink === '',
           'tab-link-active': tabLinkActive,
-          'no-fastclick': noFastclick || noFastClick,
 
           'button-round': round,
           'button-round-ios': roundIos,
+          'button-round-aurora': roundAurora,
           'button-round-md': roundMd,
           'button-fill': fill,
           'button-fill-ios': fillIos,
+          'button-fill-aurora': fillAurora,
           'button-fill-md': fillMd,
-          'button-big': big,
-          'button-big-ios': bigIos,
-          'button-big-md': bigMd,
+          'button-large': large,
+          'button-large-ios': largeIos,
+          'button-large-aurora': largeAurora,
+          'button-large-md': largeMd,
           'button-small': small,
           'button-small-ios': smallIos,
+          'button-small-aurora': smallAurora,
           'button-small-md': smallMd,
           'button-raised': raised,
+          'button-raised-ios': raisedIos,
+          'button-raised-aurora': raisedAurora,
+          'button-raised-md': raisedMd,
           'button-active': active,
           'button-outline': outline,
+          'button-outline-ios': outlineIos,
+          'button-outline-aurora': outlineAurora,
+          'button-outline-md': outlineMd,
 
           disabled,
         },
@@ -193,23 +216,57 @@ export default {
   watch: {
     'props.tooltip': function watchTooltip(newText) {
       const self = this;
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger,
+        });
+        return;
+      }
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     },
   },
+  componentDidCreate() {
+    Utils.bindMethods(this, ['onClick']);
+  },
   componentDidMount() {
     const self = this;
-    const { tooltip } = self.props;
+    const el = self.refs.el;
+    el.addEventListener('click', self.onClick);
+    const { tooltip, tooltipTrigger, routeProps } = self.props;
+    if (routeProps) {
+      el.f7RouteProps = routeProps;
+    }
     if (!tooltip) return;
     self.$f7ready((f7) => {
       self.f7Tooltip = f7.tooltip.create({
-        targetEl: self.refs.el,
+        targetEl: el,
         text: tooltip,
+        trigger: tooltipTrigger,
       });
     });
   },
+  componentDidUpdate() {
+    const self = this;
+    const el = self.refs.el;
+    const { routeProps } = self.props;
+    if (routeProps) {
+      el.f7RouteProps = routeProps;
+    }
+  },
   componentWillUnmount() {
     const self = this;
+    const el = self.refs.el;
+    el.removeEventListener('click', self.onClick);
+    delete el.f7RouteProps;
     if (self.f7Tooltip && self.f7Tooltip.destroy) {
       self.f7Tooltip.destroy();
       self.f7Tooltip = null;

@@ -34,13 +34,10 @@ const Mixins = {
   linkIconProps: {
     icon: String,
     iconMaterial: String,
-    iconIon: String,
-    iconFa: String,
     iconF7: String,
-    iconIfMd: String,
-    iconIfIos: String,
     iconIos: String,
     iconMd: String,
+    iconAurora: String,
     iconColor: String,
     iconSize: [String, Number],
   },
@@ -53,12 +50,18 @@ const Mixins = {
       default: undefined,
     },
     ignoreCache: Boolean,
-    pageName: String,
     reloadCurrent: Boolean,
     reloadAll: Boolean,
     reloadPrevious: Boolean,
+    reloadDetail: {
+      type: Boolean,
+      default: undefined,
+    },
     routeTabId: String,
     view: String,
+    routeProps: Object,
+    preventRouter: Boolean,
+    transition: String,
   },
   linkRouterAttrs(props) {
     const {
@@ -66,10 +69,12 @@ const Mixins = {
       reloadCurrent,
       reloadPrevious,
       reloadAll,
+      reloadDetail,
       animate,
       ignoreCache,
       routeTabId,
       view,
+      transition,
     } = props;
 
     let dataAnimate;
@@ -77,23 +82,31 @@ const Mixins = {
       dataAnimate = animate.toString();
     }
 
+    let dataReloadDetail;
+    if ('reloadDetail' in props && typeof reloadDetail !== 'undefined') {
+      dataReloadDetail = reloadDetail.toString();
+    }
+
     return {
       'data-force': force || undefined,
       'data-reload-current': reloadCurrent || undefined,
       'data-reload-all': reloadAll || undefined,
       'data-reload-previous': reloadPrevious || undefined,
+      'data-reload-detail': dataReloadDetail,
       'data-animate': dataAnimate,
       'data-ignore-cache': ignoreCache || undefined,
       'data-route-tab-id': routeTabId || undefined,
       'data-view': Utils.isStringProp(view) ? view : undefined,
+      'data-transition': Utils.isStringProp(transition) ? transition : undefined,
     };
   },
   linkRouterClasses(props) {
-    const { back, linkBack, external } = props;
+    const { back, linkBack, external, preventRouter } = props;
 
     return {
       back: back || linkBack,
       external,
+      'prevent-router': preventRouter,
     };
   },
   linkActionsProps: {
@@ -106,6 +119,7 @@ const Mixins = {
     // Panel
     panelOpen: [Boolean, String],
     panelClose: [Boolean, String],
+    panelToggle: [Boolean, String],
 
     // Popup
     popupOpen: [Boolean, String],
@@ -131,6 +145,17 @@ const Mixins = {
     sortableEnable: [Boolean, String],
     sortableDisable: [Boolean, String],
     sortableToggle: [Boolean, String],
+
+    // Card
+    cardOpen: [Boolean, String],
+    cardPreventOpen: [Boolean, String],
+    cardClose: [Boolean, String],
+
+    // Menu
+    menuClose: {
+      type: [Boolean, String],
+      default: undefined,
+    },
   },
   linkActionsAttrs(props) {
     const {
@@ -140,6 +165,7 @@ const Mixins = {
       searchbarToggle,
       panelOpen,
       panelClose,
+      panelToggle,
       popupOpen,
       popupClose,
       actionsOpen,
@@ -153,6 +179,8 @@ const Mixins = {
       sortableEnable,
       sortableDisable,
       sortableToggle,
+      cardOpen,
+      cardClose,
     } = props;
 
     return {
@@ -161,7 +189,8 @@ const Mixins = {
                         || (Utils.isStringProp(searchbarClear) && searchbarClear)
                         || (Utils.isStringProp(searchbarToggle) && searchbarToggle) || undefined,
       'data-panel': (Utils.isStringProp(panelOpen) && panelOpen)
-                    || (Utils.isStringProp(panelClose) && panelClose) || undefined,
+                    || (Utils.isStringProp(panelClose) && panelClose)
+                    || (Utils.isStringProp(panelToggle) && panelToggle) || undefined,
       'data-popup': (Utils.isStringProp(popupOpen) && popupOpen)
                     || (Utils.isStringProp(popupClose) && popupClose) || undefined,
       'data-actions': (Utils.isStringProp(actionsOpen) && actionsOpen)
@@ -175,6 +204,8 @@ const Mixins = {
       'data-sortable': (Utils.isStringProp(sortableEnable) && sortableEnable)
                        || (Utils.isStringProp(sortableDisable) && sortableDisable)
                        || (Utils.isStringProp(sortableToggle) && sortableToggle) || undefined,
+      'data-card': (Utils.isStringProp(cardOpen) && cardOpen)
+                    || (Utils.isStringProp(cardClose) && cardClose) || undefined,
     };
   },
   linkActionsClasses(props) {
@@ -185,6 +216,7 @@ const Mixins = {
       searchbarToggle,
       panelOpen,
       panelClose,
+      panelToggle,
       popupOpen,
       popupClose,
       actionsClose,
@@ -198,6 +230,10 @@ const Mixins = {
       sortableEnable,
       sortableDisable,
       sortableToggle,
+      cardOpen,
+      cardPreventOpen,
+      cardClose,
+      menuClose,
     } = props;
 
     return {
@@ -205,21 +241,26 @@ const Mixins = {
       'searchbar-disable': searchbarDisable || searchbarDisable === '',
       'searchbar-clear': searchbarClear || searchbarClear === '',
       'searchbar-toggle': searchbarToggle || searchbarToggle === '',
-      'panel-close': Utils.isTrueProp(panelClose) || panelClose,
+      'panel-close': panelClose || panelClose === '',
       'panel-open': panelOpen || panelOpen === '',
-      'popup-close': Utils.isTrueProp(popupClose) || popupClose,
+      'panel-toggle': panelToggle || panelToggle === '',
+      'popup-close': popupClose || popupClose === '',
       'popup-open': popupOpen || popupOpen === '',
-      'actions-close': Utils.isTrueProp(actionsClose) || actionsClose,
+      'actions-close': actionsClose || actionsClose === '',
       'actions-open': actionsOpen || actionsOpen === '',
-      'popover-close': Utils.isTrueProp(popoverClose) || popoverClose,
+      'popover-close': popoverClose || popoverClose === '',
       'popover-open': popoverOpen || popoverOpen === '',
-      'sheet-close': Utils.isTrueProp(sheetClose) || sheetClose,
+      'sheet-close': sheetClose || sheetClose === '',
       'sheet-open': sheetOpen || sheetOpen === '',
-      'login-screen-close': Utils.isTrueProp(loginScreenClose) || loginScreenClose,
+      'login-screen-close': loginScreenClose || loginScreenClose === '',
       'login-screen-open': loginScreenOpen || loginScreenOpen === '',
-      'sortable-enable': Utils.isTrueProp(sortableEnable) || sortableEnable,
-      'sortable-disable': Utils.isTrueProp(sortableDisable) || sortableDisable,
-      'sortable-toggle': sortableToggle === true || (typeof sortableToggle === 'string' && sortableToggle.length),
+      'sortable-enable': sortableEnable || sortableEnable === '',
+      'sortable-disable': sortableDisable || sortableDisable === '',
+      'sortable-toggle': sortableToggle || sortableToggle === '',
+      'card-close': cardClose || cardClose === '',
+      'card-open': cardOpen || cardOpen === '',
+      'card-prevent-open': cardPreventOpen || cardPreventOpen === '',
+      'menu-close': menuClose || menuClose === '',
     };
   },
 };

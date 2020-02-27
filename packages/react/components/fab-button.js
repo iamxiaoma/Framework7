@@ -10,6 +10,10 @@ class F7FabButton extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__reactRefs = {};
+
+    (() => {
+      Utils.bindMethods(this, ['onClick']);
+    })();
   }
 
   onClick(event) {
@@ -39,16 +43,19 @@ class F7FabButton extends React.Component {
     }
 
     return React.createElement('a', {
+      ref: __reactNode => {
+        this.__reactRefs['el'] = __reactNode;
+      },
       id: id,
       style: style,
       target: target,
-      className: classes,
-      onClick: this.onClick.bind(this)
+      className: classes
     }, this.slots['default'], labelEl);
   }
 
   componentWillUnmount() {
     const self = this;
+    self.refs.el.removeEventListener('click', self.onClick);
 
     if (self.f7Tooltip && self.f7Tooltip.destroy) {
       self.f7Tooltip.destroy();
@@ -59,14 +66,17 @@ class F7FabButton extends React.Component {
 
   componentDidMount() {
     const self = this;
+    self.refs.el.addEventListener('click', self.onClick);
     const {
-      tooltip
+      tooltip,
+      tooltipTrigger
     } = self.props;
     if (!tooltip) return;
     self.$f7ready(f7 => {
       self.f7Tooltip = f7.tooltip.create({
         targetEl: self.refs.el,
-        text: tooltip
+        text: tooltip,
+        trigger: tooltipTrigger
       });
     });
   }
@@ -88,6 +98,23 @@ class F7FabButton extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     __reactComponentWatch(this, 'props.tooltip', prevProps, prevState, newText => {
       const self = this;
+
+      if (!newText && self.f7Tooltip) {
+        self.f7Tooltip.destroy();
+        self.f7Tooltip = null;
+        delete self.f7Tooltip;
+        return;
+      }
+
+      if (newText && !self.f7Tooltip && self.$f7) {
+        self.f7Tooltip = self.$f7.tooltip.create({
+          targetEl: self.refs.el,
+          text: newText,
+          trigger: self.props.tooltipTrigger
+        });
+        return;
+      }
+
       if (!newText || !self.f7Tooltip) return;
       self.f7Tooltip.setText(newText);
     });
@@ -102,7 +129,8 @@ __reactComponentSetProps(F7FabButton, Object.assign({
   fabClose: Boolean,
   label: String,
   target: String,
-  tooltip: String
+  tooltip: String,
+  tooltipTrigger: String
 }, Mixins.colorProps));
 
 F7FabButton.displayName = 'f7-fab-button';

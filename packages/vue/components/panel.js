@@ -12,7 +12,34 @@ export default {
     reveal: Boolean,
     left: Boolean,
     right: Boolean,
-    opened: Boolean
+    opened: Boolean,
+    resizable: Boolean,
+    backdrop: {
+      type: Boolean,
+      default: true
+    },
+    backdropEl: {
+      type: String,
+      default: undefined
+    },
+    visibleBreakpoint: {
+      type: Number,
+      default: undefined
+    },
+    collapsedBreakpoint: {
+      type: Number,
+      default: undefined
+    },
+    swipe: Boolean,
+    swipeOnlyClose: Boolean,
+    swipeActiveArea: {
+      type: Number,
+      default: 0
+    },
+    swipeThreshold: {
+      type: Number,
+      default: 0
+    }
   }, Mixins.colorProps),
 
   render() {
@@ -20,7 +47,8 @@ export default {
     const props = this.props;
     const {
       id,
-      style
+      style,
+      resizable
     } = props;
     return _h('div', {
       ref: 'el',
@@ -29,7 +57,9 @@ export default {
       attrs: {
         id: id
       }
-    }, [this.$slots['default']]);
+    }, [this.$slots['default'], resizable && _h('div', {
+      class: 'panel-resize-handler'
+    })]);
   },
 
   computed: {
@@ -40,7 +70,7 @@ export default {
         left,
         reveal,
         className,
-        opened
+        resizable
       } = props;
       let {
         side,
@@ -49,7 +79,7 @@ export default {
       side = side || (left ? 'left' : 'right');
       effect = effect || (reveal ? 'reveal' : 'cover');
       return Utils.classNames(className, 'panel', {
-        'panel-active': opened,
+        'panel-resizable': resizable,
         [`panel-${side}`]: side,
         [`panel-${effect}`]: effect
       }, Mixins.colorClasses(props));
@@ -61,49 +91,42 @@ export default {
 
   },
   watch: {
+    'props.resizable': function watchResizable(resizable) {
+      const self = this;
+      if (!self.f7Panel) return;
+      if (resizable) self.f7Panel.enableResizable();else self.f7Panel.disableResizable();
+    },
     'props.opened': function watchOpened(opened) {
       const self = this;
-      if (!self.$f7) return;
-      const side = self.props.side || (self.props.left ? 'left' : 'right');
+      if (!self.f7Panel) return;
 
       if (opened) {
-        self.$f7.panel.open(side);
+        self.f7Panel.open();
       } else {
-        self.$f7.panel.open(side);
+        self.f7Panel.close();
       }
     }
+  },
+
+  created() {
+    Utils.bindMethods(this, ['onOpen', 'onOpened', 'onClose', 'onClosed', 'onBackdropClick', 'onSwipe', 'onSwipeOpen', 'onBreakpoint', 'onCollapsedBreakpoint', 'onResize']);
   },
 
   mounted() {
     const self = this;
     const el = self.$refs.el;
     const {
-      side,
-      effect,
       opened,
-      left,
-      reveal
+      resizable,
+      backdrop,
+      backdropEl,
+      visibleBreakpoint,
+      collapsedBreakpoint,
+      swipe,
+      swipeOnlyClose,
+      swipeActiveArea,
+      swipeThreshold
     } = self.props;
-    self.onOpenBound = self.onOpen.bind(self);
-    self.onOpenedBound = self.onOpened.bind(self);
-    self.onCloseBound = self.onClose.bind(self);
-    self.onClosedBound = self.onClosed.bind(self);
-    self.onBackdropClickBound = self.onBackdropClick.bind(self);
-    self.onPanelSwipeBound = self.onPanelSwipe.bind(self);
-    self.onPanelSwipeOpenBound = self.onPanelSwipeOpen.bind(self);
-    self.onBreakpointBound = self.onBreakpoint.bind(self);
-
-    if (el) {
-      el.addEventListener('panel:open', self.onOpenBound);
-      el.addEventListener('panel:opened', self.onOpenedBound);
-      el.addEventListener('panel:close', self.onCloseBound);
-      el.addEventListener('panel:closed', self.onClosedBound);
-      el.addEventListener('panel:backdrop-click', self.onBackdropClickBound);
-      el.addEventListener('panel:swipe', self.onPanelSwipeBound);
-      el.addEventListener('panel:swipeopen', self.onPanelSwipeOpenBound);
-      el.addEventListener('panel:breakpoint', self.onBreakpointBound);
-    }
-
     self.$f7ready(() => {
       const $ = self.$$;
       if (!$) return;
@@ -112,38 +135,44 @@ export default {
         $('<div class="panel-backdrop"></div>').insertBefore(el);
       }
 
-      self.f7Panel = self.$f7.panel.create({
-        el
+      const params = Utils.noUndefinedProps({
+        el,
+        resizable,
+        backdrop,
+        backdropEl,
+        visibleBreakpoint,
+        collapsedBreakpoint,
+        swipe,
+        swipeOnlyClose,
+        swipeActiveArea,
+        swipeThreshold,
+        on: {
+          open: self.onOpen,
+          opened: self.onOpened,
+          close: self.onClose,
+          closed: self.onClosed,
+          backdropClick: self.onBackdropClick,
+          swipe: self.onSwipe,
+          swipeOpen: self.onSwipeOpen,
+          collapsedBreakpoint: self.onCollapsedBreakpoint,
+          breakpoint: self.onBreakpoint,
+          resize: self.onResize
+        }
       });
+      self.f7Panel = self.$f7.panel.create(params);
+
+      if (opened) {
+        self.f7Panel.open(false);
+      }
     });
-
-    if (opened) {
-      el.style.display = 'block';
-    }
-
-    const $ = self.$$;
-    if (!$) return;
-    const panelSide = side || (left ? 'left' : 'right');
-    const panelEffect = effect || (reveal ? 'reveal' : 'cover');
-
-    if (opened) {
-      $('html').addClass(`with-panel-${panelSide}-${panelEffect}`);
-    }
   },
 
   beforeDestroy() {
     const self = this;
-    if (self.f7Panel) self.f7Panel.destroy();
-    const el = self.$refs.el;
-    if (!el) return;
-    el.removeEventListener('panel:open', self.onOpenBound);
-    el.removeEventListener('panel:opened', self.onOpenedBound);
-    el.removeEventListener('panel:close', self.onCloseBound);
-    el.removeEventListener('panel:closed', self.onClosedBound);
-    el.removeEventListener('panel:backdrop-click', self.onBackdropClickBound);
-    el.removeEventListener('panel:swipe', self.onPanelSwipeBound);
-    el.removeEventListener('panel:swipeopen', self.onPanelSwipeOpenBound);
-    el.removeEventListener('panel:breakpoint', self.onBreakpointBound);
+
+    if (self.f7Panel && self.f7Panel.destroy) {
+      self.f7Panel.destroy();
+    }
   },
 
   methods: {
@@ -167,11 +196,11 @@ export default {
       this.dispatchEvent('panel:backdrop-click panelBackdropClick', event);
     },
 
-    onPanelSwipe(event) {
+    onSwipe(event) {
       this.dispatchEvent('panel:swipe panelSwipe', event);
     },
 
-    onPanelSwipeOpen(event) {
+    onSwipeOpen(event) {
       this.dispatchEvent('panel:swipeopen panelSwipeOpen', event);
     },
 
@@ -179,18 +208,30 @@ export default {
       this.dispatchEvent('panel:breakpoint panelBreakpoint', event);
     },
 
+    onCollapsedBreakpoint(event) {
+      this.dispatchEvent('panel:collapsedbreakpoint panelCollapsedBreakpoint', event);
+    },
+
+    onResize(event) {
+      this.dispatchEvent('panel:resize panelResize', event);
+    },
+
     open(animate) {
       const self = this;
-      if (!self.$f7) return;
-      const side = self.props.side || (self.props.left ? 'left' : 'right');
-      self.$f7.panel.open(side, animate);
+      if (!self.f7Panel) return;
+      self.f7Panel.open(animate);
     },
 
     close(animate) {
       const self = this;
-      if (!self.$f7) return;
-      const side = self.props.side || (self.props.left ? 'left' : 'right');
-      self.$f7.panel.close(side, animate);
+      if (!self.f7Panel) return;
+      self.f7Panel.close(animate);
+    },
+
+    toggle(animate) {
+      const self = this;
+      if (!self.f7Panel) return;
+      self.f7Panel.toggle(animate);
     },
 
     dispatchEvent(events, ...args) {

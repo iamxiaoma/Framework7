@@ -20,6 +20,8 @@ export namespace PhotoBrowser {
     expositionHideCaptions?: boolean
     /** You can close Photo Browser with swipe up/down when this parameter is enabled (default true) */
     swipeToClose?: boolean
+    /** Enables Photo Browser popup to push view/s behind on open (default false) */
+    popupPush?: boolean
     /** Will add opened photo browser to router history which gives ability to close photo browser by going back in router history and set current route to the photo browser modal (default true) */
     routableModals?: boolean
     /** Photo browser modal URL that will be set as a current route (default "photos/") */
@@ -36,10 +38,14 @@ export namespace PhotoBrowser {
     navbar?: boolean
     /** Set to false to remove Photo Browser's Toolbar (default true) */
     toolbar?: boolean
-    /** Text on back link in Photo Browser's navbar (default "Close") */
-    backLinkText?: string
+    /** Text on back link in Photo Browser's navbar (default "Back") */
+    pageBackLinkText?: string
+    /** Text on close link in Photo Browser's navbar when opened in Popup or as Standalone (default "Close") */
+    popupCloseLinkText?: string
     /** Text of "of" in photos counter: "3 of 5" (default "of") */
     navbarOfText?: string
+    /** Defines should it display "3 of 5" text in navbar title or not. If not specified (undefined) then it will show this text if there is more than 1 item  */
+    navbarShowCount?: boolean | undefined
     /** One of the default colors */
     iconsColor?: string
     /** Swiper parameters */
@@ -105,10 +111,12 @@ export namespace PhotoBrowser {
     swipeToClose: (photoBrowser: PhotoBrowser) => void
     /** Event will be fired when user click/tap on Swiper. Receives 'touchend' event as an arguments */
     tap: (photoBrowser: PhotoBrowser, event: Event) => void
-    /** Event will be fired when user click/tap on Swiper after 300ms delay. Receives 'touchend' event as an arguments */
+    /** Event will be fired when user click/tap on Swiper. Receives 'touchend' event as an arguments */
     click: (photoBrowser: PhotoBrowser, event: Event) => void
     /** Event will be fired when user double tap on Swiper's container. Receives 'touchend' event as an arguments */
     doubleTap: (photoBrowser: PhotoBrowser, event: Event) => void
+    /** Event will be fired when user double tap on Swiper's container. Receives 'touchend' event as an arguments */
+    doubleClick: (photoBrowser: PhotoBrowser, event: Event) => void
     /** Event will be fired when currently active slide is changed */
     slideChange: (photoBrowser: PhotoBrowser) => void
     /** Event will be fired in the beginning of transition */
