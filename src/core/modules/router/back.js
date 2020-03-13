@@ -115,6 +115,8 @@ function backward(el, backwardOptions) {
       .addClass(`navbar-previous${isMaster ? ' navbar-master' : ''}${isDetail ? ' navbar-master-detail' : ''}${isDetailRoot ? ' navbar-master-detail-root' : ''}`)
       .removeClass('stacked')
       .removeAttr('aria-hidden');
+    $newNavbarEl.trigger('navbar:position', { position: 'previous' });
+    router.emit('navbarPosition', $newNavbarEl[0], 'previous');
     if (isMaster || isDetailRoot) {
       router.emit('navbarRole', $newNavbarEl[0], { role: isMaster ? 'master' : 'detail', detailRoot: !!isDetailRoot });
     }
@@ -527,12 +529,7 @@ function back(...args) {
 
   const { name, params, query } = navigateOptions;
   if (name) {
-    // find route by name
-    route = router.findRouteByKey('name', name);
-    if (!route) {
-      throw new Error(`Framework7: route with name "${name}" not found`);
-    }
-    navigateUrl = router.constructRouteUrl(route, { params, query });
+    navigateUrl = router.generateUrl({ name, params, query });
     if (navigateUrl) {
       return router.back(navigateUrl, Utils.extend({}, navigateOptions, {
         name: null,
@@ -540,7 +537,7 @@ function back(...args) {
         query: null,
       }));
     }
-    throw new Error(`Framework7: can't construct URL for route with name "${name}"`);
+    return router;
   }
 
   const app = router.app;

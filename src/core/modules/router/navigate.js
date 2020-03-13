@@ -187,6 +187,8 @@ function forward(el, forwardOptions = {}) {
       .removeClass('navbar-previous navbar-current navbar-next')
       .addClass(`navbar-${newPagePosition}${isMaster ? ' navbar-master' : ''}${isDetail ? ' navbar-master-detail' : ''}${isDetailRoot ? ' navbar-master-detail-root' : ''}`)
       .removeClass('stacked');
+    $newNavbarEl.trigger('navbar:position', { position: 'newPagePosition' });
+    router.emit('navbarPosition', $newNavbarEl[0], 'newPagePosition');
     if (isMaster || isDetail) {
       router.emit('navbarRole', $newNavbarEl[0], { role: isMaster ? 'master' : 'detail', detailRoot: !!isDetailRoot });
     }
@@ -682,16 +684,11 @@ function navigate(navigateParams, navigateOptions = {}) {
     params = navigateParams.params;
   }
   if (name) {
-    // find route by name
-    route = router.findRouteByKey('name', name);
-    if (!route) {
-      throw new Error(`Framework7: route with name "${name}" not found`);
-    }
-    url = router.constructRouteUrl(route, { params, query });
+    url = router.generateUrl({ name, params, query });
     if (url) {
       return router.navigate(url, navigateOptions);
     }
-    throw new Error(`Framework7: can't construct URL for route with name "${name}"`);
+    return router;
   }
   const app = router.app;
   appRouterCheck(router, 'navigate');
